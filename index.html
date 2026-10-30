@@ -100,6 +100,7 @@ select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visi
 .tadd{flex:none;display:inline-flex;align-items:center;gap:4px;font:inherit;font-size:.82rem;font-weight:700;line-height:1.3;padding:7px 11px 7px 9px;margin-bottom:-1px;border:1px dashed var(--acc);border-bottom-color:transparent;border-radius:9px 9px 0 0;background:none;color:var(--acc);cursor:pointer;white-space:nowrap}
 .tadd svg{width:15px;height:15px}
 .tadd:hover{background:var(--brb)}
+.chips .tadd{margin-bottom:0;margin-left:3px}
 .rcount{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 #rows{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:calc(100% - 28px);gap:10px;align-items:start;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;padding-bottom:8px;margin-bottom:4px;scrollbar-width:thin}
 #rows.one{grid-auto-columns:100%}
@@ -186,6 +187,8 @@ td.ng{font-weight:700}
 .sheet{background:#fff;color:#111;font-family:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;font-variant-numeric:tabular-nums;padding:30px 34px 26px;display:flex;flex-direction:column;overflow:hidden}
 .sheet .sh{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px;border-bottom:2px solid #111;padding-bottom:6px}
 .sheet .sh .t{font-size:22px;font-weight:700;letter-spacing:.4em;text-align:center;padding-left:.4em}
+.sheet .sh .t.tl{font-size:20px;letter-spacing:.1em;padding-left:.1em}
+.ttl{max-width:26em;margin:0 0 12px}
 .sheet .sh .l{font-size:11px;line-height:1.5}
 .sheet .sh .r{font-size:11px;text-align:right;line-height:1.5}
 .sheet .sh b{font-size:13px}
@@ -376,7 +379,8 @@ html.zvon,html.zvon body{overflow:hidden}
 </section>
 
 <section class="card">
-<h2>電線管選定書(PDF・Excel)</h2>
+<h2><span id="ttl">電線管選定書</span>(PDF・Excel)</h2>
+<div class="f ttl"><label for="pjTitle">題名(タップで編集できます)</label><input id="pjTitle" placeholder="電線管選定書" autocomplete="off"></div>
 <div class="pvbar">
 <span class="pvbtns"><button type="button" class="btn pri" id="pdf">PDFを保存</button><button type="button" class="btn" id="xlsx">Excelで保存</button><button type="button" class="btn" id="zoom">拡大して見る</button></span>
 </div>
@@ -415,7 +419,7 @@ var PAPER={a4:{w:1123,h:794,mm:[297,210],sc:2},a3:{w:1587,h:1123,mm:[420,297],sc
 var CHEV='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>';
 var $=function(id){return document.getElementById(id)};
 var rows=[],nextId=1,LASTOS=[],LASTTSV="";
-var PJ={name:"",date:"",co:"",by:"",ppr:"a4",era:"w",r15:true,show:PK.slice(),figs:true,fk:""};
+var PJ={title:"",name:"",date:"",co:"",by:"",ppr:"a4",era:"w",r15:true,show:PK.slice(),figs:true,fk:""};
 
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function isNum(v){return String(v==null?"":v).trim()!==""&&isFinite(+v)}
@@ -795,7 +799,7 @@ return h+'</tbody>'}
 function sheetShell(pg){
 var P=PAPER[PJ.ppr]||PAPER.a4;
 var d=document.createElement("div");d.className="sheet";d.style.width=P.w+"px";d.style.height=P.h+"px";
-d.innerHTML='<div class="sh"><div class="l">件名<br><b>'+esc(PJ.name||"")+'</b></div><div class="t">電線管選定書</div><div class="r">'+esc(dateText())+(PJ.co?'<br>'+esc(PJ.co):'')+(PJ.by?'<br>担当 '+esc(PJ.by):'')+'</div></div>'+
+d.innerHTML='<div class="sh"><div class="l">件名<br><b>'+esc(PJ.name||"")+'</b></div><div class="t'+(docTitle().length>8?' tl':'')+'">'+esc(docTitle())+'</div><div class="r">'+esc(dateText())+(PJ.co?'<br>'+esc(PJ.co):'')+(PJ.by?'<br>担当 '+esc(PJ.by):'')+'</div></div>'+
 '<div class="cond">選定方法: 占積率による選定(内線規程 3110-5の考え方)/ 管種ごとに、ケーブル断面積の合計が許容断面積以下となる最小のサイズ'+(PJ.r15?' / ケーブル1本のときは内径 ≧ 外径×1.5 も確認':'')+'</div>'+
 '<div class="tb"><table><colgroup>'+COLS.map(function(x){return '<col style="width:'+x[1]+'%">'}).join("")+'</colgroup><thead><tr>'+COLS.map(function(x){return '<th>'+x[0]+'</th>'}).join("")+'</tr></thead></table></div>'+
 '<div class="ft"><div><p>○占積率 = ケーブル断面積の合計 ÷ 管の内断面積 × 100</p><p>○ケーブル断面積 = π/4 × D² × 本数(D: 被覆を含む仕上がり外径[mm]。1本あたり0.1mm²に丸め)</p><p>○管の内断面積 = π/4 × d²(d: 管の内径[mm])</p><p>○管の内径: 厚鋼・薄鋼・ねじなしは JIS C 8305 の外径・厚さから算出。VEは JIS C 8430、PF・CDは JIS C 8411 製品の近似内径(PFはPFDの値)、MFXは未来工業ミラレックスR、FEPは JIS C 3653 附属書1相当品(古河電工エフレックス)の内径</p></div>'+
@@ -824,7 +828,7 @@ pages.forEach(function(p){var b=document.createElement("div");b.className="pgbox
 var rzT;window.addEventListener("resize",function(){clearTimeout(rzT);rzT=setTimeout(renderPreview,200)});
 
 async function makePdf(){
-var btn=$("pdf"),msg=$("pdfmsg"),TITLE="電線管選定書";
+var btn=$("pdf"),msg=$("pdfmsg"),TITLE=docTitle();
 if(!window.jspdf||!window.html2canvas){msg.textContent="PDFの部品を読み込めませんでした。ページを開き直してから、もう一度押してください。";return}
 if(!$("stale").hidden)runCalc();
 btn.disabled=true;msg.textContent="PDFを作っています…";
@@ -841,7 +845,7 @@ if(k>0)pdf.addPage(PJ.ppr,"landscape");
 pdf.addImage(cv.toDataURL("image/jpeg",0.92),"JPEG",0,0,P.mm[0],P.mm[1])}
 pdf.setProperties({title:TITLE+" "+(PJ.name||"")});
 var blob=pdf.output("blob");
-var fn=TITLE+(PJ.name?"_"+PJ.name.replace(/[\\\/:*?"<>|]/g,""):"")+".pdf";
+var fn=TITLE.replace(/[\\\/:*?"<>|]/g,"")+(PJ.name?"_"+PJ.name.replace(/[\\\/:*?"<>|]/g,""):"")+".pdf";
 deliverFile(blob,fn,msg,false);
 }catch(e){msg.textContent="PDFを作れませんでした: "+(e&&e.message||e)}
 finally{if(host.parentNode)document.body.removeChild(host);btn.disabled=false}}
@@ -884,8 +888,9 @@ function renderRows(){var el=$("rows");el.innerHTML=rows.map(function(r,i){retur
 var CUR_I=0,scT=0;
 function rmotion(){return !!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)}
 function cardEls(){return $("rows").querySelectorAll(".rc")}
-function renderChips(){$("chips").innerHTML=rows.map(function(r,i){return '<button type="button" class="chip" data-ci="'+i+'" aria-current="false"><span class="cn">'+(i+1)+'</span><span class="ct">'+esc(r.name||("配管"+(i+1)))+'</span></button>'}).join("");setActive(Math.min(CUR_I,rows.length-1))}
-function setActive(i){i=Math.max(0,i);CUR_I=i;var c=$("chips"),ch=c.children;
+var ADDB=null;
+function renderChips(){ADDB=ADDB||$("add");$("chips").innerHTML=rows.map(function(r,i){return '<button type="button" class="chip" data-ci="'+i+'" aria-current="false"><span class="cn">'+(i+1)+'</span><span class="ct">'+esc(r.name||("配管"+(i+1)))+'</span></button>'}).join("");if(ADDB)$("chips").appendChild(ADDB);setActive(Math.min(CUR_I,rows.length-1))}
+function setActive(i){i=Math.max(0,i);CUR_I=i;var c=$("chips"),ch=c.querySelectorAll(".chip");
 for(var k=0;k<ch.length;k++){var on=k===i;ch[k].setAttribute("aria-current",on?"true":"false");
 if(on){var L=ch[k].offsetLeft,W=ch[k].offsetWidth;if(L<c.scrollLeft)c.scrollLeft=L-4;else if(L+W>c.scrollLeft+c.clientWidth)c.scrollLeft=L+W-c.clientWidth+4}}
 $("rcount").textContent=(i+1)+" / "+rows.length;$("rPrev").disabled=i<=0;$("rNext").disabled=i>=rows.length-1}
@@ -936,7 +941,12 @@ $("pera").addEventListener("change",function(){PJ.era=$("pera").value;save();ren
 $("r15").addEventListener("change",function(){PJ.r15=$("r15").checked;save();rows.forEach(function(r){var c=$("rows").querySelector('.rc[data-id="'+r.id+'"]');if(c)liveCard(c,r)});mark()});
 function renderPks(){var a=shownPK();$("pks").innerHTML=PK.map(function(K){return '<label title="'+esc(PIPE[K].n)+'"><input type="checkbox" data-pk="'+K+'"'+(a.indexOf(K)>=0?' checked':'')+'> '+esc(PIPE[K].s)+'</label>'}).join("")}
 $("pks").addEventListener("change",function(){PJ.show=PK.filter(function(K){var c=$("pks").querySelector('[data-pk="'+K+'"]');return c&&c.checked});save();var st=!$("stale").hidden;runCalc();if(st)mark()});
-function syncPJ(){renderPks();PJF.forEach(function(p){$(p[0]).value=PJ[p[1]]||""});$("ppr").value=PAPER[PJ.ppr]?PJ.ppr:"a4";$("pera").value=PJ.era==="s"?"s":"w";$("r15").checked=PJ.r15!==false;$("pfig").checked=PJ.figs!==false}
+/* 選定書の題名(空なら最初の題名) */
+function docTitle(){return String(PJ.title||"").trim()||"電線管選定書"}
+var ttT=0;
+$("pjTitle").addEventListener("input",function(){PJ.title=$("pjTitle").value;$("ttl").textContent=docTitle();save();clearTimeout(ttT);ttT=setTimeout(renderPreview,250)});
+$("pjTitle").addEventListener("change",function(){if(!$("pjTitle").value.trim()){PJ.title="";$("pjTitle").value=docTitle();save();renderPreview()}});
+function syncPJ(){$("pjTitle").value=docTitle();$("ttl").textContent=docTitle();renderPks();PJF.forEach(function(p){$(p[0]).value=PJ[p[1]]||""});$("ppr").value=PAPER[PJ.ppr]?PJ.ppr:"a4";$("pera").value=PJ.era==="s"?"s":"w";$("r15").checked=PJ.r15!==false;$("pfig").checked=PJ.figs!==false}
 $("pfig").addEventListener("change",function(){PJ.figs=$("pfig").checked;save();renderPreview()});
 
 /* 電線管の内径と許容断面積の表 */
@@ -954,7 +964,7 @@ function siteName(d){var n=d&&d.pj&&String(d.pj.name||"").trim();return n||"無�
 function snap(){return clone({v:1,pj:PJ,rows:rows})}
 function load(d){
 d=d||{};var pj=d.pj||{};
-PJ={name:"",date:"",co:"",by:"",ppr:"a4",era:"w",r15:true,show:PK.slice(),figs:true,fk:""};
+PJ={title:"",name:"",date:"",co:"",by:"",ppr:"a4",era:"w",r15:true,show:PK.slice(),figs:true,fk:""};
 for(var k in PJ){if(pj[k]!=null)PJ[k]=pj[k]}
 PJ.r15=pj.r15!==false;PJ.figs=pj.figs!==false;if(!PIPE[PJ.fk])PJ.fk="";PJ.show=Array.isArray(pj.show)?pj.show.filter(function(K){return !!PIPE[K]}):PK.slice();
 nextId=1;rows=(Array.isArray(d.rows)?d.rows:[]).map(normRow);
@@ -1246,10 +1256,10 @@ downloadBlob(blob,fn);el.textContent="ダウンロードしました: "+fn}
 
 /* 選定書をExcelで保存(PDFと同じ内容) */
 function makeXlsx(){
-var msg=$("pdfmsg"),TITLE="電線管選定書";
+var msg=$("pdfmsg"),TITLE=docTitle();
 if(!$("stale").hidden)runCalc();
-try{var blob=XL.fromPages(buildPages(),{sheet:TITLE,paper:PJ.ppr});
-deliverFile(blob,TITLE+(PJ.name?"_"+PJ.name.replace(/[\\\/:*?"<>|]/g,""):"")+".xlsx",msg,true)}
+try{var blob=XL.fromPages(buildPages(),{sheet:TITLE.replace(/[\[\]:*?\/\\]/g,"").slice(0,31)||"選定書",paper:PJ.ppr});
+deliverFile(blob,TITLE.replace(/[\\\/:*?"<>|]/g,"")+(PJ.name?"_"+PJ.name.replace(/[\\\/:*?"<>|]/g,""):"")+".xlsx",msg,true)}
 catch(e){msg.textContent="Excelを作れませんでした: "+(e&&e.message||e)}}
 $("xlsx").addEventListener("click",makeXlsx);
 
