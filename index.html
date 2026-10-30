@@ -245,19 +245,11 @@ body{padding-left:calc(276px + 20px)}
 .shint{font-size:.74rem;line-height:1.5;color:var(--ink);background:var(--brb);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;margin:8px 0 0;padding:6px 8px}
 .savebar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
 .savebar .btn{padding:8px 16px}
-/* ===== 断面図(計算結果の中) ===== */
-.fg{margin-top:14px}
-.fgh{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:8px}
-.fgh b{font-size:.88rem}
-.fgk{display:flex;flex-wrap:wrap;gap:6px}
-.fk{font:inherit;font-size:.8rem;line-height:1.4;padding:4px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
-.fk:hover{border-color:var(--acc)}
-.fk[aria-pressed="true"]{border-color:var(--acc);background:var(--acc);color:var(--on-acc);font-weight:700}
-.fgp{position:relative;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 8px;display:flex;justify-content:center;cursor:zoom-in}
-.fgp:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
-.fgz{position:absolute;right:6px;top:6px;display:inline-flex;align-items:center;gap:3px;font-size:.72rem;font-weight:700;color:#3b4a59;background:rgba(238,242,246,.92);border:1px solid #cfd8e1;border-radius:999px;padding:2px 8px;pointer-events:none}
-.fgp .fgz svg{width:12px;height:12px;max-width:none;display:inline}
-.fgp svg{width:100%;max-width:520px;height:auto;display:block}
+/* ===== 計算結果の中: 選定書の断面図に使う管の選択 ===== */
+.fg{margin-top:8px}
+.fg:empty{display:none}
+.fgc select{display:inline-block;width:auto;height:2.1rem;font-size:.85rem;padding:0 6px;margin:0 2px;vertical-align:middle}
+.fgc label{display:inline;white-space:normal;color:inherit;font-size:inherit;margin:0}
 .fgc{font-size:.8rem;color:var(--sub);margin:6px 0 0;font-variant-numeric:tabular-nums;line-height:1.5}
 .fgall{font:inherit;font-size:.78rem;border:0;background:none;color:var(--acc);text-decoration:underline;text-underline-offset:2px;cursor:pointer;padding:2px 0;margin-left:4px}
 #rt tbody tr[data-fk]{cursor:pointer}
@@ -293,8 +285,6 @@ html.zvon,html.zvon body{overflow:hidden}
 .zvw{display:flex;flex-direction:column;gap:14px;width:max-content;min-width:100%;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px))}
 .zpg{position:relative;flex:none;margin:0 auto;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.45);overflow:hidden}
 .zpg>*{position:absolute;left:0;top:0;transform-origin:0 0}
-.zfg{background:#fff;padding:20px}
-.zfg svg{display:block}
 .zvh{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:calc(100% - 32px);background:rgba(16,21,27,.9);color:#eef2f6;font-size:.8rem;padding:7px 14px;border-radius:999px;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .35s}
 .zvh.on{opacity:1}
 @media (prefers-reduced-motion:reduce){.zvh{transition:none}}
@@ -488,7 +478,7 @@ if(!ps.length)h+='<tr><td colspan="6" class="dim">並べる管種が選ばれて
 ps.forEach(function(q){var P=PIPE[q.K];
 if(!q.p){h+='<tr><td class="c1" title="'+esc(P.n)+'">'+pn(q.K)+'</td><td class="ng" colspan="5" style="text-align:left">入らない(最大の'+esc(P.l[P.l.length-1][0])+'でも不足)</td></tr>';tsv.push(tl([nm,r.sec,cabT,o.cnt,f1(o.total),o.rt,P.n,"入らない","","","","",memo]));return}
 if(q.by15)any15=true;
-h+='<tr data-fk="'+q.K+'"'+(q.K===fk?' class="fsel"':'')+' title="タップで断面図をこの管種に切り替え"><td class="c1" title="'+esc(P.n)+'">'+pn(q.K)+'</td><td><b>'+q.p[0]+'</b>'+(q.by15?'<span class="mk" title="ケーブル外径の1.5倍の条件で決まったサイズ">*</span>':'')+'</td><td class="fc"><span class="fv">'+q.fill.toFixed(1)+'%</span>'+fillBar(q,o.rt)+'</td><td>'+q.p[2]+'</td><td>'+q.Ai.toFixed(1)+'</td><td>'+q.allow+'</td></tr>';
+h+='<tr data-fk="'+q.K+'"'+(figOn()&&q.K===fk?' class="fsel"':'')+'><td class="c1" title="'+esc(P.n)+'">'+pn(q.K)+'</td><td><b>'+q.p[0]+'</b>'+(q.by15?'<span class="mk" title="ケーブル外径の1.5倍の条件で決まったサイズ">*</span>':'')+'</td><td class="fc"><span class="fv">'+q.fill.toFixed(1)+'%</span>'+fillBar(q,o.rt)+'</td><td>'+q.p[2]+'</td><td>'+q.Ai.toFixed(1)+'</td><td>'+q.allow+'</td></tr>';
 tsv.push(tl([nm,r.sec,cabT,o.cnt,f1(o.total),o.rt,P.n,q.p[0],q.p[2],q.Ai.toFixed(1),q.allow,q.fill.toFixed(1),memo]))});
 h+='</tbody></table></div>';
 if(any15)h+='<p class="note rbn">* はケーブル外径の1.5倍の条件で決まったサイズです。</p>';
@@ -600,28 +590,23 @@ s+='<circle cx="'+n2(x0+9)+'" cy="'+n2(L.y)+'" r="7.5" fill="'+col+'"/><text x="
 s+='<text x="'+n2(x0+21)+'" y="'+n2(L.y+FS*.36)+'" font-size="'+FS+'" fill="#1d2833">'+esc(L.t)+'</text>'});
 return {svg:s+'</svg>',miss:pk.miss,q:q}}
 function figCap(o,F){var q=F.q;return q.p[0]+"(内径"+q.p[2]+"mm)に"+o.cnt+"本 ・ 占積率 "+q.fill.toFixed(1)+"%(基準"+o.rt+"%)"+(q.by15?" ・ 外径×1.5の条件で決定":"")+(F.miss?" ・ 図では一部のケーブルを重ねて描いています":"")}
-/* 計算結果の中の断面図(管種の切り替えボタン + 図) */
+/* 計算結果の各配管の下: 選定書の断面図をどの管で描くか(表の行をタップしても選べる) */
+function figOn(){return PJ.figs!==false}
 function figInner(o){
-var K=figK(o);if(!K)return '<p class="note">断面図を出せる管種がありません</p>';
-var F=figSVG(o,K),ps=figPipes(o);
-return '<div class="fgh"><b>断面図</b><div class="fgk" role="group" aria-label="断面図の管種">'+ps.map(function(z){return '<button type="button" class="fk" data-fk="'+z.K+'" aria-pressed="'+(z.K===K)+'" title="'+esc(PIPE[z.K].n)+'">'+esc(z.p[0])+'</button>'}).join("")+'</div></div>'+
-'<div class="fgp" tabindex="0" role="button" aria-label="断面図を拡大して見る">'+F.svg+'<span class="fgz" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.4 10.4L14 14M7 5v4M5 7h4"/></svg>拡大</span></div><p class="fgc">'+esc(figCap(o,F))+(rows.length>1?' <button type="button" class="fgall" data-fall="'+K+'">全部の配管を'+esc(PIPE[K].s)+'にする</button>':'')+'</p>'}
+if(!figOn())return '';var K=figK(o);if(!K)return '<p class="fgc">選定書の断面図: 描ける管種がありません</p>';
+var ps=figPipes(o);
+return '<p class="fgc"><label>選定書の断面図は <select data-fsel aria-label="選定書の断面図に使う管">'+ps.map(function(z){return '<option value="'+z.K+'"'+(z.K===K?' selected':'')+'>'+esc(z.p[0])+'('+esc(PIPE[z.K].s)+')</option>'}).join("")+'</select> で描きます</label>'+
+(rows.length>1?' <button type="button" class="fgall" data-fall="'+K+'">全部の配管を'+esc(PIPE[K].s)+'にする</button>':'')+'</p>'}
 var pvT=0;function schedPv(){clearTimeout(pvT);pvT=setTimeout(renderPreview,150)}
-function refreshFig(blk,o){var fg=blk.querySelector(".fg");if(fg)fg.innerHTML=figInner(o);var K=figK(o);Array.prototype.forEach.call(blk.querySelectorAll("tr[data-fk]"),function(tr){tr.classList.toggle("fsel",tr.getAttribute("data-fk")===K)})}
+function refreshFig(blk,o){var fg=blk.querySelector(".fg");if(fg)fg.innerHTML=figInner(o);var K=figOn()?figK(o):null;Array.prototype.forEach.call(blk.querySelectorAll("tr[data-fk]"),function(tr){tr.classList.toggle("fsel",tr.getAttribute("data-fk")===K)})}
 function refreshFigs(){Array.prototype.forEach.call($("rt").querySelectorAll(".rb[data-oi]"),function(blk){var o=LASTOS[+blk.getAttribute("data-oi")];if(o&&!o.err)refreshFig(blk,o)});schedPv()}
-/* 計算結果の断面図をタップすると全画面で拡大(図の2倍を等倍として、さらに3倍まで) */
-function figZoom(fz){var svg=fz.querySelector(":scope>svg"),blk=fz.closest(".rb");if(!svg||!blk)return;var o=LASTOS[+blk.getAttribute("data-oi")];if(!o)return;
-var vb=svg.viewBox.baseVal,M=2,w=vb.width*M,h=vb.height*M,c=svg.cloneNode(true);c.setAttribute("width",w);c.setAttribute("height",h);c.removeAttribute("style");
-var d=document.createElement("div");d.className="zfg";d.style.width=(w+40)+"px";d.style.height=(h+40)+"px";d.appendChild(c);
-var K=figK(o),q=figQ(o,K);ZV.show([d],w+40,h+40,0,$("rt").classList.contains("stale"),rowLabel(o.r,+blk.getAttribute("data-oi"))+(q?" ・ "+q.p[0]:"")+" 断面図")}
-$("rt").addEventListener("keydown",function(e){if(e.key!=="Enter"&&e.key!==" ")return;var fz=e.target.closest(".fgp");if(fz){e.preventDefault();figZoom(fz)}});
+function setFig(blk,K){var o=LASTOS[+blk.getAttribute("data-oi")];if(!o||o.r.k===K)return;o.r.k=K;PJ.fk=K;save();refreshFig(blk,o);schedPv()}
+$("rt").addEventListener("change",function(e){var sl=e.target.closest("[data-fsel]");if(!sl)return;var blk=sl.closest(".rb");if(blk)setFig(blk,sl.value)});
 $("rt").addEventListener("click",function(e){
-var fz=e.target.closest(".fgp");if(fz){figZoom(fz);return}
 var a=e.target.closest("[data-fall]");
 if(a){var K=a.getAttribute("data-fall");PJ.fk=K;rows.forEach(function(r){r.k=K});save();refreshFigs();return}
-var b=e.target.closest("[data-fk]");if(!b)return;var blk=b.closest(".rb");if(!blk)return;var o=LASTOS[+blk.getAttribute("data-oi")];if(!o)return;
-var K=b.getAttribute("data-fk");if(o.r.k===K&&b.tagName==="TR")return;o.r.k=K;PJ.fk=K;save();refreshFig(blk,o);schedPv();
-var nb=blk.querySelector('.fk[data-fk="'+K+'"]');if(nb&&b.tagName==="BUTTON")nb.focus()});
+if(!figOn())return;
+var b=e.target.closest("tr[data-fk]");if(!b)return;var blk=b.closest(".rb");if(blk)setFig(blk,b.getAttribute("data-fk"))});
 /* 選定書の断面図ページ。A4は3×2、A3は4×3 */
 var FIGGRID={a4:[3,2],a3:[4,3]};
 function figShell(){
@@ -812,7 +797,7 @@ $("r15").addEventListener("change",function(){PJ.r15=$("r15").checked;save();row
 function renderPks(){var a=shownPK();$("pks").innerHTML=PK.map(function(K){return '<label title="'+esc(PIPE[K].n)+'"><input type="checkbox" data-pk="'+K+'"'+(a.indexOf(K)>=0?' checked':'')+'> '+esc(PIPE[K].s)+'</label>'}).join("")}
 $("pks").addEventListener("change",function(){PJ.show=PK.filter(function(K){var c=$("pks").querySelector('[data-pk="'+K+'"]');return c&&c.checked});save();var st=!$("stale").hidden;runCalc();if(st)mark()});
 function syncPJ(){renderPks();PJF.forEach(function(p){$(p[0]).value=PJ[p[1]]||""});$("ppr").value=PAPER[PJ.ppr]?PJ.ppr:"a4";$("pera").value=PJ.era==="s"?"s":"w";$("r15").checked=PJ.r15!==false;$("pfig").checked=PJ.figs!==false}
-$("pfig").addEventListener("change",function(){PJ.figs=$("pfig").checked;save();renderPreview()});
+$("pfig").addEventListener("change",function(){PJ.figs=$("pfig").checked;save();refreshFigs()});
 
 /* 電線管の内径と許容断面積の表 */
 (function(){var h='<table class="ref"><thead><tr><th>呼び方</th><th>外径(mm)</th><th>内径(mm)</th><th>内断面積(mm²)</th><th>32%</th><th>48%</th></tr></thead><tbody>';
