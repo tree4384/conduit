@@ -274,18 +274,17 @@ body{padding-left:calc(276px + 20px)}
 .fgp:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .fgz{position:absolute;right:6px;top:6px;display:inline-flex;align-items:center;gap:3px;font-size:.72rem;font-weight:700;color:#3b4a59;background:rgba(238,242,246,.92);border:1px solid #cfd8e1;border-radius:999px;padding:2px 8px;pointer-events:none}
 .fgp .fgz svg{width:12px;height:12px;max-width:none;display:inline}
-.fgp>svg{display:block;width:100%;max-width:520px;height:auto;min-width:0;margin:0 auto}
+.fgp>svg{display:block;width:100%;max-width:520px;height:auto;max-height:min(34vh,240px);min-width:0;margin:0 auto}
 .fgc{font-size:.8rem;color:var(--sub);margin:6px 0 0;font-variant-numeric:tabular-nums;line-height:1.5}
 .fgc:empty{display:none}
 /* 計算結果の断面図の上の数値(選定書の断面図ページと同じ並び) */
 .fg .fi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:8px;font-variant-numeric:tabular-nums}
-.fg .fi>div{background:var(--card);padding:6px 10px 7px;min-width:0;line-height:1.35}
-.fg .fi span{display:block;font-size:.7rem;color:var(--sub)}
-.fg .fi b{font-size:.98rem;overflow-wrap:anywhere}
+.fg .fi>div{background:var(--card);padding:5px 8px 6px;min-width:0;line-height:1.3}
+.fg .fi span{display:block;font-size:.66rem;color:var(--sub);overflow-wrap:anywhere}
+.fg .fi b{display:block;font-size:.9rem;overflow-wrap:anywhere;margin-top:1px}
 .fg .fi .fr{background:var(--brb)}
-.fg .fi .fr b{font-size:1.15rem;color:var(--acc)}
+.fg .fi .fr b{font-size:1.05rem;color:var(--acc)}
 .fg .t2{font-size:.78rem;color:var(--sub);margin:-2px 0 8px}
-@media (max-width:600px){.fg .fi{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .fgx{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-top:10px}
 .fgx .btn{padding:8px 16px}
 .fgx span{font-size:.78rem;color:var(--sub)}
@@ -747,7 +746,7 @@ return d}
 function figInfo(o,F){var q=F.q,p=q.p,n=[];if(q.by15)n.push("*は外径×1.5の条件で決定");if(F.miss)n.push("図では一部のケーブルを重ねて描いています");
 function it(l,v,c){return '<div'+(c?' class="'+c+'"':'')+'><span>'+l+'</span><b>'+v+'</b></div>'}
 return '<div class="fi">'+it("選定サイズ",esc(p[0])+(q.by15?"*":""))+it("管の内径",p[2]+" mm")+it("管の内断面積",q.Ai.toFixed(1)+" mm²")+
-it("ケーブル断面積計",f1(o.total)+" mm²("+o.cnt+"本)")+it("許容断面積("+o.rt+"%)",q.allow+" mm²")+it("占積率(基準"+o.rt+"%以下)",q.fill.toFixed(1)+" %","fr")+'</div>'+
+it("ケーブル断面積計("+o.cnt+"本)",f1(o.total)+" mm²")+it("許容断面積("+o.rt+"%)",q.allow+" mm²")+it("占積率(基準"+o.rt+"%以下)",q.fill.toFixed(1)+" %","fr")+'</div>'+
 (n.length?'<div class="t2">'+esc(n.join(" / "))+'</div>':'')}
 function buildFigPages(){
 var G=FIGGRID[PJ.ppr]||FIGGRID.a4,per=G[0]*G[1],cells=[];
