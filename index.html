@@ -264,6 +264,11 @@ body{padding-left:calc(276px + 20px)}
 .fgp .fgz svg{width:12px;height:12px;max-width:none;display:inline}
 .fgp svg{width:100%;max-width:520px;height:auto;display:block}
 .fgc{font-size:.8rem;color:var(--sub);margin:6px 0 0;font-variant-numeric:tabular-nums;line-height:1.5}
+.fgx{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-top:10px}
+.fgx .btn{padding:8px 16px}
+.fgx span{font-size:.78rem;color:var(--sub)}
+.fgm:empty{display:none}
+.fgm{margin-top:6px}
 .fgall{font:inherit;font-size:.78rem;border:0;background:none;color:var(--acc);text-decoration:underline;text-underline-offset:2px;cursor:pointer;padding:2px 0;margin-left:4px}
 #rt tbody tr[data-fk]{cursor:pointer}
 #rt tbody tr.fsel td,#rt tbody tr.fsel:nth-child(even) td{background:var(--brh)}
@@ -610,7 +615,8 @@ function figInner(o){
 var K=figK(o);if(!K)return '<p class="note">断面図を出せる管種がありません</p>';
 var F=figSVG(o,K),ps=figPipes(o);
 return '<div class="fgh"><b>断面図</b><div class="fgk" role="group" aria-label="断面図の管種">'+ps.map(function(z){return '<button type="button" class="fk" data-fk="'+z.K+'" aria-pressed="'+(z.K===K)+'" title="'+esc(PIPE[z.K].n)+'">'+esc(z.p[0])+'</button>'}).join("")+'</div></div>'+
-'<div class="fgp" tabindex="0" role="button" aria-label="断面図を拡大して見る">'+F.svg+'<span class="fgz" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.4 10.4L14 14M7 5v4M5 7h4"/></svg>拡大</span></div><p class="fgc">'+esc(figCap(o,F))+(rows.length>1?' <button type="button" class="fgall" data-fall="'+K+'">全部の配管を'+esc(PIPE[K].s)+'にする</button>':'')+'</p>'}
+'<div class="fgp" tabindex="0" role="button" aria-label="断面図を拡大して見る">'+F.svg+'<span class="fgz" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.4 10.4L14 14M7 5v4M5 7h4"/></svg>拡大</span></div><p class="fgc">'+esc(figCap(o,F))+(rows.length>1?' <button type="button" class="fgall" data-fall="'+K+'">全部の配管を'+esc(PIPE[K].s)+'にする</button>':'')+'</p>'+
+'<div class="fgx"><button type="button" class="btn" data-dxf>断面図をDXFで保存</button><span>A3枠・縮尺1/1(Jw_cadで開けます)</span></div><p class="note fgm" role="status"></p>'}
 var pvT=0;function schedPv(){clearTimeout(pvT);pvT=setTimeout(renderPreview,150)}
 function refreshFig(blk,o){var fg=blk.querySelector(".fg");if(fg)fg.innerHTML=figInner(o);var K=figK(o);Array.prototype.forEach.call(blk.querySelectorAll("tr[data-fk]"),function(tr){tr.classList.toggle("fsel",tr.getAttribute("data-fk")===K)})}
 function refreshFigs(){Array.prototype.forEach.call($("rt").querySelectorAll(".rb[data-oi]"),function(blk){var o=LASTOS[+blk.getAttribute("data-oi")];if(o&&!o.err)refreshFig(blk,o)});schedPv()}
@@ -621,6 +627,7 @@ var d=document.createElement("div");d.className="zfg";d.style.width=(w+40)+"px";
 var K=figK(o),q=figQ(o,K);ZV.show([d],w+40,h+40,0,$("rt").classList.contains("stale"),rowLabel(o.r,+blk.getAttribute("data-oi"))+(q?" ・ "+q.p[0]:"")+" 断面図")}
 $("rt").addEventListener("keydown",function(e){if(e.key!=="Enter"&&e.key!==" ")return;var fz=e.target.closest(".fgp");if(fz){e.preventDefault();figZoom(fz)}});
 $("rt").addEventListener("click",function(e){
+var dx=e.target.closest("[data-dxf]");if(dx){saveDxf(dx);return}
 var fz=e.target.closest(".fgp");if(fz){figZoom(fz);return}
 var a=e.target.closest("[data-fall]");
 if(a){var K=a.getAttribute("data-fall");PJ.fk=K;rows.forEach(function(r){r.k=K});save();refreshFigs();return}
@@ -650,6 +657,119 @@ for(var k=0;k<cells.length;k+=per){var d=figShell(),g=d.querySelector(".fgs");g.
 return pages}
 /* 選定書の全ページ(表 + 断面図)。ページ番号は通しで振る */
 function allPages(){var a=buildPages();if(PJ.figs!==false)a=a.concat(buildFigPages());a.forEach(function(p,k){var e=p.querySelector(".pg");if(e)e.textContent=(k+1)+" / "+a.length});return a}
+/* ===================== 断面図のDXF書き出し =====================
+   A3の図面枠と表題欄つき、縮尺1/1(単位mm)。Jw_cadの「DXF形式ファイルを開く」で読める形(AutoCAD R12形式)。
+   文字はJw_cadが読めるShift-JIS。レイヤは 図面枠・電線管・ケーブル・引出線・文字 に分ける */
+var SJ=null,SJL=null;
+function sjLoad(){if(window.SJIS_T)return Promise.resolve();if(SJL)return SJL;
+SJL=new Promise(function(res,rej){var s=document.createElement("script");s.src="sjis.js";s.onload=function(){window.SJIS_T?res():rej(new Error("文字コード表を読み込めませんでした"))};s.onerror=function(){SJL=null;s.remove();rej(new Error("文字コード表を読み込めませんでした"))};document.head.appendChild(s)});return SJL}
+function sjMap(){if(SJ)return SJ;var T=window.SJIS_T,m=new Map(),n=0,leads=[],l;for(l=0x81;l<=0x9F;l++)leads.push(l);for(l=0xE0;l<=0xFC;l++)leads.push(l);
+leads.forEach(function(L){for(var t=0x40;t<=0xFC;t++){if(t===0x7F)continue;var c=T[n++];if(c!=="�"&&!m.has(c))m.set(c,(L<<8)|t)}});
+[["−",0x817C],["〜",0x8160],["‖",0x8161],["—",0x815C],["¢",0x8191],["£",0x8192],["¬",0x81CA]].forEach(function(a){if(!m.has(a[0]))m.set(a[0],a[1])});
+SJ=m;return m}
+/* 文字列をShift-JISのバイト列に。表にない文字は「?」 */
+function toSjis(str){var m=sjMap(),out=[];
+for(var ch of String(str)){var u=ch.codePointAt(0);
+if(u<0x80){out.push(u);continue}
+if(u>=0xFF61&&u<=0xFF9F){out.push(u-0xFF61+0xA1);continue}
+var v=m.get(ch);if(v==null){out.push(0x3F);continue}out.push(v>>8,v&255)}
+return new Uint8Array(out)}
+var DXF_ACI=[5,1,3,6,4,2,8,9,5,1];
+function dxfDoc(ents,layers){
+var L=[];function g(c,v){L.push(String(c),String(v))}
+g(0,"SECTION");g(2,"HEADER");g(9,"$ACADVER");g(1,"AC1009");g(9,"$DWGCODEPAGE");g(3,"ANSI_932");
+g(9,"$INSBASE");g(10,0);g(20,0);g(30,0);g(9,"$EXTMIN");g(10,0);g(20,0);g(30,0);g(9,"$EXTMAX");g(10,420);g(20,297);g(30,0);
+g(9,"$LIMMIN");g(10,0);g(20,0);g(9,"$LIMMAX");g(10,420);g(20,297);g(9,"$LTSCALE");g(40,1);g(0,"ENDSEC");
+g(0,"SECTION");g(2,"TABLES");
+g(0,"TABLE");g(2,"LTYPE");g(70,2);
+g(0,"LTYPE");g(2,"CONTINUOUS");g(70,0);g(3,"Solid line");g(72,65);g(73,0);g(40,0);
+g(0,"LTYPE");g(2,"DASHED");g(70,0);g(3,"__ __ __");g(72,65);g(73,2);g(40,3);g(49,2);g(49,-1);
+g(0,"ENDTAB");
+g(0,"TABLE");g(2,"LAYER");g(70,layers.length);layers.forEach(function(a){g(0,"LAYER");g(2,a[0]);g(70,0);g(62,a[1]);g(6,"CONTINUOUS")});g(0,"ENDTAB");
+g(0,"TABLE");g(2,"STYLE");g(70,1);g(0,"STYLE");g(2,"STANDARD");g(70,0);g(40,0);g(41,1);g(50,0);g(71,0);g(42,3);g(3,"txt");g(4,"");g(0,"ENDTAB");
+g(0,"ENDSEC");
+g(0,"SECTION");g(2,"ENTITIES");ents.forEach(function(e){for(var k=0;k<e.length;k++)L.push(e[k])});g(0,"ENDSEC");g(0,"EOF");
+return L.join("\r\n")+"\r\n"}
+/* o: 計算結果の1配管、K: 管種、idx: 配管の番号(0から) */
+function figDXF(o,K,idx){
+var q=figQ(o,K);if(!q)return null;
+var p=q.p,D=p[2],Do=parseFloat(p[1]);if(!(Do>D))Do=D*1.12;
+var list=[];o.its.forEach(function(x,g){for(var k=0;k<x.n;k++)list.push({i:list.length,g:g,d:x.od,fl:x.fl||null,tw:x.tw||0})});
+var pk=figPack(D,list),E=[],r=o.r;
+function f(v){return String(Math.round(v*1000)/1000)}
+function ent(t,lay,col,lt,a){var e=["0",t,"8",lay];if(lt)e.push("6",lt);if(col!=null)e.push("62",String(col));for(var k=0;k<a.length;k+=2)e.push(String(a[k]),typeof a[k+1]==="number"?f(a[k+1]):String(a[k+1]));E.push(e)}
+function ln(lay,col,x1,y1,x2,y2){ent("LINE",lay,col,null,[10,x1,20,y1,30,0,11,x2,21,y2,31,0])}
+function ci(lay,col,x,y,rad,lt){ent("CIRCLE",lay,col,lt,[10,x,20,y,30,0,40,rad])}
+function ar(lay,col,x,y,rad,a1,a2){ent("ARC",lay,col,null,[10,x,20,y,30,0,40,rad,50,a1,51,a2])}
+function tw(s,h){var w=0;for(var ch of String(s))w+=ch.charCodeAt(0)>0xFF?h:h*.5;return w}
+function cut(s,h,mw){s=String(s).replace(/[\r\n\t]/g," ");if(tw(s,h)<=mw)return s;var a=Array.from(s);while(a.length&&tw(a.join("")+"…",h)>mw)a.pop();return a.join("")+"…"}
+function tx(lay,col,x,y,h,s,mw){ent("TEXT",lay,col,null,[10,x,20,y,30,0,40,h,1,mw?cut(s,h,mw):String(s).replace(/[\r\n\t]/g," "),7,"STANDARD"])}
+function rect(lay,col,x1,y1,x2,y2){ln(lay,col,x1,y1,x2,y1);ln(lay,col,x2,y1,x2,y2);ln(lay,col,x2,y2,x1,y2);ln(lay,col,x1,y2,x1,y1)}
+var LW="図面枠",LP="電線管",LC="ケーブル",LL="引出線",LT="文字";
+/* 図面枠(A3 420×297、周囲10mm) */
+rect(LW,7,10,10,410,287);
+/* 表題欄(右下) */
+var T=[["件名",PJ.name||""],
+["図名","電線管断面図  No."+(idx+1)+(r.name?"  "+r.name:"")+(r.sec?"  "+r.sec:"")],
+["電線管",PIPE[K].n+"  "+p[0]+"(外径"+p[1]+"・内径"+p[2]+"mm)"+(q.by15?"  *外径×1.5の条件で決定":"")],
+["断面積","管の内断面積 "+q.Ai.toFixed(1)+"mm2 ・ ケーブル断面積計 "+f1(o.total)+"mm2("+o.cnt+"本)"],
+["占積率",q.fill.toFixed(1)+"%(基準"+o.rt+"%以下 ・ 許容断面積 "+q.allow+"mm2)"],
+["縮尺","1/1        "+dateText()],
+["作成",[PJ.co,PJ.by?"担当 "+PJ.by:""].filter(Boolean).join("  ")]];
+var X1=230,X2=410,RH=7,Y2=10+RH*T.length,XL=252;
+rect(LW,7,X1,10,X2,Y2);ln(LW,7,XL,10,XL,Y2);
+T.forEach(function(row,k){var yb=Y2-RH*(k+1);if(k)ln(LW,7,X1,yb+RH,X2,yb+RH);tx(LT,7,X1+2,yb+2.2,2.5,row[0]);tx(LT,7,XL+2,yb+2.2,2.7,row[1],X2-XL-4)});
+tx(LT,7,15,13,2.5,"※ケーブルの並び方はイメージです。管(外径・内径)とケーブル(仕上がり外径)の寸法は実寸です。");
+/* 電線管(外径・内径) */
+var cx=30+Do/2,cy=153;
+ci(LP,7,cx,cy,Do/2);ci(LP,7,cx,cy,D/2);
+var cap=p[0]+"(外径"+p[1]+" 内径"+p[2]+")";tx(LT,7,cx-tw(cap,3)/2,cy+Do/2+4,3,cap);
+/* ケーブル */
+pk.items.forEach(function(it){var g=it.s.g,col=DXF_ACI[g%DXF_ACI.length],X=cx+it.x,Y=cy-it.y,rr=it.rr,nx=X,ny=Y,nr=rr;
+if(it.h>0){var h=it.h;
+if(!it.v){ln(LC,col,X-h,Y+rr,X+h,Y+rr);ln(LC,col,X-h,Y-rr,X+h,Y-rr);ar(LC,col,X+h,Y,rr,-90,90);ar(LC,col,X-h,Y,rr,90,270)}
+else{ln(LC,col,X-rr,Y-h,X-rr,Y+h);ln(LC,col,X+rr,Y-h,X+rr,Y+h);ar(LC,col,X,Y+h,rr,0,180);ar(LC,col,X,Y-h,rr,180,360)}}
+else if(it.s.tw){var t=it.s.tw,rc=t===2?rr/2:t===3?rr/(1+2/Math.sqrt(3)):rr/(1+Math.SQRT2),a=rr-rc,ang=t===2?[180,0]:t===3?[90,210,330]:[135,45,225,315];
+ci(LC,col,X,Y,rr,"DASHED");
+ang.forEach(function(A,k){var x1=X+a*Math.cos(A*Math.PI/180),y1=Y+a*Math.sin(A*Math.PI/180);ci(LC,col,x1,y1,rc);if(!k){nx=x1;ny=y1;nr=rc}})}
+else ci(LC,col,X,Y,rr);
+if(nr>=2&&pk.items.length<=60){var th=Math.min(2.5,nr*.9),s=String(g+1);tx(LT,col,nx-tw(s,th)/2,ny-th/2,th,s)}});
+/* 引き出し線と文字(種類ごとに一番右のケーブルから) */
+var H=3.5,GAP=8;
+var rep={};pk.items.forEach(function(it){var g=it.s.g,xr=it.x+(it.v?0:it.h)+it.rr;if(!rep[g]||xr>rep[g].xr)rep[g]={it:it,xr:xr}});
+var labs=o.its.map(function(x,g){var t=(g<20?String.fromCharCode(0x2460+g):"("+(g+1)+")")+x.lbl+" ×"+x.n+"本",rp=rep[g];return {g:g,t:t,it:rp?rp.it:null,ry:rp?cy-rp.it.y:cy,w:tw(t,H)}});
+var maxw=Math.max.apply(null,labs.map(function(L){return L.w}).concat([10])),x0=Math.min(cx+Do/2+15,405-maxw-2);
+var yTop=272,yBot=(x0+maxw+2>X1)?Y2+8:24;
+labs.sort(function(a,b){return b.ry-a.ry||a.g-b.g});
+labs.forEach(function(L,k){L.y=Math.min(L.ry,k?labs[k-1].y-GAP:yTop)});
+for(var k=labs.length-1;k>=0;k--){var lim=k===labs.length-1?yBot:labs[k+1].y+GAP;if(labs[k].y<lim)labs[k].y=lim}
+if(labs.length&&labs[0].y>yTop)labs.forEach(function(L,k){L.y=yTop-k*GAP});
+function lseg(L,y){return [cx+L.it.x,cy-L.it.y,x0,y-1.2]}
+function ori(ax,ay,bx,by,px,py){var v=(bx-ax)*(py-ay)-(by-ay)*(px-ax);return v>1e-9?1:v<-1e-9?-1:0}
+function lcross(a,b){return ori(a[0],a[1],a[2],a[3],b[0],b[1])*ori(a[0],a[1],a[2],a[3],b[2],b[3])<0&&ori(b[0],b[1],b[2],b[3],a[0],a[1])*ori(b[0],b[1],b[2],b[3],a[2],a[3])<0}
+if(labs.length>1&&labs.length<=7&&labs.every(function(L){return L.it})){
+var ys=labs.map(function(L){return L.y}),nL=labs.length,best=null,used=[],cur=[];
+(function rec(k,cr,dev){if(best&&cr*1e6+dev>=best.c)return;if(k===nL){best={c:cr*1e6+dev,p:cur.slice()};return}
+for(var j=0;j<nL;j++){if(used[j])continue;var sg=lseg(labs[j],ys[k]),add=0;for(var m=0;m<k;m++){if(lcross(sg,lseg(labs[cur[m]],ys[m])))add++}
+used[j]=1;cur.push(j);rec(k+1,cr+add,dev+Math.abs(ys[k]-labs[j].ry));cur.pop();used[j]=0}})(0,0,0);
+labs=best.p.map(function(j,k){var L=labs[j];L.y=ys[k];return L})}
+labs.forEach(function(L){var uy=L.y-1.2;
+if(L.it){var it=L.it,X=cx+it.x,Y=cy-it.y,sx,sy;
+if(it.h>0){sx=it.v?X+it.rr:X+it.h+it.rr;sy=Y}else{var dx=x0-X,dy=uy-Y,dl=Math.sqrt(dx*dx+dy*dy)||1;sx=X+dx/dl*it.rr;sy=Y+dy/dl*it.rr}
+ln(LL,7,sx,sy,x0,uy);ci(LL,7,sx,sy,.4)}
+ln(LL,7,x0,uy,x0+L.w+1,uy);tx(LT,7,x0+.5,L.y,H,L.t)});
+var fn=("電線管断面図_"+(r.name||"配管"+(idx+1))+"_"+p[0]).replace(/[\\\/:*?"<>|\s]/g,"")+".dxf";
+return {dxf:dxfDoc(E,[[LW,7],[LP,7],[LC,5],[LL,7],[LT,7]]),fn:fn,miss:pk.miss}}
+/* 計算結果の断面図の下の「断面図をDXFで保存」 */
+function saveDxf(btn){
+var blk=btn.closest(".rb");if(!blk)return;var i=+blk.getAttribute("data-oi"),o=LASTOS[i],msg=blk.querySelector(".fgm");if(!o||!msg)return;
+function go(inG){try{var R=figDXF(o,figK(o),i);if(!R)throw new Error("断面図がありません");
+deliverFile(new Blob([toSjis(R.dxf)],{type:"application/dxf"}),R.fn,msg,inG)}catch(e){msg.textContent="DXFを作れませんでした: "+(e&&e.message||e)}}
+if(window.SJIS_T){go(true);return}
+msg.textContent="準備しています…";
+sjLoad().then(function(){go(false)},function(e){msg.textContent=e.message+"。電波のあるところで一度アプリを開き直してください。"})}
+/* 文字コード表は、使う前に裏で読み込んでおく(ボタンを押したらすぐ保存できるように) */
+window.addEventListener("load",function(){setTimeout(function(){sjLoad().catch(function(){})},2500)});
 
 /* ===== 電線管選定書(紙面) ===== */
 function dateText(){var s=String(PJ.date||"").trim();if(s)return s;var d=new Date();if(PJ.era==="s")return d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日";var y=d.getFullYear()-2018;return "令和"+(y===1?"元":y)+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日"}
@@ -1118,7 +1238,7 @@ if(isTouch()&&shareable(file)){
 if(inGesture){shareFile(file,el);return}
 /* PDFは作るのに時間がかかるので、もう一度タップしてもらってから共有シートを開く */
 el.innerHTML="";var w=document.createElement("span");w.className="savebar";
-var t=document.createElement("span");t.textContent="PDFができました。";
+var t=document.createElement("span");t.textContent=/\.pdf$/i.test(fn)?"PDFができました。":"ファイルができました。";
 var b=document.createElement("button");b.type="button";b.className="btn pri";b.textContent="保存・共有する";
 b.addEventListener("click",function(){shareFile(file,el)});
 w.appendChild(t);w.appendChild(b);el.appendChild(w);b.focus();return}
