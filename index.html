@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>電線管選定</title>
+<meta name="description" content="配管ごとのケーブルと本数から電線管の太さを選定し、電線管選定書をPDFで出力します。">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="電線管">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#eef2f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1721" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+img{max-width:100%}
+</style>
+<style>
+/* Layout: 電圧降下計算と同じ構成。広い画面は左に現場一覧、中央に入力(配管カード・下に固定の操作バー)、右に計算結果と選定書プレビュー。狭い画面は1列 */
+:root{--bg:#eef2f6;--card:#fff;--ink:#14212e;--sub:#5b6b7b;--line:#cfd8e1;--acc:#1f5fa8;--on-acc:#fff;--ok:#1a7f4b;--ng:#c0392b;--head:#e3eaf1;--brb:#f3f8fd;--zb:#f6f9fb;--brz:#e9f2fb;--brh:#d3e4f4;--desk:#d9e0e7;--font:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1721;--card:#18232f;--ink:#e8eef4;--sub:#9aabbb;--line:#2b3a4a;--acc:#6aa8ee;--on-acc:#0f1721;--ok:#4cc38a;--ng:#ff7b6b;--head:#1f2d3b;--brb:#1b2937;--zb:#1c2935;--brz:#203244;--brh:#27415a;--desk:#0b1219;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1721;--card:#18232f;--ink:#e8eef4;--sub:#9aabbb;--line:#2b3a4a;--acc:#6aa8ee;--on-acc:#0f1721;--ok:#4cc38a;--ng:#ff7b6b;--head:#1f2d3b;--brb:#1b2937;--zb:#1c2935;--brz:#203244;--brh:#27415a;--desk:#0b1219;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6;padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1640px;margin:0 auto}
+.top{margin-bottom:14px}
+.pjgrid{display:grid;grid-template-columns:2fr repeat(5,minmax(0,1fr));gap:10px}
+@media (max-width:1100px){.pjgrid{grid-template-columns:repeat(3,minmax(0,1fr))}.pjn{grid-column:1/-1}}
+@media (max-width:520px){.pjgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+.colL,.colR{min-width:0}
+@media (min-width:1100px){
+.layout{grid-template-columns:540px minmax(0,1fr)}
+.colR{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;padding-right:2px;scrollbar-gutter:stable}
+}
+h1{font-size:1.3rem;margin:0 0 4px;text-wrap:balance}
+h2{font-size:1rem;margin:0 0 10px;letter-spacing:.02em}
+.lead{color:var(--sub);font-size:.85rem;margin:0;max-width:62em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+label{display:block;font-size:.75rem;color:var(--sub);margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+select,input{width:100%;height:2.5rem;font:inherit;font-size:.95rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:0 10px;min-width:0}
+select{padding-right:4px}
+input::placeholder{color:var(--sub);opacity:.7}
+select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.f{min-width:0}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.sec{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.sec h3{font-size:.78rem;margin:0;color:var(--acc);font-weight:700;letter-spacing:.08em}
+/* ケーブルの行: 種類 / サイズ・心数 / 本数 / 削除 */
+.it{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.45fr) 4.6em 2.6em;gap:6px;align-items:center;margin-top:6px}
+.it.ith{margin-top:10px}
+@media (max-width:520px){
+.it{grid-template-columns:minmax(0,1fr) 4.8em 2.6em;grid-template-areas:"t n d" "s s s";row-gap:6px;padding-top:8px;margin-top:8px;border-top:1px dotted var(--line)}
+.it>:nth-child(1){grid-area:t}.it>:nth-child(2){grid-area:s}.it>:nth-child(3){grid-area:n}.it>:nth-child(4){grid-area:d}
+.it.ith{display:none}
+.g3.pipe{grid-template-columns:repeat(2,minmax(0,1fr))}.g3.pipe>.f:last-child{grid-column:1/-1}
+}
+.it.ith span{font-size:.75rem;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oth{display:grid;grid-template-columns:minmax(0,1fr) 5.4em;gap:6px;min-width:0}
+.idel{height:2.5rem;font:inherit;font-size:.8rem;border:0;background:none;color:var(--sub);cursor:pointer;border-radius:8px;padding:0}
+.idel:hover{color:var(--ng);background:var(--bg)}
+.idel:disabled{visibility:hidden}
+.pks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pks label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:5px 11px;border:1px solid var(--line);border-radius:999px;font-size:.85rem;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:visible}
+.pks input{width:1rem;height:1rem;margin:0}
+.pks label:has(input:checked){border-color:var(--acc);background:var(--brb)}
+.iadd{width:100%;margin-top:8px;height:2.5rem;font:inherit;font-size:.85rem;font-weight:700;border:1px dashed var(--acc);border-radius:8px;background:none;color:var(--acc);cursor:pointer}
+.isum{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--head);font-size:.85rem;font-variant-numeric:tabular-nums}
+.isum b{font-size:.95rem}
+.iwarn{font-size:.8rem;color:var(--ng);margin:6px 0 0}
+.rc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px 16px;margin-bottom:10px}
+/* 配管カードは横に並べて横スクロール。次のカードが少しのぞく幅にして、横に続くことがわかるようにする */
+.rnav{display:flex;align-items:center;gap:6px;margin:0 0 8px}
+.chips{position:relative;display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:inline-flex;align-items:center;gap:6px;max-width:11em;font:inherit;font-size:.8rem;padding:3px 10px 3px 3px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.chip .cn{width:1.6em;height:1.6em;display:grid;place-items:center;border-radius:50%;background:var(--head);font-weight:700;font-size:.75rem;flex:none}
+.chip .ct{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip[aria-current="true"]{border-color:var(--acc);color:var(--acc);font-weight:700}
+.chip[aria-current="true"] .cn{background:var(--acc);color:var(--on-acc)}
+.nb{flex:none;width:2.2rem;height:2.2rem;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--acc);cursor:pointer;padding:0}
+.nb svg{width:18px;height:18px}
+.nb:disabled{opacity:.35;cursor:default}
+.rcount{flex:none;font-size:.78rem;color:var(--sub);font-variant-numeric:tabular-nums;min-width:3.2em;text-align:center}
+#rows{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:calc(100% - 28px);gap:10px;align-items:start;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;padding-bottom:8px;margin-bottom:4px;scrollbar-width:thin}
+#rows.one{grid-auto-columns:100%}
+#rows>.rc{scroll-snap-align:start;margin-bottom:0}
+.rh{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;gap:6px;align-items:center}
+.rh input{font-weight:700}
+.rc.cl{padding:10px 16px 12px}
+.rc.cl .cbody{display:none}
+.sum{display:none;width:100%;margin-top:8px;text-align:left;font:inherit;font-size:.85rem;color:var(--sub);background:none;border:0;padding:0;cursor:pointer;line-height:1.5}
+.rc.cl .sum{display:block}
+.sum b{color:var(--ink);font-weight:700}
+.mini{font:inherit;font-size:.85rem;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);cursor:pointer}
+.mini.tg{width:2.4em;height:2.4em;padding:0;display:grid;place-items:center;border-color:transparent;background:none;color:var(--acc)}
+.mini.tg svg{width:20px;height:20px;transition:transform .15s}
+.rc:not(.cl) .mini.tg svg{transform:rotate(180deg)}
+@media (prefers-reduced-motion:reduce){.mini.tg svg{transition:none}}
+.rh .mini:not(.tg){background:none;border-color:transparent;color:var(--sub);padding:8px 6px}
+.rh .mini:not(.tg):hover{color:var(--ink);background:var(--bg)}
+.rn{width:1.9em;height:1.9em;display:grid;place-items:center;border-radius:50%;background:var(--acc);color:var(--on-acc);font-weight:700;font-size:.85rem}
+.btns{display:flex;gap:10px;margin-bottom:14px;position:sticky;bottom:0;z-index:5;padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));background:var(--bg)}
+.btns .btn{flex:1}
+.btn{font:inherit;font-weight:700;padding:11px 18px;border-radius:10px;border:1px solid var(--acc);background:var(--card);color:var(--acc);cursor:pointer}
+.btn.pri{background:var(--acc);color:var(--on-acc)}
+.btn:disabled{opacity:.5;cursor:default}
+details summary{cursor:pointer;font-size:.88rem;color:var(--sub)}
+label.chk{display:flex;align-items:flex-start;gap:8px;margin:0;font-size:.9rem;color:var(--ink);white-space:normal;overflow:visible;line-height:1.5}
+label.chk input{width:1.1rem;height:1.1rem;margin:.2rem 0 0;flex:none}
+textarea{display:block;width:100%;min-height:3.2em;margin-top:0;font:inherit;font-size:.95rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;resize:vertical}
+textarea#tsv{min-height:6em;font-size:.8rem;margin-top:8px}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+#rt table{border-collapse:separate;border-spacing:0;width:100%;font-size:.86rem;font-variant-numeric:tabular-nums}
+#rt th,#rt td{padding:7px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);white-space:nowrap;text-align:center;background:var(--card);vertical-align:middle}
+#rt thead th{background:var(--head);color:var(--ink);font-weight:600}
+#rt thead tr:last-child th{border-bottom:2px solid var(--sub)}
+#rt .c1{text-align:left;position:sticky;left:0;z-index:1;min-width:6.5em}
+#rt thead th.c1{z-index:2}
+#rt thead th.gb{background:var(--brh)}
+#rt thead th.sm{font-size:.72rem;font-weight:400;color:var(--sub)}
+#rt td.br{background:var(--brb)}
+#rt .bl{border-left:2px solid var(--acc)}
+#rt tbody tr:nth-child(even) td:not(.br){background:var(--zb)}
+#rt tbody tr:nth-child(even) td.br{background:var(--brz)}
+#rt tbody tr:last-child td{border-bottom:0}
+#rt td.cab{text-align:left;font-size:.8rem;line-height:1.45}
+#rt td.memo{text-align:left;white-space:normal;min-width:16em;font-size:.8rem}
+#rt td .pk{display:inline-block;padding:0 7px;border-radius:6px;outline:2px solid var(--acc);font-weight:700}
+#rt td .dim{color:var(--sub)}
+.ok{color:var(--ok)}.ng{color:var(--ng)}
+td.ng{font-weight:700}
+.badge{font-weight:700;padding:1px 9px;border-radius:999px;border:2px solid currentColor;font-size:.8rem}
+#rt.stale,#pv.stale{opacity:.45}
+#rt{display:grid;gap:18px}
+.rb{min-width:0}
+.rb+.rb{padding-top:16px;border-top:1px solid var(--line)}
+.rbh{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:start;margin-bottom:8px}
+.rbt{min-width:0;line-height:1.45}
+.rbt b{font-size:.95rem}
+.rbc{font-size:.8rem;color:var(--sub);margin-top:2px}
+.rbs{text-align:right;font-size:.8rem;line-height:1.45;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rbs b{font-size:1rem}
+.rbe{margin:0;font-size:.85rem}
+.rbn{margin-top:6px}
+#rt td.c1{font-size:.85rem;min-width:6.5em}
+#rt td.fc{text-align:left;min-width:9.5em}
+.fv{display:inline-block;min-width:3.4em;text-align:right;font-weight:700}
+.fb{position:relative;display:inline-block;vertical-align:middle;width:4.5em;height:6px;margin-left:8px;border-radius:3px;background:var(--line)}
+.fb i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--acc)}
+.fb::after{content:"";position:absolute;left:var(--rt);top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--ink)}
+.mk{color:var(--acc);font-weight:700;margin-left:2px;cursor:help}
+.stale-msg{color:var(--ng);font-size:.85rem;margin:0 0 8px}
+.note{font-size:.8rem;color:var(--sub);margin:0}
+.note p{margin:0 0 8px}
+.ref{border-collapse:collapse;font-size:.78rem;font-variant-numeric:tabular-nums;margin:4px 0 12px;min-width:100%}
+.ref th,.ref td{border:1px solid var(--line);padding:3px 8px;text-align:right;white-space:nowrap}
+.ref th{background:var(--head);color:var(--ink);font-weight:600;text-align:center}
+.ref td:first-child{text-align:left;font-weight:700;color:var(--ink)}
+.pvbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:12px}
+.desk{background:var(--desk);border-radius:10px;padding:14px;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:14px}
+.pgbox{position:relative;box-shadow:0 1px 3px rgba(0,0,0,.25);flex:none}
+.pgbox>.sheet{position:absolute;left:0;top:0;transform-origin:0 0}
+#pdfmsg{min-height:1.2em}
+/* ===== 電線管選定書(紙面)。紙なので常に白地・黒字で固定 ===== */
+.sheet{background:#fff;color:#111;font-family:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;font-variant-numeric:tabular-nums;padding:30px 34px 26px;display:flex;flex-direction:column;overflow:hidden}
+.sheet .sh{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px;border-bottom:2px solid #111;padding-bottom:6px}
+.sheet .sh .t{font-size:22px;font-weight:700;letter-spacing:.4em;text-align:center;padding-left:.4em}
+.sheet .sh .l{font-size:11px;line-height:1.5}
+.sheet .sh .r{font-size:11px;text-align:right;line-height:1.5}
+.sheet .sh b{font-size:13px}
+.sheet .cond{font-size:10px;margin:5px 0 6px;color:#333}
+.sheet .tb{flex:1;min-height:0;overflow:hidden}
+.sheet table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:9.5px;line-height:1.3}
+.sheet th,.sheet td{border:.8px solid #333;padding:2px 3px;text-align:center;vertical-align:middle;word-break:break-all;color:#111;background:#fff}
+.sheet thead th{background:#eef1f4;font-weight:700;font-size:9px}
+.sheet td.l{text-align:left}
+.sheet td.n{text-align:right}
+.sheet td .ln{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 0}
+.sheet td .ln+.ln{border-top:.6px dotted #888}
+.sheet td .s2{display:block;border-top:.6px dotted #888;margin-top:1px;padding-top:1px;font-size:8.5px;color:#333}
+.sheet td.ngc{color:#b00;font-weight:700}
+.sheet tbody.blk>tr:first-child>td{border-top:1.4px solid #111}
+.sheet td .s2{white-space:normal}
+.sheet td.sm{font-size:8.5px;line-height:1.4;word-break:normal;overflow-wrap:anywhere}
+.sheet td .nw{white-space:nowrap}
+.sheet .ft{margin-top:6px;border-top:1px solid #111;padding-top:5px;font-size:9px;line-height:1.5;display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;color:#222}
+.sheet .ft p{margin:0}
+.sheet .pg{font-size:9px;text-align:right;margin-top:4px;color:#444}
+/* ===== 現場一覧(サイドバー)。広い画面は左に固定、狭い画面は引き出し ===== */
+#side{position:fixed;left:0;top:0;bottom:0;width:276px;z-index:40;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:12px;transform:translateX(-105%);transition:transform .2s ease}
+#side.open{transform:none;box-shadow:0 0 0 100vmax rgba(8,14,22,.38)}
+@media (prefers-reduced-motion:reduce){#side{transition:none}}
+.shd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.shd h2{margin:0;font-size:.95rem}
+.sx{font:inherit;border:0;background:none;color:var(--sub);cursor:pointer;padding:6px 8px;border-radius:8px}
+.sx:hover{background:var(--bg);color:var(--ink)}
+.snew{width:100%;font:inherit;font-weight:700;padding:10px 12px;border-radius:10px;border:1px solid var(--acc);background:var(--acc);color:var(--on-acc);cursor:pointer;text-align:left}
+.sq{margin:10px 0 6px;height:2.3rem;font-size:.88rem}
+.slist{list-style:none;margin:0 -4px;padding:0 4px;overflow:auto;flex:1;min-height:0}
+.slist li{margin:0 0 2px}
+.si{display:block;width:100%;text-align:left;font:inherit;border:0;background:none;color:var(--ink);padding:8px 10px;border-radius:8px;cursor:pointer;line-height:1.35}
+.si:hover{background:var(--bg)}
+.si .nm{display:block;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.si .mt{display:block;font-size:.72rem;color:var(--sub);font-variant-numeric:tabular-nums}
+.slist li.on .si{background:var(--brh)}
+.slist li.on .si .nm{font-weight:700}
+.sacts{display:flex;gap:4px;padding:2px 6px 6px}
+.sacts button{font:inherit;font-size:.78rem;border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:7px;padding:3px 9px;cursor:pointer}
+.sacts button:hover{color:var(--ink)}
+.sacts .del:hover,.sacts .yes{color:var(--ng);border-color:var(--ng)}
+.sacts .q{font-size:.78rem;color:var(--ng);align-self:center;margin-right:2px}
+.sempty{font-size:.82rem;color:var(--sub);padding:8px 10px;margin:0}
+.ssync{font-size:.74rem;color:var(--sub);margin:8px 2px 0;padding-top:8px;border-top:1px solid var(--line)}
+.ssync.ng{color:var(--ng)}
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.sbtn{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:.85rem;font-weight:700;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--acc);cursor:pointer;min-width:0;max-width:100%}
+.sbtn svg{width:16px;height:16px;flex:none}
+.sbtn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (min-width:1280px){
+#side{transform:none;box-shadow:none}
+body{padding-left:calc(276px + 20px)}
+.sbtn,#sClose{display:none}
+}
+.sbk{display:flex;gap:6px;margin-top:8px}
+.sbk button{flex:1;font:inherit;font-size:.8rem;font-weight:700;padding:7px 6px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--acc);cursor:pointer;white-space:nowrap}
+.sbk button:hover{border-color:var(--acc)}
+.bkmsg{font-size:.74rem;color:var(--sub);margin:6px 2px 0;min-height:1em}
+.bkmsg.ng{color:var(--ng)}
+.shint{font-size:.74rem;line-height:1.5;color:var(--ink);background:var(--brb);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;margin:8px 0 0;padding:6px 8px}
+.savebar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.savebar .btn{padding:8px 16px}
+</style>
+</head>
+<body>
+<aside id="side" aria-label="現場一覧">
+<div class="shd"><h2>現場</h2><button type="button" class="sx" id="sClose" aria-label="一覧を閉じる">閉じる</button></div>
+<button type="button" class="snew" id="sNew">＋ 新しい現場</button>
+<input id="sQ" class="sq" type="search" placeholder="現場名で探す" aria-label="現場名で探す">
+<ul class="slist" id="sList"></ul>
+<p class="ssync" id="sSync">この端末に保存しています</p>
+<div class="sbk"><button type="button" id="bkOut">データを書き出す</button><button type="button" id="bkIn">読み込む</button></div>
+<input type="file" id="bkFile" accept="application/json,.json" hidden>
+<p class="bkmsg" id="bkMsg" role="status"></p>
+<p class="shint" id="sHint" hidden>ホーム画面に追加して使うと、保存した現場が消えにくくなります(Safariの共有ボタン →「ホーム画面に追加」)。</p>
+</aside>
+<main>
+<header class="top"><div class="topbar"><button type="button" class="sbtn" id="sOpen" aria-controls="side" aria-expanded="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h9"/></svg><span id="sCur">現場一覧</span></button></div><h1>電線管選定</h1>
+<p class="lead">配管ごとにケーブルと本数を入れて「計算する」を押すと、電線管(厚鋼・薄鋼・ねじなし・PF・CD・VE・MFX・FEP)の太さが出て、電線管選定書をPDFで保存できます。</p></header>
+<section class="card">
+<div class="pjgrid">
+<div class="f pjn"><label for="pjName">件名(建物名称)</label><input id="pjName" placeholder="件名を入力(例: ○○ビル新築工事)"></div>
+<div class="f"><label for="pjDate">作成日</label><input id="pjDate" placeholder="空欄で今日"></div>
+<div class="f"><label for="pjCo">会社名</label><input id="pjCo"></div>
+<div class="f"><label for="pjBy">担当者</label><input id="pjBy"></div>
+<div class="f"><label for="ppr">PDFの用紙</label><select id="ppr"><option value="a4">A4 横</option><option value="a3">A3 横</option></select></div>
+<div class="f"><label for="pera">日付の書き方</label><select id="pera"><option value="w">和暦(令和)</option><option value="s">西暦</option></select></div>
+</div>
+</section>
+<div class="layout"><div class="colL">
+
+<section class="card">
+<h2>共通の条件</h2>
+<label class="chk" for="r15"><input type="checkbox" id="r15"> ケーブルが1本だけのときは、管の内径がケーブル外径の1.5倍以上あるかも確認する</label>
+<p class="note" style="margin-top:6px">占積率32%なら1本でもほぼ満たします。48%で選ぶときに効いてきます。</p>
+<div class="sec" style="margin-top:12px"><h3>結果の表と選定書に並べる管種</h3><div class="pks" id="pks"></div></div>
+</section>
+
+<div class="rnav" id="rnav"><button type="button" class="nb" id="rPrev" aria-label="前の配管"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5l-5 5 5 5"/></svg></button><div class="chips" id="chips" aria-label="配管の一覧"></div><span class="rcount" id="rcount" aria-live="polite"></span><button type="button" class="nb" id="rNext" aria-label="次の配管"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button></div>
+<div id="rows"></div>
+
+<div class="btns">
+<button type="button" class="btn" id="add">配管を追加</button>
+<button type="button" class="btn pri" id="go">計算する</button>
+</div>
+
+<details class="card">
+<summary>計算のしくみと根拠</summary>
+<div class="note" style="margin-top:10px">
+<p><b>ケーブルの断面積</b> = π ×(外径 ÷ 2)²。被覆を含む仕上がり外径で、0.1mm²に丸めます。本数をかけて足したものが断面積の合計です。</p>
+<p><b>管の太さ</b>は、断面積の合計が管の内断面積の32%以下になる最小の太さです(内線規程 3110-5の考え方)。管の屈曲が少なく、引き入れ・引き替えが容易な場合は48%以下で選べます。どちらで選ぶかは配管ごとに決めてください。各管の許容断面積(内断面積×32%・48%)は1mm²未満を切り捨てています。</p>
+<p><b>ケーブル1本のとき</b>の「内径 ≧ 外径 × 1.5」は、内線規程 3165節(ケーブルを管に収める場合)の考え方による確認です。共通の条件でオン・オフできます。</p>
+<p><b>管の内径</b>は次の値です。厚鋼・薄鋼・ねじなし電線管は JIS C 8305 の外径と厚さから求めた値。VE管は JIS C 8430 の内径。PF管・CD管は JIS C 8411 製品の近似内径で、PFは安全側に PFD(複層管)の値を使っています(PFD 42は40mm、54は52mm。PFS は42・54mm)。MFXは未来工業「ミラレックスR」(PFS、JIS C 8411)のカタログ値。FEP管は JIS C 3653 附属書1相当の古河電工「エフレックス」の内径(許容差±2〜4mm)です。製品によって内径は少し違うので、使うメーカーのカタログでも確認してください。</p>
+<p><b>FEP・MFXを地中埋設に使うとき</b>は、JIS C 3653 で管の内径をケーブル外径の1.5倍以上(2条以上はケーブルをまとめた外接円の1.5倍以上)にすることになっています。1本のときは共通の条件の1.5倍チェックで確認できます。2本以上のときは別に確認してください。</p>
+<p><b>ケーブルの外径</b>は次の値です。電力用(IV・HIV・EM-IE・VVR・CV・CVD・CVT・CVQ・EM-CE系)は矢崎エナジーシステムのカタログ値。VVF・EM-EEFと、IVの2.6mm・3.2mm・250sq以上は住電HST、CV-4Cの100sq以上は古河電工産業電線の値です。CVD・CVT・CVQ・EM-CED・EM-CET・EM-CEQは、より合わせた外径の円で断面積を出しています。VVF・EM-EEFなどの平形は、短径×長径を断面積にしています(1.5倍の確認は長径で見ます)。制御・計装用(CVV・CVVS・CPEV・CPEVS・KPEV・KPEVS)は、送ってもらったExcel「電線管選定ツール ConduitSelector Ver.1.0」(計装屋の知恵袋)の値です。表にないケーブルは「その他」を選んで外径を入れてください。メーカーで外径は1mmくらい違うことがあるので、使うケーブルが決まったら仕様書やカタログで確認してください。</p>
+<p>電線管の内径と許容断面積</p>
+<div class="tw" id="reftbl" style="border:0"></div>
+</div>
+</details>
+</div><div class="colR">
+<section class="card" aria-live="polite">
+<div class="rh" style="grid-template-columns:minmax(0,1fr) auto;margin-bottom:8px"><h2 style="margin:0">計算結果</h2><button type="button" class="mini" id="copy">表をコピー</button></div>
+<p class="stale-msg" id="stale" hidden>入力が変わりました。「計算する」を押すと表と選定書が更新されます。</p>
+<div id="rt"></div>
+<p class="note" style="margin-top:8px">管種ごとに、占積率の基準以下で入る最小のサイズと、そのときの占積率です。バーの目盛りは0〜50%で、縦線が基準(32%か48%)の位置です。</p>
+<p class="note" id="cmsg" style="margin-top:8px"></p>
+<textarea id="tsv" hidden readonly aria-label="コピー用の表"></textarea>
+</section>
+
+<section class="card">
+<h2>電線管選定書(PDF)</h2>
+<div class="pvbar">
+<button type="button" class="btn pri" id="pdf">PDFを保存</button>
+</div>
+<p class="note" id="pdfmsg"></p>
+<div class="desk" id="pv"></div>
+</section>
+</div></div>
+</main>
+<script>
+var CAB={"CVV":[["1.25sq","2C",9.1],["1.25sq","3C",9.6],["1.25sq","4C",10.5],["1.25sq","5C",11.5],["1.25sq","6C",12],["1.25sq","7C",12],["1.25sq","8C",13],["1.25sq","10C",15],["1.25sq","12C",15.5],["1.25sq","15C",17],["1.25sq","20C",18.5],["1.25sq","30C",23],["2sq","2C",10],["2sq","3C",11],["2sq","4C",11.5],["2sq","5C",12.5],["2sq","6C",13.5],["2sq","7C",13.5],["2sq","8C",14.5],["2sq","10C",17],["2sq","12C",17.5],["2sq","15C",19],["2sq","20C",21],["2sq","30C",26]],"CVVS":[["1.25sq","2C",10.1],["1.25sq","3C",10.6],["1.25sq","4C",11.5],["1.25sq","5C",12.5],["1.25sq","6C",13],["1.25sq","7C",13],["1.25sq","8C",14],["1.25sq","10C",16],["1.25sq","12C",16.5],["1.25sq","15C",18],["1.25sq","20C",19.5],["1.25sq","30C",24],["2sq","2C",11],["2sq","3C",12],["2sq","4C",12.5],["2sq","5C",13.5],["2sq","6C",14.5],["2sq","7C",14.5],["2sq","8C",15.5],["2sq","10C",18],["2sq","12C",18.5],["2sq","15C",20],["2sq","20C",22],["2sq","30C",27]],"CPEV":[["0.65mm","1P",4.5],["0.65mm","2P",5.5],["0.65mm","3P",6],["0.65mm","5P",6.5],["0.65mm","7P",7],["0.65mm","10P",8.5],["0.65mm","15P",10],["0.65mm","20P",11],["0.65mm","30P",13],["0.65mm","50P",16.5],["0.65mm","70P",19.5],["0.65mm","100P",23],["0.9mm","1P",5],["0.9mm","2P",7],["0.9mm","3P",7],["0.9mm","5P",8.5],["0.9mm","7P",9],["0.9mm","10P",10.5],["0.9mm","15P",12.5],["0.9mm","20P",14],["0.9mm","30P",17],["0.9mm","50P",22],["0.9mm","70P",25.5],["0.9mm","100P",30.5],["1.2mm","1P",6],["1.2mm","2P",8.5],["1.2mm","3P",9],["1.2mm","5P",10.5],["1.2mm","7P",11.5],["1.2mm","10P",13.5],["1.2mm","15P",16.5],["1.2mm","20P",18.5],["1.2mm","30P",22.5],["1.2mm","50P",28],["1.2mm","70P",33.5],["1.2mm","100P",40]],"CPEVS":[["0.65mm","1P",4.5],["0.65mm","2P",5.5],["0.65mm","3P",6.5],["0.65mm","5P",7],["0.65mm","7P",7.5],["0.65mm","10P",9],["0.65mm","15P",10.5],["0.65mm","20P",12],["0.65mm","30P",14],["0.65mm","50P",17],["0.65mm","70P",20],["0.65mm","100P",23.5],["0.9mm","1P",5],["0.9mm","2P",7],["0.9mm","3P",7.5],["0.9mm","5P",9],["0.9mm","7P",9.5],["0.9mm","10P",11],["0.9mm","15P",13.5],["0.9mm","20P",14.5],["0.9mm","30P",18],["0.9mm","50P",22.5],["0.9mm","70P",26],["0.9mm","100P",31],["1.2mm","1P",6],["1.2mm","2P",8.5],["1.2mm","3P",9.5],["1.2mm","5P",11],["1.2mm","7P",12],["1.2mm","10P",14],["1.2mm","15P",17],["1.2mm","20P",19.5],["1.2mm","30P",23],["1.2mm","50P",28.5],["1.2mm","70P",34],["1.2mm","100P",40.5]],"KPEV":[["0.75sq","1P",7.5],["0.75sq","2P",11],["0.75sq","3P",12],["0.75sq","4P",13],["0.75sq","5P",14],["0.75sq","7P",15],["0.75sq","10P",17],["0.75sq","15P",21],["0.75sq","20P",23],["0.75sq","25P",26],["0.75sq","30P",27],["0.9sq","1P",7.5],["0.9sq","2P",11],["0.9sq","3P",12],["0.9sq","4P",13],["0.9sq","5P",14],["0.9sq","7P",15],["0.9sq","10P",17],["0.9sq","15P",21],["0.9sq","20P",23],["0.9sq","25P",26],["0.9sq","30P",27],["1.25sq","1P",8.5],["1.25sq","2P",12],["1.25sq","3P",14],["1.25sq","4P",15],["1.25sq","5P",16],["1.25sq","7P",17],["1.25sq","10P",19],["1.25sq","15P",24],["1.25sq","20P",26],["1.25sq","25P",29],["1.25sq","30P",31]],"KPEVS":[["0.75sq","1P",8],["0.75sq","2P",10.5],["0.75sq","3P",11],["0.75sq","5P",13],["0.75sq","7P",14],["0.75sq","10P",17],["0.75sq","15P",19.5],["0.75sq","20P",22],["0.75sq","30P",26],["0.75sq","50P",34],["0.9sq","1P",8],["0.9sq","2P",11],["0.9sq","3P",11.5],["0.9sq","5P",13.5],["0.9sq","7P",14.5],["0.9sq","10P",17.5],["0.9sq","15P",20],["0.9sq","20P",23],["0.9sq","30P",26],["1.25sq","1P",8.5],["1.25sq","2P",12],["1.25sq","3P",13],["1.25sq","5P",15.5],["1.25sq","7P",16.5],["1.25sq","10P",20.5],["1.25sq","15P",23.5],["1.25sq","20P",26.5],["1.25sq","30P",32.5]]};
+/* 電力用の電線・ケーブル(内線規程で扱う種類)。[サイズ, "", 仕上外径] / 平形は[サイズ, "", 短径, 長径]。
+   主に矢崎エナジーシステムのカタログ値。VVF・EM-EEFとIVの2.6mm・3.2mm・250sq以上は住電HST、CV-4Cの100sq以上は古河電工産業電線の値 */
+var CABP={"IV":[["1.6mm","",3.2],["2.0mm","",3.6],["2.6mm","",4.6],["3.2mm","",5.6],["2sq","",3.4],["3.5sq","",4.0],["5.5sq","",5.0],["8sq","",6.0],["14sq","",7.6],["22sq","",9.2],["38sq","",11.5],["60sq","",14.0],["100sq","",17.0],["150sq","",21],["200sq","",23],["250sq","",26],["325sq","",29],["400sq","",32],["500sq","",35]],"HIV":[["1.6mm","",3.2],["2.0mm","",3.6],["2sq","",3.4],["3.5sq","",4.0],["5.5sq","",5.0],["8sq","",6.0],["14sq","",7.6],["22sq","",9.2],["38sq","",11.5],["60sq","",14.0],["100sq","",17.0],["150sq","",21]],"EM-IE":[["1.6mm","",3.2],["2.0mm","",3.6],["2sq","",3.4],["3.5sq","",4.0],["5.5sq","",5.0],["8sq","",5.6],["14sq","",6.8],["22sq","",8.4],["38sq","",10.5],["60sq","",13.0],["100sq","",17.0],["150sq","",21],["200sq","",24]],"VVF-2C":[["1.6mm","",6.2,9.4],["2.0mm","",6.6,10.5],["2.6mm","",7.6,12.5],["2sq","",6.4,9.8],["3.5sq","",7.0,11.0],["5.5sq","",8.0,13.0],["8sq","",9.0,15.0],["14sq","",11.0,18.5]],"VVF-3C":[["1.6mm","",6.2,13.0],["2.0mm","",6.6,14.0],["2.6mm","",7.6,17.0],["2sq","",6.4,13.5],["3.5sq","",7.0,15.0],["5.5sq","",8.0,18.0],["8sq","",9.0,21],["14sq","",11.0,26]],"VVF-4C":[["1.6mm","",6.2,16.0],["2.0mm","",6.6,17.5]],"EM-EEF-2C":[["1.6mm","",6.2,9.4],["2.0mm","",6.6,10.5],["2.6mm","",7.6,12.5]],"EM-EEF-3C":[["1.6mm","",6.2,13.0],["2.0mm","",6.6,14.0],["2.6mm","",7.6,17.0]],"EM-EEF-4C":[["1.6mm","",6.2,16.0],["2.0mm","",6.2,17.5]],"VVR-2C":[["1.6mm","",9.5],["2.0mm","",10.5],["2sq","",9.9],["3.5sq","",11.5],["5.5sq","",13.5],["8sq","",15.0],["14sq","",17.5],["22sq","",21],["38sq","",26]],"VVR-3C":[["1.6mm","",10.0],["2.0mm","",11.0],["2sq","",10.5],["3.5sq","",12.0],["5.5sq","",14.0],["8sq","",16.0],["14sq","",19.0],["22sq","",22],["38sq","",27],["60sq","",32],["100sq","",39],["150sq","",47]],"CV-1C":[["3.5sq","",7.0],["5.5sq","",8.0],["8sq","",8.4],["14sq","",9.4],["22sq","",11.0],["38sq","",13.0],["60sq","",15.5],["100sq","",19.0],["150sq","",22],["200sq","",26],["250sq","",28],["325sq","",31]],"CV-2C":[["2sq","",9.8],["3.5sq","",11.0],["5.5sq","",13.0],["8sq","",14.0],["14sq","",16.0],["22sq","",19.0],["38sq","",23],["60sq","",29],["100sq","",37],["150sq","",43],["200sq","",50],["250sq","",54]],"CV-3C":[["2sq","",10.5],["3.5sq","",12.0],["5.5sq","",14.0],["8sq","",15.0],["14sq","",17.0],["22sq","",21],["38sq","",25],["60sq","",31],["100sq","",39],["150sq","",46],["200sq","",54],["250sq","",58]],"CV-4C":[["2sq","",11.5],["3.5sq","",13.0],["5.5sq","",15.5],["8sq","",16.5],["14sq","",18.5],["22sq","",23],["38sq","",28],["60sq","",34],["100sq","",44],["150sq","",51],["200sq","",60],["250sq","",65]],"CVD":[["14sq","",19.0],["22sq","",22],["38sq","",26],["60sq","",31],["100sq","",38],["150sq","",44],["200sq","",51],["250sq","",56],["325sq","",61]],"CVT":[["8sq","",18.5],["14sq","",21],["22sq","",24],["38sq","",28],["60sq","",33],["100sq","",41],["150sq","",47],["200sq","",55],["250sq","",60],["325sq","",66]],"CVQ":[["14sq","",23],["22sq","",27],["38sq","",31],["60sq","",37],["100sq","",46],["150sq","",53],["200sq","",62],["250sq","",67],["325sq","",74]],"EM-CE-1C":[["5.5sq","",8.0],["8sq","",8.4],["14sq","",9.4],["22sq","",11.0],["38sq","",13.0],["60sq","",15.5],["100sq","",19.0],["150sq","",22],["200sq","",26],["250sq","",28],["325sq","",31]],"EM-CE-2C":[["2sq","",9.8],["3.5sq","",11.0],["5.5sq","",13.5],["8sq","",14.0],["14sq","",16.0],["22sq","",19.0],["38sq","",23],["60sq","",29],["100sq","",37],["150sq","",43],["200sq","",50]],"EM-CE-3C":[["2sq","",10.5],["3.5sq","",12.0],["5.5sq","",14.0],["8sq","",15.0],["14sq","",17.0],["22sq","",21],["38sq","",25],["60sq","",31],["100sq","",39],["150sq","",46]],"EM-CE-4C":[["2sq","",11.5],["3.5sq","",13.0],["5.5sq","",15.5],["8sq","",16.5],["14sq","",19.0],["22sq","",23],["38sq","",28],["60sq","",34]],"EM-CED":[["14sq","",19.0],["22sq","",22],["38sq","",26],["60sq","",31],["100sq","",38],["150sq","",44],["200sq","",51],["250sq","",56],["325sq","",61]],"EM-CET":[["8sq","",18.5],["14sq","",21],["22sq","",24],["38sq","",28],["60sq","",33],["100sq","",41],["150sq","",47],["200sq","",55],["250sq","",60],["325sq","",66]],"EM-CEQ":[["14sq","",23],["22sq","",27],["38sq","",31],["60sq","",37],["100sq","",46],["150sq","",53],["200sq","",62],["250sq","",67],["325sq","",74]]};
+for(var _k in CABP)CAB[_k]=CABP[_k];
+/* 管の内径。[呼び, 外径(表示用), 内径mm]。n=管種名、s=短い名前、t=選定書の表記、x=サイズの前に短い名前を付ける */
+var PIPE={
+G:{n:"厚鋼電線管",s:"厚鋼",t:"厚鋼<br>電線管",x:1,l:[["G16","21.0±0.3",16.4],["G22","26.5±0.3",21.9],["G28","33.3±0.3",28.3],["G36","41.9±0.3",36.9],["G42","47.8±0.3",42.8],["G54","59.6±0.3",54],["G70","75.2±0.3",69.6],["G82","87.9±0.3",82.3],["G92","100.7±0.4",93.7],["G104","113.4±0.4",106.4]]},
+C:{n:"薄鋼電線管",s:"薄鋼",t:"薄鋼<br>電線管",x:1,l:[["C19","19.1±0.2",15.9],["C25","25.4±0.2",22.2],["C31","31.8±0.2",28.6],["C39","38.1±0.2",34.9],["C51","50.8±0.2",47.6],["C63","63.5±0.35",59.5],["C75","76.2±0.35",72.2]]},
+E:{n:"ねじなし電線管",s:"ねじなし",t:"ねじなし<br>電線管",x:1,l:[["E19","19.1±0.15",16.7],["E25","25.4±0.15",23],["E31","31.8±0.15",29],["E39","38.1±0.15",35.3],["E51","50.8±0.15",48],["E63","63.5±0.25",60.3],["E75","76.2±0.25",72.6]]},
+PF:{n:"PF管(合成樹脂製可とう)",s:"PF",t:"PF管",l:[["PF14","21.5",14],["PF16","23",16],["PF22","30.5",22],["PF28","36.5",28],["PF36","45.5",36],["PF42","52",40],["PF54","64.5",52]]},
+CD:{n:"CD管(合成樹脂製可とう)",s:"CD",t:"CD管",l:[["CD14","19",14],["CD16","21",16],["CD22","27.5",22],["CD28","34",28],["CD36","42",36],["CD42","48",42],["CD54","60",54]]},
+VE:{n:"VE管(硬質ビニル)",s:"VE",t:"VE管",l:[["VE14","18",14],["VE16","22",18],["VE22","26",22],["VE28","34",28],["VE36","42",35],["VE42","48",40],["VE54","60",51],["VE70","76",67],["VE82","89",77]]},
+MFX:{n:"MFX(ミラレックスR)",s:"MFX",t:"MFX",l:[["MFX-22","30.5",22],["MFX-28","36.5",28],["MFX-36","45.5",36],["MFX-42","52",41],["MFX-54","64.5",52.5],["MFX-70","81",67],["MFX-82","94.5",78.5],["MFX-100","116.5",96],["MFX-125","150.5",125],["MFX-150","179",147]]},
+FEP:{n:"FEP管(波付硬質合成樹脂)",s:"FEP",t:"FEP管",l:[["FEP30","40.0±2.0",30],["FEP40","53.5±2.0",42],["FEP50","64.5±2.5",50],["FEP65","84.5±2.5",66],["FEP80","102.0±3.0",80],["FEP100","130.0±4.0",101],["FEP125","160.0±4.0",125],["FEP150","189.0±4.0",150],["FEP200","253.0±4.0",200]]}};
+var PK=["G","C","E","PF","CD","VE","MFX","FEP"];
+function pn(K){return PIPE[K].t.replace("<br>","")}
+function pl(K,p){return PIPE[K].x?PIPE[K].s+" "+p[0]:p[0]}
+function shownPK(){var a=Array.isArray(PJ.show)?PJ.show:PK;return PK.filter(function(K){return a.indexOf(K)>=0})}
+var CT_PW=Object.keys(CABP),CT_CT=["CVV","CVVS","CPEV","CPEVS","KPEV","KPEVS"],CT=CT_PW.concat(CT_CT);
+var CT_GROUPS=[["電力用(電線・ケーブル)",CT_PW],["制御・計装用",CT_CT]];
+var CT_LBL={"VVF-2C":"VVF-2C(平形)","VVF-3C":"VVF-3C(平形)","VVF-4C":"VVF-4C(平形)","EM-EEF-2C":"EM-EEF-2C(平形)","EM-EEF-3C":"EM-EEF-3C(平形)","EM-EEF-4C":"EM-EEF-4C(平形)",CVV:"CVV",CVVS:"CVVS(遮へい付)",CPEV:"CPEV",CPEVS:"CPEVS(遮へい付)",KPEV:"KPEV",KPEVS:"KPEVS(遮へい付)",other:"その他(外径を入力)"};
+var RT_OPTS=[["32","32%(一般)"],["48","48%(屈曲が少ない)"]];
+var PAPER={a4:{w:1123,h:794,mm:[297,210],sc:2},a3:{w:1587,h:1123,mm:[420,297],sc:1.5}};
+var CHEV='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>';
+var $=function(id){return document.getElementById(id)};
+var rows=[],nextId=1,LASTOS=[],LASTTSV="";
+var PJ={name:"",date:"",co:"",by:"",ppr:"a4",era:"w",r15:true,show:PK.slice()};
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function isNum(v){return String(v==null?"":v).trim()!==""&&isFinite(+v)}
+function r1(x){return Math.round(x*10)/10}
+function f1(x){return (x!=null&&isFinite(x))?x.toFixed(1):"-"}
+function circ(d){return Math.PI*(d/2)*(d/2)}
+function cabKey(c){return c[1]?c[0]+" "+c[1]:c[0]}
+/* 平形は長径を外径、短径×長径を断面積とする */
+function isFlat(c){return c.length>3}
+function odOf(c){return isFlat(c)?c[3]:c[2]}
+function odText(c){return isFlat(c)?c[2].toFixed(1)+"×"+c[3].toFixed(1):c[2].toFixed(1)}
+function areaOf(c){return isFlat(c)?r1(c[2]*c[3]):r1(circ(c[2]))}
+function cabFind(t,k){var L=CAB[t]||[];for(var i=0;i<L.length;i++){if(cabKey(L[i])===k)return L[i]}return null}
+function cabName(t,c){var m=t.match(/^(.*)-(\dC)$/);if(m)return m[1]+" "+c[0]+"-"+m[2];return t+" "+c[0]+(c[1]?"-"+c[1]:"")}
+function pipeFind(K,nm){var L=PIPE[K].l;for(var i=0;i<L.length;i++){if(L[i][0]===nm)return L[i]}return null}
+/* 許容断面積 = 内断面積 × 占積率(1mm²未満切り捨て。元のExcelと同じ) */
+function allowA(id,rt){return Math.floor(circ(id)*rt/100)}
+function rowById(id){for(var i=0;i<rows.length;i++){if(String(rows[i].id)===String(id))return rows[i]}return null}
+/* 開いた欄の頭を、画面の上から同じ位置にそろえる */
+function revealTop(el){if(!el)return;var off=(parseFloat(getComputedStyle(document.documentElement).paddingTop)||0)+12,y=window.scrollY+el.getBoundingClientRect().top-off,rm=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;window.scrollTo({top:Math.max(0,y),behavior:rm?"auto":"smooth"})}
+function afterClose(el){if(el&&el.getBoundingClientRect().top<0)revealTop(el)}
+
+function defItem(){return {t:"IV",s:"",n:"",nm:"",od:""}}
+function defRow(){return {id:nextId++,name:"",sec:"",items:[defItem()],k:"G",rt:"32",sz:"",memo:"",cl:false}}
+function normItem(o){var it=defItem();o=o||{};for(var k in it){if(o[k]!=null)it[k]=String(o[k])}if(it.t!=="other"&&!CAB[it.t])it.t="CVV";if(it.t!=="other"&&it.s&&!cabFind(it.t,it.s))it.s="";return it}
+function normRow(o){var r=defRow();o=o||{};["name","sec","k","rt","sz","memo"].forEach(function(k){if(o[k]!=null)r[k]=String(o[k])});r.cl=!!o.cl;
+r.items=Array.isArray(o.items)&&o.items.length?o.items.map(normItem):[defItem()];
+if(!PIPE[r.k])r.k="G";if(r.rt!=="48")r.rt="32";if(r.sz&&!pipeFind(r.k,r.sz))r.sz="";return r}
+
+/* ケーブル1行を読む。空の行はnull、半端な行は{bad:true} */
+function readItem(it){
+var hasN=String(it.n).trim()!=="",od,lbl,odT,a1=null;
+if(it.t==="other"){od=isNum(it.od)&&+it.od>0?+it.od:null;lbl=String(it.nm||"").trim()||"その他";if(od==null&&!hasN&&!String(it.nm||"").trim()&&String(it.od).trim()==="")return null;if(od!=null){odT=od.toFixed(1);a1=r1(circ(od))}}
+else{var c=it.s?cabFind(it.t,it.s):null;if(!c&&!hasN)return null;od=c?odOf(c):null;lbl=c?cabName(it.t,c):it.t;if(c){odT=odText(c);a1=areaOf(c)}}
+var n=+it.n;
+if(od==null||!hasN||!(n>0)||Math.floor(n)!==n)return {bad:true,lbl:lbl,why:od==null?(it.t==="other"?"外径":"サイズ"):"本数"};
+return {lbl:lbl,od:od,odT:odT,n:n,a1:a1,sub:r1(a1*n)}}
+
+function calcRow(r){
+var o={r:r,its:[],warn:[],notes:[]};
+r.items.forEach(function(it,i){var x=readItem(it);if(!x)return;if(x.bad){o.warn.push((i+1)+"行目の"+x.why+"が入っていません(計算に入れていません)");return}o.its.push(x)});
+if(!o.its.length){o.err="ケーブルと本数を入れてください";return o}
+o.total=r1(o.its.reduce(function(a,x){return a+x.sub},0));
+o.cnt=o.its.reduce(function(a,x){return a+x.n},0);
+o.maxOd=Math.max.apply(null,o.its.map(function(x){return x.od}));
+o.one=o.cnt===1;
+o.chk15=PJ.r15&&o.one;
+function fits(p,rt,c15){return allowA(p[2],rt)>=o.total-1e-9&&(!c15||p[2]>=1.5*o.maxOd-1e-9)}
+function first(K,rt,c15){var L=PIPE[K].l;for(var i=0;i<L.length;i++){if(fits(L[i],rt,c15))return L[i]}return null}
+o.rt=+r.rt===48?48:32;
+o.cand={};PK.forEach(function(K){o.cand[K]={};[32,48].forEach(function(rt){o.cand[K][rt]=first(K,rt,o.chk15)})});
+/* 管種ごとに、基準の占積率以下で入る最小サイズと、そのときの占積率 */
+o.pipes=PK.map(function(K){var p=o.cand[K][o.rt],q={K:K,p:p};if(p){q.Ai=circ(p[2]);q.allow=allowA(p[2],o.rt);q.fill=o.total/q.Ai*100;if(o.chk15){var f=first(K,o.rt,false);q.by15=!f||f[0]!==p[0]}}return q});
+if(o.chk15)o.notes.push("1本のため内径≧外径×1.5も確認");
+o.ok=!o.warn.length;
+return o}
+function shownPipes(o){var a=shownPK();return (o.pipes||[]).filter(function(q){return a.indexOf(q.K)>=0})}
+
+/* ===== 計算結果の表 ===== */
+function badge(ok){return ok?'<span class="badge ok">OK</span>':'<span class="badge ng">NG</span>'}
+function memoOf(o){var m=[];if(o.err)m.push(o.err);m=m.concat(o.warn||[],o.notes||[]);if(o.r.memo)m.push(o.r.memo);return m.join(" / ")}
+function rowLabel(r,i){return r.name||("配管"+(i+1))}
+function tl(a){return a.map(function(x){return String(x==null?"":x).replace(/[\t\r\n]/g," ")}).join("\t")}
+function fillBar(q,rt){var w=Math.min(100,q.fill/50*100);return '<span class="fb" style="--rt:'+(rt/50*100)+'%" aria-hidden="true"><i style="width:'+w.toFixed(1)+'%"></i></span>'}
+function runCalc(){
+var os=rows.map(calcRow);LASTOS=os;
+var h="",tsv=[tl(["配管","区間・用途","ケーブル","本数","断面積計(mm2)","占積率の基準(%)","管種","サイズ","内径(mm)","内断面積(mm2)","許容断面積(mm2)","占積率(%)","メモ"])];
+os.forEach(function(o,i){
+var r=o.r,nm=rowLabel(r,i),cab=o.its.map(function(x){return esc(x.lbl)+' ×'+x.n}).join("<br>"),cabT=o.its.map(function(x){return x.lbl+"×"+x.n}).join(" / ");
+h+='<section class="rb"><div class="rbh"><span class="rn">'+(i+1)+'</span><div class="rbt"><b>'+esc(nm)+'</b>'+(r.sec?'<span class="dim"> '+esc(r.sec)+'</span>':'')+(cab?'<div class="rbc">'+cab+'</div>':'')+'</div>'+
+(o.total!=null?'<div class="rbs"><span class="dim">断面積計</span> <b>'+f1(o.total)+'</b> mm²<br><span class="dim">'+o.cnt+'本 ・ 基準 '+o.rt+'%</span></div>':'')+'</div>';
+var memo=memoOf(o);
+if(o.err){h+='<p class="rbe ng">'+esc(o.err)+'</p>';tsv.push(tl([nm,r.sec,cabT,"","","","","","","","","",memo]))}
+else{
+var ps=shownPipes(o),any15=false;
+h+='<div class="tw"><table><thead><tr><th class="c1">管種</th><th>サイズ</th><th style="text-align:left">占積率</th><th>内径<br>(mm)</th><th>内断面積<br>(mm²)</th><th>許容断面積<br>('+o.rt+'%)</th></tr></thead><tbody>';
+if(!ps.length)h+='<tr><td colspan="6" class="dim">並べる管種が選ばれていません(共通の条件で選んでください)</td></tr>';
+ps.forEach(function(q){var P=PIPE[q.K];
+if(!q.p){h+='<tr><td class="c1" title="'+esc(P.n)+'">'+pn(q.K)+'</td><td class="ng" colspan="5" style="text-align:left">入らない(最大の'+esc(P.l[P.l.length-1][0])+'でも不足)</td></tr>';tsv.push(tl([nm,r.sec,cabT,o.cnt,f1(o.total),o.rt,P.n,"入らない","","","","",memo]));return}
+if(q.by15)any15=true;
+h+='<tr><td class="c1" title="'+esc(P.n)+'">'+pn(q.K)+'</td><td><b>'+q.p[0]+'</b>'+(q.by15?'<span class="mk" title="ケーブル外径の1.5倍の条件で決まったサイズ">*</span>':'')+'</td><td class="fc"><span class="fv">'+q.fill.toFixed(1)+'%</span>'+fillBar(q,o.rt)+'</td><td>'+q.p[2]+'</td><td>'+q.Ai.toFixed(1)+'</td><td>'+q.allow+'</td></tr>';
+tsv.push(tl([nm,r.sec,cabT,o.cnt,f1(o.total),o.rt,P.n,q.p[0],q.p[2],q.Ai.toFixed(1),q.allow,q.fill.toFixed(1),memo]))});
+h+='</tbody></table></div>';
+if(any15)h+='<p class="note rbn">* はケーブル外径の1.5倍の条件で決まったサイズです。</p>';
+if(memo)h+='<p class="note rbn">'+esc(memo)+'</p>'}
+h+='</section>'});
+$("rt").innerHTML=h||'<p class="note">配管がありません</p>';LASTTSV=tsv.join("\n");
+$("rt").classList.remove("stale");$("pv").classList.remove("stale");$("stale").hidden=true;
+renderPreview()}
+function mark(){$("rt").classList.add("stale");$("pv").classList.add("stale");$("stale").hidden=false}
+
+/* ===== 電線管選定書(紙面) ===== */
+function dateText(){var s=String(PJ.date||"").trim();if(s)return s;var d=new Date();if(PJ.era==="s")return d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日";var y=d.getFullYear()-2018;return "令和"+(y===1?"元":y)+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日"}
+var COLS=[["No.",3],["配管番号<br>区間・用途",10],["ケーブル",15],["外径<br>(mm)",5],["本数",4],["断面積<br>(mm²)",6],["断面積計<br>(mm²)",6],["占積率<br>の基準",5],["管種",10],["選定<br>サイズ",7],["内径<br>(mm)",5],["内断面積<br>(mm²)",7],["許容<br>断面積<br>(mm²)",6],["占積率<br>(%)",5],["備考",6]];
+function lines(a){return a.map(function(t){return '<span class="ln">'+t+'</span>'}).join("")}
+function sheetRow(o,i){
+var r=o.r,its=o.its,ps=o.err?[]:shownPipes(o),n=Math.max(1,ps.length),rs=n>1?' rowspan="'+n+'"':'';
+var notes=[];if(o.err)notes.push(o.err);notes=notes.concat(o.warn||[],o.notes||[]);if(ps.some(function(q){return q.by15}))notes.push("*は外径×1.5の条件で決定");if(r.memo)notes.push(r.memo);
+function td(c,v){return '<td'+rs+(c?' class="'+c+'"':'')+'>'+v+'</td>'}
+var L=td('',i+1)+td('l','<b>'+esc(r.name||"")+'</b>'+(r.sec?'<span class="s2">'+esc(r.sec)+'</span>':''))+
+td('l',its.length?lines(its.map(function(x){return esc(x.lbl)})):"-")+
+td('n',its.length?lines(its.map(function(x){return x.odT})):"-")+
+td('n',its.length?lines(its.map(function(x){return x.n})):"-")+
+td('n',its.length?lines(its.map(function(x){return f1(x.sub)})):"-")+
+td('n',o.total!=null?f1(o.total):"-")+td('',o.err?"-":o.rt+"%");
+var Rn=td('l',esc(notes.join(" / ")));
+function prow(q){var P=PIPE[q.K],nm=P.t.replace("<br>","");if(!q.p)return '<td class="l">'+nm+'</td><td class="ngc" colspan="5">入らない</td>';
+return '<td class="l">'+nm+'</td><td><b>'+q.p[0]+'</b>'+(q.by15?'*':'')+'</td><td class="n">'+q.p[2]+'</td><td class="n">'+q.Ai.toFixed(1)+'</td><td class="n">'+q.allow+'</td><td class="n">'+q.fill.toFixed(1)+'</td>'}
+var h='<tbody class="blk">';
+if(!ps.length)h+='<tr>'+L+'<td colspan="6">'+(o.err?"-":"管種が選ばれていません")+'</td>'+Rn+'</tr>';
+else ps.forEach(function(q,k){h+='<tr>'+(k===0?L:'')+prow(q)+(k===0?Rn:'')+'</tr>'});
+return h+'</tbody>'}
+function sheetShell(pg){
+var P=PAPER[PJ.ppr]||PAPER.a4;
+var d=document.createElement("div");d.className="sheet";d.style.width=P.w+"px";d.style.height=P.h+"px";
+d.innerHTML='<div class="sh"><div class="l">件名<br><b>'+esc(PJ.name||"")+'</b></div><div class="t">電線管選定書</div><div class="r">'+esc(dateText())+(PJ.co?'<br>'+esc(PJ.co):'')+(PJ.by?'<br>担当 '+esc(PJ.by):'')+'</div></div>'+
+'<div class="cond">選定方法: 占積率による選定(内線規程 3110-5の考え方)/ 管種ごとに、ケーブル断面積の合計が許容断面積以下となる最小のサイズ'+(PJ.r15?' / ケーブル1本のときは内径 ≧ 外径×1.5 も確認':'')+'</div>'+
+'<div class="tb"><table><colgroup>'+COLS.map(function(x){return '<col style="width:'+x[1]+'%">'}).join("")+'</colgroup><thead><tr>'+COLS.map(function(x){return '<th>'+x[0]+'</th>'}).join("")+'</tr></thead></table></div>'+
+'<div class="ft"><div><p>○占積率 = ケーブル断面積の合計 ÷ 管の内断面積 × 100</p><p>○ケーブル断面積 = π/4 × D² × 本数(D: 被覆を含む仕上がり外径[mm]。1本あたり0.1mm²に丸め)</p><p>○管の内断面積 = π/4 × d²(d: 管の内径[mm])</p><p>○管の内径: 厚鋼・薄鋼・ねじなしは JIS C 8305 の外径・厚さから算出。VEは JIS C 8430、PF・CDは JIS C 8411 製品の近似内径(PFはPFDの値)、MFXは未来工業ミラレックスR、FEPは JIS C 3653 附属書1相当品(古河電工エフレックス)の内径</p></div>'+
+'<div><p>○管の太さ: 断面積の合計が管の内断面積の32%以下となる最小の太さ。管の屈曲が少なく、引き入れ・引き替えが容易な場合は48%以下(内線規程 3110-5)。許容断面積は1mm²未満切り捨て</p><p>○ケーブル外径はメーカー資料による参考値(平形は短径×長径を断面積とする)。実際の外径は仕様書・カタログで確認のこと</p></div></div>'+
+'<div class="pg">'+pg+'</div>';
+return d}
+function buildPages(){
+var os=LASTOS,host=document.createElement("div");
+host.style.cssText="position:absolute;left:-20000px;top:0;";document.body.appendChild(host);
+var pages=[],cur=null;
+function newPage(){cur=sheetShell("0 / 0");host.appendChild(cur);pages.push(cur);return cur.querySelector("table")}
+var tb=newPage();
+if(!os.length)tb.insertAdjacentHTML("beforeend",'<tbody><tr><td colspan="'+COLS.length+'">配管がありません</td></tr></tbody>');
+for(var i=0;i<os.length;i++){
+tb.insertAdjacentHTML("beforeend",sheetRow(os[i],i));
+var box=cur.querySelector(".tb");
+if(box.scrollHeight>box.clientHeight+1&&tb.tBodies.length>1){tb.tBodies[tb.tBodies.length-1].remove();tb=newPage();tb.insertAdjacentHTML("beforeend",sheetRow(os[i],i))}}
+pages.forEach(function(p,k){p.querySelector(".pg").textContent=(k+1)+" / "+pages.length});
+document.body.removeChild(host);
+return pages}
+function renderPreview(){
+var pv=$("pv");pv.innerHTML="";
+var pages=buildPages(),P=PAPER[PJ.ppr]||PAPER.a4;
+var w=Math.min(pv.clientWidth-28,P.w);if(!(w>0))w=P.w;var sc=w/P.w;
+pages.forEach(function(p){var b=document.createElement("div");b.className="pgbox";b.style.width=(P.w*sc)+"px";b.style.height=(P.h*sc)+"px";p.style.transform="scale("+sc+")";b.appendChild(p);pv.appendChild(b)})}
+var rzT;window.addEventListener("resize",function(){clearTimeout(rzT);rzT=setTimeout(renderPreview,200)});
+
+async function makePdf(){
+var btn=$("pdf"),msg=$("pdfmsg"),TITLE="電線管選定書";
+if(!window.jspdf||!window.html2canvas){msg.textContent="PDFの部品を読み込めませんでした。ページを開き直してから、もう一度押してください。";return}
+if(!$("stale").hidden)runCalc();
+btn.disabled=true;msg.textContent="PDFを作っています…";
+var host=document.createElement("div");host.style.cssText="position:absolute;left:-20000px;top:0;";document.body.appendChild(host);
+try{
+if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+var P=PAPER[PJ.ppr]||PAPER.a4,pages=buildPages();
+var pdf=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:PJ.ppr});
+for(var k=0;k<pages.length;k++){
+host.appendChild(pages[k]);
+var cv=await window.html2canvas(pages[k],{scale:P.sc,backgroundColor:"#ffffff",logging:false,width:P.w,height:P.h,windowWidth:P.w+40});
+host.removeChild(pages[k]);
+if(k>0)pdf.addPage(PJ.ppr,"landscape");
+pdf.addImage(cv.toDataURL("image/jpeg",0.92),"JPEG",0,0,P.mm[0],P.mm[1])}
+pdf.setProperties({title:TITLE+" "+(PJ.name||"")});
+var blob=pdf.output("blob");
+var fn=TITLE+(PJ.name?"_"+PJ.name.replace(/[\\\/:*?"<>|]/g,""):"")+".pdf";
+deliverFile(blob,fn,msg,false);
+}catch(e){msg.textContent="PDFを作れませんでした: "+(e&&e.message||e)}
+finally{if(host.parentNode)document.body.removeChild(host);btn.disabled=false}}
+
+/* ===== 入力カード ===== */
+function opt(v,l,cur){return '<option value="'+esc(v)+'"'+(String(v)===String(cur)?' selected':'')+'>'+esc(l)+'</option>'}
+function nOpts(v){var a=[opt("","本数",v)];for(var k=1;k<=20;k++)a.push(opt(String(k),String(k),v));if(v!==""&&!(+v>=1&&+v<=20&&Math.floor(+v)===+v))a.push(opt(v,v,v));return a.join("")}
+function itemHTML(it,i,r){
+var tsel='<select data-i="'+i+'" data-g="t" aria-label="ケーブル'+(i+1)+'の種類">'+CT_GROUPS.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(k){return opt(k,CT_LBL[k]||k,it.t)}).join("")+'</optgroup>'}).join("")+'<optgroup label="その他">'+opt("other",CT_LBL.other,it.t)+'</optgroup></select>';
+var mid;
+if(it.t==="other")mid='<div class="oth"><input data-i="'+i+'" data-g="nm" placeholder="名称(例: CVV-S 2sq-3C)" value="'+esc(it.nm)+'" aria-label="ケーブル'+(i+1)+'の名称"><input data-i="'+i+'" data-g="od" type="number" inputmode="decimal" step="0.1" placeholder="外径mm" value="'+esc(it.od)+'" aria-label="ケーブル'+(i+1)+'の外径(mm)"></div>';
+else mid='<select data-i="'+i+'" data-g="s" aria-label="ケーブル'+(i+1)+'のサイズ・心数">'+opt("",/-\dC$/.test(it.t)||!CAB[it.t][0][1]?"サイズを選ぶ":"サイズ・心数を選ぶ",it.s)+CAB[it.t].map(function(c){return opt(cabKey(c),c[0]+(c[1]?"-"+c[1]:"")+(isFlat(c)?"("+c[2]+"×"+c[3]+")":"(φ"+c[2]+")"),it.s)}).join("")+'</select>';
+return '<div class="it">'+tsel+mid+'<select data-i="'+i+'" data-g="n" aria-label="ケーブル'+(i+1)+'の本数">'+nOpts(it.n)+'</select><button type="button" class="idel" data-act="idel" data-i="'+i+'" aria-label="ケーブル'+(i+1)+'を削除"'+(r.items.length>1?'':' disabled')+'>削除</button></div>'}
+function isumHTML(r){var o=calcRow(r);
+var s=o.err?'<span>ケーブルと本数を入れると、ここに合計が出ます</span>':'<span>合計 <b>'+o.cnt+'</b> 本</span><span>断面積計 <b>'+f1(o.total)+'</b> mm²</span>';
+return s}
+function iwarnHTML(r){var o=calcRow(r),w=o.warn.filter(function(x){return /行目/.test(x)});return w.join(" / ")}
+function sumText(r,i){var o=calcRow(r),a=[];
+if(o.its.length){a.push(esc(o.its[0].lbl)+" ×"+o.its[0].n+(o.its.length>1?" ほか"+(o.its.length-1)+"種":""));a.push(o.cnt+"本")}
+else a.push("ケーブル未入力");
+if(o.total!=null)a.push('断面積計 <b>'+f1(o.total)+'</b> mm²('+o.rt+'%)');
+return (r.sec?esc(r.sec)+" ・ ":"")+a.join(" ・ ")}
+function rowHTML(r,pos){
+return '<article class="rc'+(r.cl?' cl':'')+'" data-id="'+r.id+'">'+
+'<div class="rh"><span class="rn">'+pos+'</span><input data-f="name" value="'+esc(r.name)+'" placeholder="配管番号(例: P-1)" aria-label="配管番号"><button type="button" class="mini" data-act="dup">複製</button><button type="button" class="mini" data-act="del">削除</button><button type="button" class="mini tg" data-act="tog" aria-expanded="'+(!r.cl)+'" aria-label="'+(r.cl?'ひらく':'たたむ')+'">'+CHEV+'</button></div>'+
+'<button type="button" class="sum" data-act="open">'+sumText(r,pos-1)+'</button><div class="cbody">'+
+'<div class="g2" style="grid-template-columns:1fr"><div class="f"><label>区間・用途</label><input data-f="sec" value="'+esc(r.sec)+'" placeholder="例: 計装盤 → FT-101"></div></div>'+
+'<div class="sec"><h3>ケーブル</h3>'+
+'<div class="it ith" aria-hidden="true"><span>種類</span><span>サイズ</span><span>本数</span><span></span></div>'+
+r.items.map(function(it,i){return itemHTML(it,i,r)}).join("")+
+'<button type="button" class="iadd" data-act="iadd">＋ ケーブルを追加</button>'+
+'<p class="iwarn">'+esc(iwarnHTML(r))+'</p>'+
+'<div class="isum">'+isumHTML(r)+'</div></div>'+
+'<div class="sec"><h3>占積率の基準</h3><div class="g2"><div class="f"><label>占積率</label><select data-f="rt">'+RT_OPTS.map(function(x){return opt(x[0],x[1],r.rt)}).join("")+'</select></div></div>'+
+'<p class="note" style="margin-top:6px">結果は、共通の条件で選んだすべての管種について出します。</p></div>'+
+'<div class="sec"><h3>メモ</h3><textarea data-f="memo" style="margin-top:8px" placeholder="空欄なら記載なし" aria-label="メモ">'+esc(r.memo)+'</textarea></div>'+
+'</div></article>'}
+function renderRows(){var el=$("rows");el.innerHTML=rows.map(function(r,i){return rowHTML(r,i+1)}).join("");el.classList.toggle("one",rows.length<2);renderChips()}
+/* ===== 横スクロールの移動 ===== */
+var CUR_I=0,scT=0;
+function rmotion(){return !!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)}
+function cardEls(){return $("rows").querySelectorAll(".rc")}
+function renderChips(){$("chips").innerHTML=rows.map(function(r,i){return '<button type="button" class="chip" data-ci="'+i+'" aria-current="false"><span class="cn">'+(i+1)+'</span><span class="ct">'+esc(r.name||("配管"+(i+1)))+'</span></button>'}).join("");setActive(Math.min(CUR_I,rows.length-1))}
+function setActive(i){i=Math.max(0,i);CUR_I=i;var c=$("chips"),ch=c.children;
+for(var k=0;k<ch.length;k++){var on=k===i;ch[k].setAttribute("aria-current",on?"true":"false");
+if(on){var L=ch[k].offsetLeft,W=ch[k].offsetWidth;if(L<c.scrollLeft)c.scrollLeft=L-4;else if(L+W>c.scrollLeft+c.clientWidth)c.scrollLeft=L+W-c.clientWidth+4}}
+$("rcount").textContent=(i+1)+" / "+rows.length;$("rPrev").disabled=i<=0;$("rNext").disabled=i>=rows.length-1}
+function goCard(i,instant){var cs=cardEls();if(!cs.length)return;i=Math.max(0,Math.min(cs.length-1,i));setActive(i);
+$("rows").scrollTo({left:cs[i].offsetLeft,behavior:(instant||rmotion())?"auto":"smooth"});
+if($("rnav").getBoundingClientRect().top<0)revealTop($("rnav"))}
+$("rows").addEventListener("scroll",function(){if(scT)return;scT=requestAnimationFrame(function(){scT=0;var el=$("rows"),cs=cardEls(),best=0,bd=1e9;for(var k=0;k<cs.length;k++){var d=Math.abs(cs[k].offsetLeft-el.scrollLeft);if(d<bd){bd=d;best=k}}if(best!==CUR_I)setActive(best)})},{passive:true});
+$("chips").addEventListener("click",function(e){var b=e.target.closest("[data-ci]");if(b)goCard(+b.getAttribute("data-ci"))});
+$("rPrev").addEventListener("click",function(){goCard(CUR_I-1)});
+$("rNext").addEventListener("click",function(){goCard(CUR_I+1)});
+function rerenderCard(r){var card=$("rows").querySelector('.rc[data-id="'+r.id+'"]');if(!card)return;var pos=rows.indexOf(r)+1;var tmp=document.createElement("div");tmp.innerHTML=rowHTML(r,pos);card.replaceWith(tmp.firstChild)}
+function liveCard(card,r){card.querySelector(".isum").innerHTML=isumHTML(r);card.querySelector(".iwarn").textContent=iwarnHTML(r);card.querySelector(".sum").innerHTML=sumText(r,rows.indexOf(r))}
+function onField(e){
+var card=e.target.closest(".rc");if(!card)return;var r=rowById(card.getAttribute("data-id"));if(!r)return;
+var f=e.target.getAttribute("data-f"),g=e.target.getAttribute("data-g");
+if(f){r[f]=e.target.value;
+if(f==="name"){var cb=$("chips").querySelector('[data-ci="'+rows.indexOf(r)+'"] .ct');if(cb)cb.textContent=r.name||("配管"+(rows.indexOf(r)+1))}
+if(f==="k"){if(r.sz&&!pipeFind(r.k,r.sz))r.sz="";rerenderCard(r)}
+else liveCard(card,r)}
+else if(g){var i=+e.target.getAttribute("data-i"),it=r.items[i];if(!it)return;it[g]=e.target.value;
+if(g==="t"){it.s="";if(it.t!=="other"){it.nm="";it.od=""}rerenderCard(r);var c2=$("rows").querySelector('.rc[data-id="'+r.id+'"] [data-i="'+i+'"][data-g="'+(it.t==="other"?"nm":"s")+'"]');if(c2)c2.focus()}
+else liveCard(card,r)}
+else return;
+mark();save()}
+$("rows").addEventListener("input",function(e){if(e.target.tagName==="SELECT")return;onField(e)});
+$("rows").addEventListener("change",function(e){if(e.target.tagName!=="SELECT")return;onField(e)});
+$("rows").addEventListener("click",function(e){
+var b=e.target.closest("[data-act]");if(!b)return;var card=b.closest(".rc"),r=rowById(card.getAttribute("data-id"));if(!r)return;
+var act=b.getAttribute("data-act"),i=rows.indexOf(r);
+if(act==="tog"||act==="open"){var v=act==="open"?false:!r.cl;r.cl=v;card.classList.toggle("cl",v);var t=card.querySelector('[data-act="tog"]');t.setAttribute("aria-label",v?"ひらく":"たたむ");t.setAttribute("aria-expanded",String(!v));save();if(v)afterClose(card);else revealTop(card);return}
+if(act==="iadd"){r.items.push(defItem());rerenderCard(r);var nc=$("rows").querySelector('.rc[data-id="'+r.id+'"]'),ss=nc.querySelectorAll('[data-g="s"],[data-g="nm"]');if(ss.length)ss[ss.length-1].focus();save();return}
+if(act==="idel"){var k=+b.getAttribute("data-i");r.items.splice(k,1);if(!r.items.length)r.items.push(defItem());rerenderCard(r);mark();save();return}
+if(act==="dup"){var c=normRow(JSON.parse(JSON.stringify(r)));c.id=nextId++;c.name=(r.name||"配管"+(i+1))+"(複製)";c.cl=false;rows.splice(i+1,0,c);renderRows();mark();save();goCard(i+1);return}
+if(act==="del"){rows.splice(i,1);if(!rows.length)rows.push(defRow());renderRows();mark();save();goCard(Math.min(i,rows.length-1),true);return}});
+$("add").addEventListener("click",function(){rows.push(defRow());renderRows();mark();save();goCard(rows.length-1)});
+$("go").addEventListener("click",function(){runCalc();if(window.matchMedia("(max-width:1099px)").matches)$("rt").scrollIntoView({block:"start",behavior:"smooth"})});
+$("pdf").addEventListener("click",makePdf);
+$("copy").addEventListener("click",function(){
+var t=LASTTSV;
+function fb(){var ta=$("tsv");ta.hidden=false;ta.value=t;ta.focus();ta.select();$("cmsg").textContent="自動でコピーできませんでした。選択された文字をコピーしてください。"}
+try{navigator.clipboard.writeText(t).then(function(){$("tsv").hidden=true;$("cmsg").textContent="コピーしました。Excelやスプレッドシートに貼り付けられます。"},fb)}catch(e){fb()}});
+
+/* 件名など */
+var PJF=[["pjName","name"],["pjDate","date"],["pjCo","co"],["pjBy","by"]];
+PJF.forEach(function(p){$(p[0]).addEventListener("input",function(){PJ[p[1]]=$(p[0]).value;save();renderPreview()})});
+$("ppr").addEventListener("change",function(){PJ.ppr=$("ppr").value;save();renderPreview()});
+$("pera").addEventListener("change",function(){PJ.era=$("pera").value;save();renderPreview()});
+$("r15").addEventListener("change",function(){PJ.r15=$("r15").checked;save();rows.forEach(function(r){var c=$("rows").querySelector('.rc[data-id="'+r.id+'"]');if(c)liveCard(c,r)});mark()});
+function renderPks(){var a=shownPK();$("pks").innerHTML=PK.map(function(K){return '<label title="'+esc(PIPE[K].n)+'"><input type="checkbox" data-pk="'+K+'"'+(a.indexOf(K)>=0?' checked':'')+'> '+esc(PIPE[K].s)+'</label>'}).join("")}
+$("pks").addEventListener("change",function(){PJ.show=PK.filter(function(K){var c=$("pks").querySelector('[data-pk="'+K+'"]');return c&&c.checked});save();var st=!$("stale").hidden;runCalc();if(st)mark()});
+function syncPJ(){renderPks();PJF.forEach(function(p){$(p[0]).value=PJ[p[1]]||""});$("ppr").value=PAPER[PJ.ppr]?PJ.ppr:"a4";$("pera").value=PJ.era==="s"?"s":"w";$("r15").checked=PJ.r15!==false}
+
+/* 電線管の内径と許容断面積の表 */
+(function(){var h='<table class="ref"><thead><tr><th>呼び方</th><th>外径(mm)</th><th>内径(mm)</th><th>内断面積(mm²)</th><th>32%</th><th>48%</th></tr></thead><tbody>';
+PK.forEach(function(K){h+='<tr><th colspan="6" style="text-align:left">'+PIPE[K].n+'</th></tr>';PIPE[K].l.forEach(function(p){h+='<tr><td>'+p[0]+'</td><td>'+esc(p[1])+'</td><td>'+p[2]+'</td><td>'+circ(p[2]).toFixed(1)+'</td><td>'+allowA(p[2],32)+'</td><td>'+allowA(p[2],48)+'</td></tr>'})});
+$("reftbl").innerHTML=h+'</tbody></table>'})();
+
+/* ===================== 現場ごとの保存と切り替え ===================== */
+var SKEY="cs-sites-v1",CKEY="cs-sites-cur",SITES=[],CUR=null,COL=null,lsT=null,pushT={},dirty={},inflight={},firstSync=false;
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function rd(k){try{var s=localStorage.getItem(k);return s?JSON.parse(s):null}catch(e){return null}}
+function newId(){return "s"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function siteById(id){for(var i=0;i<SITES.length;i++)if(SITES[i].id===id)return SITES[i];return null}
+function siteName(d){var n=d&&d.pj&&String(d.pj.name||"").trim();return n||"無題"}
+function snap(){return clone({v:1,pj:PJ,rows:rows})}
+function load(d){
+d=d||{};var pj=d.pj||{};
+PJ={name:"",date:"",co:"",by:"",ppr:"a4",era:"w",r15:true,show:PK.slice()};
+for(var k in PJ){if(pj[k]!=null)PJ[k]=pj[k]}
+PJ.r15=pj.r15!==false;PJ.show=Array.isArray(pj.show)?pj.show.filter(function(K){return !!PIPE[K]}):PK.slice();
+nextId=1;rows=(Array.isArray(d.rows)?d.rows:[]).map(normRow);
+if(!rows.length)rows=[defRow()]}
+function writeLocal(){clearTimeout(lsT);lsT=null;try{localStorage.setItem(SKEY,JSON.stringify({list:SITES}));localStorage.setItem(CKEY,CUR||"")}catch(e){}}
+function applyState(d){
+LASTTSV="";$("tsv").hidden=true;$("cmsg").textContent="";$("pdfmsg").textContent="";
+load(d?clone(d):null);syncPJ();CUR_I=0;renderRows();$("rows").scrollLeft=0;setActive(0);runCalc()}
+function siteTouch(){
+var s=siteById(CUR);if(!s)return;
+s.data=snap();s.name=siteName(s.data);s.updated=Date.now();delete s.fresh;
+clearTimeout(lsT);lsT=setTimeout(writeLocal,300);
+queuePush(s.id);renderSites()}
+var save=siteTouch;
+function fmtWhen(t){if(!t)return "";var d=new Date(t),n=new Date(),p=function(x){return (x<10?"0":"")+x};
+var hm=p(d.getHours())+":"+p(d.getMinutes());
+if(d.toDateString()===n.toDateString())return "今日 "+hm;
+return (d.getFullYear()!==n.getFullYear()?d.getFullYear()+"/":"")+(d.getMonth()+1)+"/"+d.getDate()+" "+hm}
+var CONF=null;
+function renderSites(){
+var q=$("sQ").value.trim().toLowerCase(),list=SITES.slice().sort(function(a,b){return (b.updated||0)-(a.updated||0)});
+if(q)list=list.filter(function(s){return s.name.toLowerCase().indexOf(q)>=0});
+var cur=siteById(CUR);$("sCur").textContent=cur?cur.name:"現場一覧";
+if(!list.length){$("sList").innerHTML='<li><p class="sempty">'+(q?"見つかりません":"現場がありません")+"</p></li>";return}
+$("sList").innerHTML=list.map(function(s){
+var d=s.data||{},nr=(d.rows||[]).length,on=s.id===CUR;
+var acts="";
+if(on)acts=CONF===s.id?'<div class="sacts"><span class="q">この現場を削除？</span><button type="button" class="yes" data-sa="yes">削除する</button><button type="button" data-sa="no">やめる</button></div>'
+:'<div class="sacts"><button type="button" data-sa="dup">複製</button><button type="button" class="del" data-sa="del">削除</button></div>';
+return '<li class="'+(on?"on":"")+'" data-sid="'+esc(s.id)+'"><button type="button" class="si"'+(on?' aria-current="true"':"")+'><span class="nm">'+esc(s.name)+'</span><span class="mt">'+fmtWhen(s.updated)+" ・ 配管"+nr+"</span></button>"+acts+"</li>"}).join("")}
+function openSite(id){
+var s=siteById(id);if(!s)return;
+if(CUR&&CUR!==id){var c=siteById(CUR);if(c){c.data=snap();c.name=siteName(c.data)}}
+CUR=id;CONF=null;applyState(s.data);writeLocal();renderSites();closeSide();window.scrollTo(0,0)}
+function addSite(data,name){var s={id:newId(),name:name||siteName(data),updated:Date.now(),data:data};SITES.push(s);queuePush(s.id);return s}
+function newSite(){
+var base={pj:{co:PJ.co||"",by:PJ.by||"",ppr:PJ.ppr,era:PJ.era,r15:PJ.r15}};
+var s=addSite(base,"無題");openSite(s.id);$("pjName").focus()}
+function dupSite(id){var s=siteById(id);if(!s)return;if(id===CUR)s.data=snap();var d=clone(s.data||{});d.pj=d.pj||{};d.pj.name=(/^無題/.test(s.name)?"":s.name)+"(複製)";var n=addSite(d);openSite(n.id)}
+function delSite(id){
+SITES=SITES.filter(function(s){return s.id!==id});clearTimeout(pushT[id]);delete dirty[id];
+if(COL){COL.doc(id).delete().catch(function(){})}
+CONF=null;
+if(id===CUR){CUR=null;var rest=SITES.slice().sort(function(a,b){return (b.updated||0)-(a.updated||0)});if(rest.length)openSite(rest[0].id);else{var s=addSite({},"無題");openSite(s.id)}}
+writeLocal();renderSites()}
+$("sList").addEventListener("click",function(e){
+var li=e.target.closest("li[data-sid]");if(!li)return;var id=li.getAttribute("data-sid");
+var a=e.target.closest("[data-sa]");
+if(!a){if(id!==CUR)openSite(id);else closeSide();return}
+var k=a.getAttribute("data-sa");
+if(k==="dup")dupSite(id);else if(k==="del"){CONF=id;renderSites()}else if(k==="yes")delSite(id);else{CONF=null;renderSites()}});
+$("sNew").addEventListener("click",newSite);
+$("sQ").addEventListener("input",renderSites);
+function openSide(){$("side").classList.add("open");$("sOpen").setAttribute("aria-expanded","true")}
+function closeSide(){$("side").classList.remove("open");$("sOpen").setAttribute("aria-expanded","false")}
+$("sOpen").addEventListener("click",openSide);
+$("sClose").addEventListener("click",closeSide);
+document.addEventListener("click",function(e){if($("side").classList.contains("open")&&!e.target.closest("#side")&&!e.target.closest("#sOpen"))closeSide()});
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeSide()});
+/* クラウド(どの端末からでも同じ現場が見える) */
+function setSync(k){var el=$("sSync");el.classList.toggle("ng",k==="err"||k==="full");
+el.textContent={local:"この端末に保存しています",ok:"クラウドに保存済み(ほかの端末でも開けます)",saving:"クラウドに保存中…",err:"クラウドに保存できませんでした。この端末には残っています",full:"保存先がいっぱいです。使わない現場を削除してください"}[k]||""}
+function queuePush(id){if(!COL)return;dirty[id]=1;clearTimeout(pushT[id]);pushT[id]=setTimeout(function(){doPush(id)},1500)}
+function doPush(id){
+if(!COL)return;if(inflight[id]){pushT[id]=setTimeout(function(){doPush(id)},800);return}
+var s=siteById(id);if(!s){delete dirty[id];return}
+var body=clone({name:s.name,updated:s.updated,data:s.data||{}});
+inflight[id]=1;setSync("saving");
+COL.doc(id).set(body).then(function(){inflight[id]=0;var t=siteById(id);if(!t||t.updated===body.updated)delete dirty[id];if(!Object.keys(dirty).length)setSync("ok")},
+function(e){inflight[id]=0;setSync(e&&e.code==="quota_exceeded"?"full":"err")})}
+function flushAll(){writeLocal();Object.keys(dirty).forEach(function(id){if(!inflight[id]){clearTimeout(pushT[id]);doPush(id)}})}
+window.addEventListener("pagehide",flushAll);
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")flushAll()});
+function onRemote(qs){
+var curChanged=false,listChanged=false;
+qs.docChanges().forEach(function(ch){
+var id=ch.doc.id,b=ch.doc.data()||{},l=siteById(id);
+if(ch.type==="removed"){if(l&&!dirty[id]){SITES=SITES.filter(function(s){return s.id!==id});listChanged=true;if(id===CUR)CUR=null}return}
+if(!l){SITES.push({id:id,name:b.name||siteName(b.data),updated:+b.updated||0,data:b.data||{}});listChanged=true;return}
+if((+b.updated||0)>(l.updated||0)&&!dirty[id]){l.data=b.data||{};l.name=b.name||siteName(l.data);l.updated=+b.updated;listChanged=true;if(id===CUR)curChanged=true}});
+if(!firstSync&&!qs.metadata.fromCache){firstSync=true;
+var have={};qs.docs.forEach(function(d){have[d.id]=1});
+if(qs.docs.length){SITES=SITES.filter(function(s){if(s.fresh&&!have[s.id]){if(s.id===CUR)CUR=null;listChanged=true;return false}return true})}
+SITES.forEach(function(s){if(!have[s.id])queuePush(s.id)});
+if(!Object.keys(dirty).length)setSync("ok")}
+if(!CUR){var rest=SITES.slice().sort(function(a,b){return (b.updated||0)-(a.updated||0)});if(rest.length)openSite(rest[0].id);else{var s=addSite({},"無題");openSite(s.id)}return}
+if(curChanged)applyState(siteById(CUR).data);
+if(listChanged||curChanged){writeLocal();renderSites()}}
+async function initCloud(){
+try{
+if(!window.claude||!window.claude.use)return;
+var u=await window.claude.use("user"),db=await window.claude.use("db");
+if(!u||!db)return;var uid=await u.id();if(!uid)return;
+COL=db.collection("data/users/"+uid);
+COL.onSnapshot(onRemote,function(){COL=null;setSync("local")})
+}catch(e){COL=null;setSync("local")}}
+/* はじめて開いたときの見本(「例)」つき。消してから使う) */
+var EXAMPLE={v:1,pj:{},rows:[
+{name:"例) P-1",sec:"例) 計装盤 → FT-101",k:"G",rt:"32",items:[{t:"CVV",s:"2sq 4C",n:"2"},{t:"KPEVS",s:"1.25sq 2P",n:"3"}]},
+{name:"例) P-2",sec:"例) 中継端子箱 → TE-201",k:"E",rt:"48",items:[{t:"CVVS",s:"1.25sq 2C",n:"1"}]}]};
+(function(){
+var st=rd(SKEY);
+if(st&&Array.isArray(st.list)&&st.list.length)SITES=st.list.filter(function(s){return s&&s.id});
+if(!SITES.length)SITES=[{id:newId(),name:"無題",updated:Date.now(),data:clone(EXAMPLE),fresh:true}];
+var c="";try{c=localStorage.getItem(CKEY)||""}catch(e){}
+if(!siteById(c))c=SITES.slice().sort(function(a,b){return (b.updated||0)-(a.updated||0)})[0].id;
+CUR=c;applyState(siteById(c).data);writeLocal();renderSites()})();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(renderPreview);
+
+/* ===================== ファイルの保存(PDF・バックアップ) ===================== */
+/* iPhoneなどタッチ端末は共有シート(「ファイルに保存」やLINEで送る)、パソコンは普通のダウンロード */
+function isTouch(){try{return matchMedia("(pointer:coarse)").matches}catch(e){return false}}
+function shareable(file){try{return !!(file&&navigator.canShare&&navigator.canShare({files:[file]}))}catch(e){return false}}
+function downloadBlob(blob,fn){
+var u=URL.createObjectURL(blob),a=document.createElement("a");
+a.href=u;a.download=fn;a.rel="noopener";document.body.appendChild(a);a.click();a.remove();
+setTimeout(function(){URL.revokeObjectURL(u)},60000)}
+function shareFile(file,el){
+return navigator.share({files:[file],title:file.name}).then(function(){el.textContent="保存・共有しました: "+file.name},
+function(e){if(e&&e.name==="AbortError"){el.textContent="キャンセルしました。"}else{downloadBlob(file,file.name);el.textContent="ダウンロードしました: "+file.name}})}
+/* inGesture: ボタンを押した直後で、そのまま共有シートを開ける状態かどうか */
+function deliverFile(blob,fn,el,inGesture){
+var file=null;try{file=new File([blob],fn,{type:blob.type||"application/octet-stream"})}catch(e){}
+el.classList&&el.classList.remove("ng");
+if(isTouch()&&shareable(file)){
+if(inGesture){shareFile(file,el);return}
+/* PDFは作るのに時間がかかるので、もう一度タップしてもらってから共有シートを開く */
+el.innerHTML="";var w=document.createElement("span");w.className="savebar";
+var t=document.createElement("span");t.textContent="PDFができました。";
+var b=document.createElement("button");b.type="button";b.className="btn pri";b.textContent="保存・共有する";
+b.addEventListener("click",function(){shareFile(file,el)});
+w.appendChild(t);w.appendChild(b);el.appendChild(w);b.focus();return}
+downloadBlob(blob,fn);el.textContent="ダウンロードしました: "+fn}
+
+/* ===================== バックアップ(書き出し・読み込み) ===================== */
+function ymd(){var d=new Date(),p=function(x){return (x<10?"0":"")+x};return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())}
+function bkMsg(t,ng){var el=$("bkMsg");el.textContent=t;el.classList.toggle("ng",!!ng)}
+$("bkOut").addEventListener("click",function(){
+var c=siteById(CUR);if(c){c.data=snap();c.name=siteName(c.data)}
+var list=SITES.filter(function(s){return !s.fresh}).map(function(s){return {id:s.id,name:s.name,updated:s.updated,data:s.data||{}}});
+if(!list.length){bkMsg("書き出す現場がまだありません。",true);return}
+var body=JSON.stringify({app:"cs-calc",format:1,exported:Date.now(),list:list},null,1);
+deliverFile(new Blob([body],{type:"application/json"}),"電線管選定_現場データ_"+ymd()+".json",$("bkMsg"),true)});
+$("bkIn").addEventListener("click",function(){$("bkFile").value="";$("bkFile").click()});
+$("bkFile").addEventListener("change",function(){
+var f=this.files&&this.files[0];if(!f)return;
+var rdr=new FileReader();
+rdr.onerror=function(){bkMsg("ファイルを読めませんでした。",true)};
+rdr.onload=function(){
+var o=null;try{o=JSON.parse(String(rdr.result||""))}catch(e){}
+var list=o&&Array.isArray(o.list)?o.list:null;
+if(!list){bkMsg("このアプリで書き出したファイルではないようです。",true);return}
+if(o.app&&o.app!=="cs-calc"){bkMsg(o.app==="vd-calc"?"電圧降下計算のファイルです。電圧降下計算のアプリで読み込んでください。":"このアプリで書き出したファイルではないようです。",true);return}
+var c=siteById(CUR);if(c&&!c.fresh){c.data=snap();c.name=siteName(c.data)}
+var add=0,upd=0,same=0,curChanged=false;
+list.forEach(function(x){
+if(!x||typeof x.id!=="string"||!x.id||(x.data&&typeof x.data!=="object"))return;
+var d=clone(x.data||{}),u=+x.updated||Date.now(),l=siteById(x.id);
+if(!l){SITES.push({id:x.id,name:String(x.name||"")||siteName(d),updated:u,data:d});add++;return}
+if(u>(l.updated||0)){l.data=d;l.name=String(x.name||"")||siteName(d);l.updated=u;delete l.fresh;upd++;if(l.id===CUR)curChanged=true}else same++});
+if(add){var f0=siteById(CUR);if(f0&&f0.fresh){SITES=SITES.filter(function(s){return s.id!==f0.id});CUR=null}}
+if(!add&&!upd){bkMsg(same?"新しいデータはありませんでした(この端末の方が新しいか同じです)。":"読み込める現場がありませんでした。",!same);return}
+if(!CUR){var r=SITES.slice().sort(function(a,b){return (b.updated||0)-(a.updated||0)});openSite(r[0].id);$("side").classList.add("open");$("sOpen").setAttribute("aria-expanded","true")}
+else if(curChanged){applyState(siteById(CUR).data)}
+writeLocal();renderSites();
+bkMsg((add?add+"件の現場を追加":"")+(add&&upd?"、":"")+(upd?upd+"件を新しい内容に更新":"")+"しました。"+(same?"(この端末の方が新しい"+same+"件はそのまま)":""))};
+rdr.readAsText(f)});
+
+/* ===================== ホーム画面アプリ・オフライン対応 ===================== */
+(function(){
+var ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+var standalone=navigator.standalone===true;try{standalone=standalone||matchMedia("(display-mode: standalone)").matches}catch(e){}
+if(ios&&!standalone)$("sHint").hidden=false;
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){})}catch(e){}
+if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1")){
+window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}})();
+</script>
+
+</body></html>
