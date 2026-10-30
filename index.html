@@ -270,11 +270,11 @@ body{padding-left:calc(276px + 20px)}
 .fk{font:inherit;font-size:.8rem;line-height:1.4;padding:4px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
 .fk:hover{border-color:var(--acc)}
 .fk[aria-pressed="true"]{border-color:var(--acc);background:var(--acc);color:var(--on-acc);font-weight:700}
-.fgp{position:relative;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 8px;display:flex;justify-content:center;cursor:zoom-in}
+.fgp{position:relative;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 8px;cursor:zoom-in;overflow:hidden}
 .fgp:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .fgz{position:absolute;right:6px;top:6px;display:inline-flex;align-items:center;gap:3px;font-size:.72rem;font-weight:700;color:#3b4a59;background:rgba(238,242,246,.92);border:1px solid #cfd8e1;border-radius:999px;padding:2px 8px;pointer-events:none}
 .fgp .fgz svg{width:12px;height:12px;max-width:none;display:inline}
-.fgp svg{width:100%;max-width:520px;height:auto;display:block}
+.fgp>svg{display:block;width:100%;max-width:520px;height:auto;min-width:0;margin:0 auto}
 .fgc{font-size:.8rem;color:var(--sub);margin:6px 0 0;font-variant-numeric:tabular-nums;line-height:1.5}
 .fgc:empty{display:none}
 /* 計算結果の断面図の上の数値(選定書の断面図ページと同じ並び) */
@@ -365,6 +365,8 @@ h1{display:flex;align-items:center;gap:10px;font-size:1.45rem;letter-spacing:.03
 @media (prefers-reduced-motion:reduce){.btn{transition:none}}
 /* 横に並んだカードは、いま見ているカードの高さに合わせる(JSで高さを入れる) */
 #rows,#hrows{overflow-y:hidden}
+/* iPhoneで入力欄をタップしたときに画面が勝手に拡大されないように(16px未満だと拡大される) */
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}.pjcard .pjn input{font-size:18px!important}}
 </style>
 </head>
 <body>
@@ -683,7 +685,7 @@ return {W:W,H:H,P:P,miss:pk.miss,q:q,p:p}}
 function figSVG(o,K){
 var G=figGeom(o,K,FIG_FONT);if(!G)return null;
 function n2(v){return Math.round(v*100)/100}
-var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+n2(G.W)+' '+n2(G.H)+'" font-family="'+FIG_FONT+'" role="img" aria-label="'+esc(G.p[0]+"の断面図。"+o.its.map(function(x){return x.lbl+"が"+x.n+"本"}).join("、"))+'">';
+var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+n2(G.W)+' '+n2(G.H)+'" width="'+n2(G.W)+'" height="'+n2(G.H)+'" style="aspect-ratio:'+n2(G.W)+'/'+n2(G.H)+'" preserveAspectRatio="xMidYMid meet" font-family="'+FIG_FONT+'" role="img" aria-label="'+esc(G.p[0]+"の断面図。"+o.its.map(function(x){return x.lbl+"が"+x.n+"本"}).join("、"))+'">';
 G.P.forEach(function(e){
 var st=(e.fill?' fill="'+e.fill+'"':' fill="none"')+(e.stroke?' stroke="'+e.stroke+'" stroke-width="'+e.sw+'"':'')+(e.dash?' stroke-dasharray="'+e.dash.join(" ")+'"':'');
 if(e.k==="c")s+='<circle cx="'+n2(e.x)+'" cy="'+n2(e.y)+'" r="'+n2(e.r)+'"'+st+'/>';
@@ -723,7 +725,7 @@ function figZoom(fz){var svg=fz.querySelector(":scope>svg"),blk=fz.closest(".rb"
 var vb=svg.viewBox.baseVal,M=2,w=vb.width*M,h=vb.height*M,c=svg.cloneNode(true);c.setAttribute("width",w);c.setAttribute("height",h);c.removeAttribute("style");
 var K=figK(o),q=figQ(o,K),F=figSVG(o,K),d=document.createElement("div");d.className="zfg";d.innerHTML=F?figInfo(o,F):"";
 var IH=F?140+(d.querySelector(".t2")?32:0):0,H2=h+40+IH;d.style.width=(w+40)+"px";d.style.height=H2+"px";d.appendChild(c);
-ZV.show([d],w+40,H2,0,$("rt").classList.contains("stale"),rowLabel(o.r,+blk.getAttribute("data-oi"))+(q?" ・ "+q.p[0]:"")+" 断面図")}
+ZV.show([d],w+40,H2,0,$("rt").classList.contains("stale"),rowLabel(o.r,+blk.getAttribute("data-oi"))+(q?" ・ "+q.p[0]:"")+" 断面図",true)}
 $("rt").addEventListener("keydown",function(e){if(e.key!=="Enter"&&e.key!==" ")return;var fz=e.target.closest(".fgp");if(fz){e.preventDefault();figZoom(fz)}});
 $("rt").addEventListener("click",function(e){
 var dx=e.target.closest("[data-dxf]");if(dx){saveDxf(dx);return}
@@ -1444,7 +1446,8 @@ else if(e.key==="-"){e.preventDefault();setScale(sc/1.4,null)}
 else if(e.key==="Tab"){var f=el.querySelectorAll("button"),a=f[0],z=f[f.length-1];if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}}});
 window.addEventListener("resize",function(){if(!el||el.hidden)return;var atFit=sc<=fit*1.01;calcFit();setScale(atFit?fit:sc,null)})}
 /* 横幅に合わせた倍率(大きい画面では等倍まで) */
-function calcFit(){var w=scroller().clientWidth-28;fit=Math.min(1,Math.max(.05,w/PW))}
+var WHOLE=false;
+function calcFit(){var S=scroller(),w=S.clientWidth-28,f=w/PW;if(WHOLE)f=Math.min(f,(S.clientHeight-28)/PH);fit=Math.min(1,Math.max(.05,f))}
 function apply(){var w=PW*sc+"px",h=PH*sc+"px",t="scale("+sc+")";Array.prototype.forEach.call(pages(),function(p){p.style.width=w;p.style.height=h;p.firstChild.style.transform=t})}
 /* 画面上の点が、どのページのどこ(等倍の座標)にあたるか */
 function anchorAt(x,y){var ps=pages(),best=0,bd=1e9;
@@ -1487,8 +1490,8 @@ function open(pv,k){
 var sh=pv?pv.querySelectorAll(".sheet"):[];if(!sh.length)return;
 show(Array.prototype.map.call(sh,function(s){var c=s.cloneNode(true);c.style.transform="";return c}),parseFloat(sh[0].style.width)||sh[0].offsetWidth,parseFloat(sh[0].style.height)||sh[0].offsetHeight,k,pv.classList.contains("stale"),"")}
 /* nodes: 表示する中身(どれも幅W・高さHの等倍)、stale: 古いお知らせを出すか、title: 上に出す名前(空ならページ番号) */
-function show(nodes,W,H,k,stale,title){
-if(!el)build();
+function show(nodes,W,H,k,stale,title,whole){
+if(!el)build();WHOLE=!!whole;
 opener=document.activeElement;TITLE=title||"";
 var w=q(".zvw");w.innerHTML="";PW=W;PH=H;
 nodes.forEach(function(c){var b=document.createElement("div");b.className="zpg";b.appendChild(c);w.appendChild(b)});
