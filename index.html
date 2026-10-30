@@ -14,8 +14,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="電線管">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#eef2f6" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0f1721" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eef2f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1719" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
@@ -28,9 +28,9 @@ img{max-width:100%}
 </style>
 <style>
 /* Layout: 電圧降下計算と同じ構成。広い画面は左に現場一覧、中央に入力(配管カード・下に固定の操作バー)、右に計算結果と選定書プレビュー。狭い画面は1列 */
-:root{--bg:#eef2f6;--card:#fff;--ink:#14212e;--sub:#5b6b7b;--line:#cfd8e1;--acc:#1f5fa8;--on-acc:#fff;--ok:#1a7f4b;--ng:#c0392b;--head:#e3eaf1;--brb:#f3f8fd;--zb:#f6f9fb;--brz:#e9f2fb;--brh:#d3e4f4;--desk:#d9e0e7;--font:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1721;--card:#18232f;--ink:#e8eef4;--sub:#9aabbb;--line:#2b3a4a;--acc:#6aa8ee;--on-acc:#0f1721;--ok:#4cc38a;--ng:#ff7b6b;--head:#1f2d3b;--brb:#1b2937;--zb:#1c2935;--brz:#203244;--brh:#27415a;--desk:#0b1219;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0f1721;--card:#18232f;--ink:#e8eef4;--sub:#9aabbb;--line:#2b3a4a;--acc:#6aa8ee;--on-acc:#0f1721;--ok:#4cc38a;--ng:#ff7b6b;--head:#1f2d3b;--brb:#1b2937;--zb:#1c2935;--brz:#203244;--brh:#27415a;--desk:#0b1219;color-scheme:dark}
+:root{--bg:#eef2f3;--card:#fff;--ink:#132024;--sub:#56676d;--line:#cdd7da;--acc:#16695b;--on-acc:#fff;--ok:#1a7f4b;--ng:#c0392b;--head:#e3eaec;--brb:#eef7f4;--zb:#f5f8f8;--brz:#e5f2ee;--brh:#cfe6df;--desk:#d6dee0;--font:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1719;--card:#172326;--ink:#e6eff0;--sub:#97aaae;--line:#2a3a3e;--acc:#5cc4ae;--on-acc:#0b1615;--ok:#4cc38a;--ng:#ff7b6b;--head:#1e2d30;--brb:#132a27;--zb:#1a2729;--brz:#183330;--brh:#1f4039;--desk:#0a1214;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1719;--card:#172326;--ink:#e6eff0;--sub:#97aaae;--line:#2a3a3e;--acc:#5cc4ae;--on-acc:#0b1615;--ok:#4cc38a;--ng:#ff7b6b;--head:#1e2d30;--brb:#132a27;--zb:#1a2729;--brz:#183330;--brh:#1f4039;--desk:#0a1214;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{background:var(--bg)}
@@ -312,6 +312,32 @@ html.zvon,html.zvon body{overflow:hidden}
 .zvh{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:calc(100% - 32px);background:rgba(16,21,27,.9);color:#eef2f6;font-size:.8rem;padding:7px 14px;border-radius:999px;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .35s}
 .zvh.on{opacity:1}
 @media (prefers-reduced-motion:reduce){.zvh{transition:none}}
+
+/* ===== 仕上げ ===== */
+h1{display:flex;align-items:center;gap:10px;font-size:1.45rem;letter-spacing:.03em;margin:4px 0 6px}
+.appi{width:36px;height:36px;border-radius:9px;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+.lead{line-height:1.7;max-width:46em}
+.card>h2:first-child{margin-bottom:12px}
+/* 件名などは図面の表題欄のように: 太い外枠と細い罫線で区切ったマスに書き込む */
+.pjcard{padding:0;background:var(--line);border:1.5px solid var(--ink);border-radius:6px;overflow:hidden}
+.pjcard .pjgrid{gap:1px}
+.pjcard .f{background:var(--card);padding:8px 12px 3px;min-width:0;transition:background-color .15s,box-shadow .15s}
+.pjcard .f:focus-within{background:var(--brb);box-shadow:inset 0 -2px 0 var(--acc)}
+.pjcard label{font-size:.7rem;margin:0;letter-spacing:.02em}
+.pjcard input,.pjcard select{height:2.15rem;border:0;border-radius:0;background:transparent;padding:0;font-size:1rem}
+.pjcard select{margin-left:-3px;width:calc(100% + 3px)}
+.pjcard input:focus-visible,.pjcard select:focus-visible{outline:none}
+.pjcard .pjn input{font-size:1.12rem;font-weight:700}
+@media (prefers-reduced-motion:reduce){.pjcard .f{transition:none}}
+@media (max-width:1100px){.pjcard .f:last-child{grid-column:span 2}}
+@media (max-width:520px){.pjcard .pjgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.pjcard .pjn{grid-column:1/-1}.pjcard .f:last-child{grid-column:1/-1}}
+/* 下の「計算する」のバー: 上の内容がふわっと隠れるように */
+.btns::before{content:"";position:absolute;left:0;right:0;top:-18px;height:18px;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none}
+.btn{transition:background-color .15s,filter .15s}
+.btn.pri:hover{filter:brightness(1.08)}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}}
+/* 横に並んだカードは、いま見ているカードの高さに合わせる(JSで高さを入れる) */
+#rows,#hrows{overflow-y:hidden}
 </style>
 </head>
 <body>
@@ -327,9 +353,9 @@ html.zvon,html.zvon body{overflow:hidden}
 <p class="shint" id="sHint" hidden>ホーム画面に追加して使うと、保存した現場が消えにくくなります(Safariの共有ボタン →「ホーム画面に追加」)。</p>
 </aside>
 <main>
-<header class="top"><div class="topbar"><button type="button" class="sbtn" id="sOpen" aria-controls="side" aria-expanded="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h9"/></svg><span id="sCur">現場一覧</span></button></div><h1>電線管選定</h1>
-<p class="lead">配管ごとにケーブルと本数を入れて「計算する」を押すと、電線管(厚鋼・薄鋼・ねじなし・PF・CD・VE・MFX・FEP)の太さが出て、電線管選定書をPDFで保存できます。</p></header>
-<section class="card">
+<header class="top"><div class="topbar"><button type="button" class="sbtn" id="sOpen" aria-controls="side" aria-expanded="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h9"/></svg><span id="sCur">現場一覧</span></button></div><h1><img class="appi" src="icon-192.png" alt="" width="36" height="36">電線管選定</h1>
+<p class="lead">配管ごとにケーブルと本数を入れて「計算する」を押すと、管種ごとの太さと占積率が出ます。断面図と選定書(PDF・Excel)、断面図のDXFも作れます。</p></header>
+<section class="card pjcard">
 <div class="pjgrid">
 <div class="f pjn"><label for="pjName">件名(建物名称)</label><input id="pjName" placeholder="件名を入力(例: ○○ビル新築工事)"></div>
 <div class="f"><label for="pjDate">作成日</label><input id="pjDate" placeholder="空欄で今日"></div>
@@ -893,7 +919,13 @@ function renderChips(){ADDB=ADDB||$("add");$("chips").innerHTML=rows.map(functio
 function setActive(i){i=Math.max(0,i);CUR_I=i;var c=$("chips"),ch=c.querySelectorAll(".chip");
 for(var k=0;k<ch.length;k++){var on=k===i;ch[k].setAttribute("aria-current",on?"true":"false");
 if(on){var L=ch[k].offsetLeft,W=ch[k].offsetWidth;if(L<c.scrollLeft)c.scrollLeft=L-4;else if(L+W>c.scrollLeft+c.clientWidth)c.scrollLeft=L+W-c.clientWidth+4}}
-$("rcount").textContent=(i+1)+" / "+rows.length;$("rPrev").disabled=i<=0;$("rNext").disabled=i>=rows.length-1}
+$("rcount").textContent=(i+1)+" / "+rows.length;$("rPrev").disabled=i<=0;$("rNext").disabled=i>=rows.length-1;fitRows()}
+/* 横に並んだカードの高さを、いま見ているカードに合わせる(短いカードの下に大きな空きができないように) */
+var fitRO=window.ResizeObserver?new ResizeObserver(function(){fitRows()}):null,fitEl=null;
+function fitRows(){var box=$("rows"),c=cardEls()[CUR_I];if(!c){box.style.height="";return}
+if(fitRO&&fitEl!==c){if(fitEl)fitRO.unobserve(fitEl);fitRO.observe(c);fitEl=c}
+var h=c.offsetHeight;box.style.height=h?(h+8)+"px":""}
+if(window.MutationObserver)new MutationObserver(function(){fitRows()}).observe($("rows"),{childList:true});
 function goCard(i,instant){var cs=cardEls();if(!cs.length)return;i=Math.max(0,Math.min(cs.length-1,i));setActive(i);
 $("rows").scrollTo({left:cs[i].offsetLeft,behavior:(instant||rmotion())?"auto":"smooth"});
 if($("rnav").getBoundingClientRect().top<0)revealTop($("rnav"))}
