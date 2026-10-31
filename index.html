@@ -71,7 +71,7 @@ select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visi
 .g3.pipe{grid-template-columns:repeat(2,minmax(0,1fr))}.g3.pipe>.f:last-child{grid-column:1/-1}
 }
 .it.ith span{font-size:.75rem;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.oth{display:grid;grid-template-columns:minmax(0,1fr) 5.4em;gap:6px;min-width:0}
+.oth{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 6.2em;gap:6px;min-width:0}
 .idel{height:2.5rem;font:inherit;font-size:.8rem;border:0;background:none;color:var(--sub);cursor:pointer;border-radius:8px;padding:0}
 .idel:hover{color:var(--ng);background:var(--bg)}
 .idel:disabled{visibility:hidden}
@@ -533,9 +533,11 @@ function rowById(id){for(var i=0;i<rows.length;i++){if(String(rows[i].id)===Stri
 function revealTop(el){if(!el)return;var off=(parseFloat(getComputedStyle(document.documentElement).paddingTop)||0)+12,y=window.scrollY+el.getBoundingClientRect().top-off,rm=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;window.scrollTo({top:Math.max(0,y),behavior:rm?"auto":"smooth"})}
 function afterClose(el){if(el&&el.getBoundingClientRect().top<0)revealTop(el)}
 
-function defItem(){return {t:"IV",s:"",n:"",nm:"",od:""}}
+function defItem(){return {t:"IV",s:"",n:"",ty:"",sz:"",od:""}}
 function defRow(){return {id:nextId++,name:"",sec:"",items:[defItem()],k:(PJ&&PIPE[PJ.fk])?PJ.fk:"G",rt:"32",sz:"",memo:"",cl:false,show:shownPK()}}
-function normItem(o){var it=defItem();o=o||{};for(var k in it){if(o[k]!=null)it[k]=String(o[k])}if(it.t!=="other"&&!CAB[it.t])it.t="CVV";if(it.t!=="other"&&it.s&&!cabFind(it.t,it.s))it.s="";return it}
+function normItem(o){var it=defItem();o=o||{};for(var k in it){if(o[k]!=null)it[k]=String(o[k])}
+/* 前の版の「名称」は、最初の空白の前を種別、後ろをサイズとして読み込む */
+if(o.nm!=null&&!it.ty&&!it.sz){var L=String(o.nm).trim(),q=L.indexOf(" ");it.ty=q>0?L.slice(0,q):L;it.sz=q>0?L.slice(q+1).trim():""}if(it.t!=="other"&&!CAB[it.t])it.t="CVV";if(it.t!=="other"&&it.s&&!cabFind(it.t,it.s))it.s="";return it}
 function normRow(o){var r=defRow();o=o||{};["name","sec","k","rt","sz","memo"].forEach(function(k){if(o[k]!=null)r[k]=String(o[k])});r.cl=!!o.cl;
 r.items=Array.isArray(o.items)&&o.items.length?o.items.map(normItem):[defItem()];
 if(Array.isArray(o.show))r.show=o.show.filter(function(K){return !!PIPE[K]});
@@ -544,11 +546,12 @@ if(!PIPE[r.k])r.k="G";if(r.rt!=="48")r.rt="32";if(r.sz&&!pipeFind(r.k,r.sz))r.sz
 /* ケーブル1行を読む。空の行はnull、半端な行は{bad:true} */
 function readItem(it){
 var hasN=String(it.n).trim()!=="",od,lbl,odT,a1=null;
-if(it.t==="other"){od=isNum(it.od)&&+it.od>0?+it.od:null;lbl=String(it.nm||"").trim()||"その他";if(od==null&&!hasN&&!String(it.nm||"").trim()&&String(it.od).trim()==="")return null;if(od!=null){odT=od.toFixed(1);a1=r1(circ(od))}}
+var cty=null,csz=null;
+if(it.t==="other"){od=isNum(it.od)&&+it.od>0?+it.od:null;cty=String(it.ty||"").trim();csz=String(it.sz||"").trim();lbl=[cty,csz].filter(Boolean).join(" ")||"その他";if(od==null&&!hasN&&!cty&&!csz&&String(it.od).trim()==="")return null;cty=cty||"その他";csz=csz||"-";if(od!=null){odT=od.toFixed(1);a1=r1(circ(od))}}
 else{var c=it.s?cabFind(it.t,it.s):null;if(!c&&!hasN)return null;od=c?odOf(c):null;lbl=c?cabName(it.t,c):it.t;if(c){odT=odText(c);a1=areaOf(c)}}
 var n=+it.n;
 if(od==null||!hasN||!(n>0)||Math.floor(n)!==n)return {bad:true,lbl:lbl,why:od==null?(it.t==="other"?"外径":"サイズ"):"本数"};
-return {lbl:lbl,od:od,odT:odT,n:n,a1:a1,sub:r1(a1*n),fl:(it.t!=="other"&&c&&isFlat(c))?[c[2],c[3]]:null,tw:FIG_TW[it.t]||0}}
+return {lbl:lbl,cty:cty,csz:csz,od:od,odT:odT,n:n,a1:a1,sub:r1(a1*n),fl:(it.t!=="other"&&c&&isFlat(c))?[c[2],c[3]]:null,tw:FIG_TW[it.t]||0}}
 /* より合わせのケーブルの心の数(断面図で中の心を描く) */
 var FIG_TW={CVD:2,CVT:3,CVQ:4,"EM-CED":2,"EM-CET":3,"EM-CEQ":4};
 
@@ -581,7 +584,7 @@ function rowLabel(r,i){return r.name||("配管"+(i+1))}
 function tl(a){return a.map(function(x){return String(x==null?"":x).replace(/[\t\r\n]/g," ")}).join("\t")}
 /* 計算結果の表の上に出すケーブルの一覧(種別・サイズ・外径・本数) */
 function cabTable(o){return '<div class="ckw"><table class="ck"><thead><tr><th>ケーブル</th><th>サイズ</th><th class="n">外径(mm)</th><th class="n">本数</th></tr></thead><tbody>'+
-o.its.map(function(x){var L=String(x.lbl),k=L.indexOf(" "),ty=k>0?L.slice(0,k):L,sz=k>0?L.slice(k+1):"-";
+o.its.map(function(x){var L=String(x.lbl),k=L.indexOf(" "),ty=x.cty!=null?x.cty:k>0?L.slice(0,k):L,sz=x.csz!=null?x.csz:k>0?L.slice(k+1):"-";
 return '<tr><td><b>'+esc(ty)+'</b></td><td>'+esc(sz)+'</td><td class="n">'+esc(x.odT)+'</td><td class="n"><b>'+x.n+'</b>本</td></tr>'}).join("")+'</tbody></table></div>'}
 /* バーの全長 = 管の内断面積(100%)。塗りがケーブルの占める割合、縦線が基準 */
 function fillBar(q,rt){var w=Math.min(100,q.fill);return '<span class="fb" style="--rt:'+rt+'%" aria-hidden="true"><i style="width:'+w.toFixed(1)+'%"></i></span>'}
@@ -1058,7 +1061,7 @@ function nOpts(v){var a=[opt("","本数",v)];for(var k=1;k<=20;k++)a.push(opt(St
 function itemHTML(it,i,r){
 var tsel='<select data-i="'+i+'" data-g="t" aria-label="ケーブル'+(i+1)+'の種類">'+CT_GROUPS.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(k){return opt(k,CT_LBL[k]||k,it.t)}).join("")+'</optgroup>'}).join("")+'<optgroup label="その他">'+opt("other",CT_LBL.other,it.t)+'</optgroup></select>';
 var mid;
-if(it.t==="other")mid='<div class="oth"><input data-i="'+i+'" data-g="nm" placeholder="名称(例: CVV-S 2sq-3C)" value="'+esc(it.nm)+'" aria-label="ケーブル'+(i+1)+'の名称"><input data-i="'+i+'" data-g="od" type="number" inputmode="decimal" step="0.1" placeholder="外径mm" value="'+esc(it.od)+'" aria-label="ケーブル'+(i+1)+'の外径(mm)"></div>';
+if(it.t==="other")mid='<div class="oth"><input data-i="'+i+'" data-g="ty" placeholder="種別" value="'+esc(it.ty)+'" aria-label="ケーブル'+(i+1)+'の種別(例: CVV-S)" autocapitalize="characters" autocomplete="off"><input data-i="'+i+'" data-g="sz" placeholder="サイズ" value="'+esc(it.sz)+'" aria-label="ケーブル'+(i+1)+'のサイズ(例: 2sq-3C)" autocomplete="off"><input data-i="'+i+'" data-g="od" type="number" inputmode="decimal" step="0.1" placeholder="外径mm" value="'+esc(it.od)+'" aria-label="ケーブル'+(i+1)+'の外径(mm)"></div>';
 else mid='<select data-i="'+i+'" data-g="s" aria-label="ケーブル'+(i+1)+'のサイズ・心数">'+opt("",/-\dC$/.test(it.t)||!CAB[it.t][0][1]?"サイズを選ぶ":"サイズ・心数を選ぶ",it.s)+CAB[it.t].map(function(c){return opt(cabKey(c),c[0]+(c[1]?"-"+c[1]:"")+(isFlat(c)?"("+c[2]+"×"+c[3]+")":"(φ"+c[2]+")"),it.s)}).join("")+'</select>';
 return '<div class="it">'+tsel+mid+'<select data-i="'+i+'" data-g="n" aria-label="ケーブル'+(i+1)+'の本数">'+nOpts(it.n)+'</select><button type="button" class="idel" data-act="idel" data-i="'+i+'" aria-label="ケーブル'+(i+1)+'を削除"'+(r.items.length>1?'':' disabled')+'>削除</button></div>'}
 function isumHTML(r){var o=calcRow(r);
@@ -1147,7 +1150,7 @@ if(f==="name"){var cb=$("chips").querySelector('[data-ci="'+rows.indexOf(r)+'"] 
 if(f==="k"){if(r.sz&&!pipeFind(r.k,r.sz))r.sz="";rerenderCard(r)}
 else liveCard(card,r)}
 else if(g){var i=+e.target.getAttribute("data-i"),it=r.items[i];if(!it)return;it[g]=e.target.value;
-if(g==="t"){it.s="";if(it.t!=="other"){it.nm="";it.od=""}rerenderCard(r);var c2=$("rows").querySelector('.rc[data-id="'+r.id+'"] [data-i="'+i+'"][data-g="'+(it.t==="other"?"nm":"s")+'"]');if(c2)c2.focus()}
+if(g==="t"){it.s="";if(it.t!=="other"){it.ty="";it.sz="";it.od=""}rerenderCard(r);var c2=$("rows").querySelector('.rc[data-id="'+r.id+'"] [data-i="'+i+'"][data-g="'+(it.t==="other"?"ty":"s")+'"]');if(c2)c2.focus()}
 else liveCard(card,r)}
 else return;
 mark();save()}
@@ -1164,7 +1167,7 @@ var act=b.getAttribute("data-act"),i=rows.indexOf(r);
 if(act==="cpq"||act==="cpqx"){var fm=card.querySelector(".cpqf"),open=act==="cpq"&&fm.hidden;fm.hidden=!open;card.querySelector('[data-act="cpq"]').setAttribute("aria-expanded",String(open));if(open){card.querySelector(".cpqm").textContent="";var dn=card.querySelector(".cpqdone");if(dn)dn.remove();card.querySelector('[data-q="name"]').focus()}return}
 if(act==="cpqok"){cpqAdd(card,r);return}
 if(act==="tog"||act==="open"){var v=act==="open"?false:!r.cl;r.cl=v;card.classList.toggle("cl",v);var t=card.querySelector('[data-act="tog"]');t.setAttribute("aria-label",v?"ひらく":"たたむ");t.setAttribute("aria-expanded",String(!v));save();if(v)afterClose(card);else revealTop(card);return}
-if(act==="iadd"){r.items.push(defItem());rerenderCard(r);var nc=$("rows").querySelector('.rc[data-id="'+r.id+'"]'),ss=nc.querySelectorAll('[data-g="s"],[data-g="nm"]');if(ss.length)ss[ss.length-1].focus();save();return}
+if(act==="iadd"){r.items.push(defItem());rerenderCard(r);var nc=$("rows").querySelector('.rc[data-id="'+r.id+'"]'),ss=nc.querySelectorAll('[data-g="s"],[data-g="ty"]');if(ss.length)ss[ss.length-1].focus();save();return}
 if(act==="idel"){var k=+b.getAttribute("data-i");r.items.splice(k,1);if(!r.items.length)r.items.push(defItem());rerenderCard(r);mark();save();return}
 if(act==="pkall"){PJ.show=shownPK(r);rows.forEach(function(x){x.show=PJ.show.slice()});save();renderRows();goCard(i,true);reCalcKeep();return}
 if(act==="dup"){var c=normRow(JSON.parse(JSON.stringify(r)));c.id=nextId++;c.name=(r.name||"配管"+(i+1))+"(複製)";c.cl=false;rows.splice(i+1,0,c);renderRows();mark();save();goCard(i+1);return}
