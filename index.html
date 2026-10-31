@@ -87,6 +87,16 @@ select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visi
 .cpth{margin-top:8px}
 .cpw:empty{display:none}
 .pkx{font-size:.72rem;color:var(--sub);margin:10px 0 -2px}
+/* 配管カードの中から一覧にない配管を追加する */
+.cpq{font:inherit;font-size:.82rem;font-weight:700;margin-top:8px;padding:6px 12px;border:1px dashed var(--acc);border-radius:999px;background:none;color:var(--acc);cursor:pointer}
+.cpqf{margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.cpqg{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:6px}
+.cpqg input{background:var(--card)}
+@media (max-width:520px){.cpqg{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cpqb{display:flex;gap:8px;margin-top:8px}
+.cpqb .btn{flex:1;padding:9px 12px}
+.cpqm:empty{display:none}
+.cpqdone{margin:6px 0 0;font-size:.8rem;color:var(--ok)}
 .pks label:has(input:checked){border-color:var(--acc);background:var(--brb)}
 .iadd{width:100%;margin-top:8px;height:2.5rem;font:inherit;font-size:.85rem;font-weight:700;border:1px dashed var(--acc);border-radius:8px;background:none;color:var(--acc);cursor:pointer}
 .isum{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--head);font-size:.85rem;font-variant-numeric:tabular-nums}
@@ -409,7 +419,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--acc)}
 <h2>共通の条件</h2>
 <label class="chk" for="r15"><input type="checkbox" id="r15"> ケーブルが1本だけのときは、管の内径がケーブル外径の1.5倍以上あるかも確認する</label>
 <p class="note" style="margin-top:6px">占積率32%なら1本でもほぼ満たします。48%で選ぶときに効いてきます。</p>
-<div class="sec"><h3>一覧にない配管</h3><p class="note" style="margin:6px 0 0">名前とサイズごとの内径を入れると、各配管の「その他の配管」に出てきて、ほかの管種と同じように太さを選べます。内径はメーカーのカタログで確かめた値を入れてください。外径は断面図だけに使います(空欄でも計算できます)。この現場だけに保存されます。</p><div id="cps"></div><button type="button" class="iadd" id="cpAdd">＋ 配管の種類を追加</button></div>
+<div class="sec"><h3>一覧にない配管</h3><p class="note" style="margin:6px 0 0">名前とサイズごとの内径を入れると、各配管の「その他の配管」に出てきて、ほかの管種と同じように太さを選べます。各配管カードの「＋ 一覧にない配管を追加」からも、その場で入れられます。内径はメーカーのカタログで確かめた値を入れてください。外径は断面図だけに使います(空欄でも計算できます)。この現場だけに保存されます。</p><div id="cps"></div><button type="button" class="iadd" id="cpAdd">＋ 配管の種類を追加</button><datalist id="cpNames"></datalist></div>
 </section>
 
 <div class="rnav" id="rnav"><button type="button" class="nb" id="rPrev" aria-label="前の配管"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5l-5 5 5 5"/></svg></button><div class="chips" id="chips" aria-label="配管の一覧"></div><span class="rcount" id="rcount" aria-live="polite"></span><button type="button" class="nb" id="rNext" aria-label="次の配管"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button><button type="button" class="tadd" id="add" title="配管を追加" aria-label="配管を追加"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>追加</button></div>
@@ -1057,6 +1067,30 @@ else a.push("ケーブル未入力");
 if(o.total!=null)a.push('断面積計 <b>'+f1(o.total)+'</b> mm²('+o.rt+'%)');
 return (r.sec?esc(r.sec)+" ・ ":"")+a.join(" ・ ")}
 function pkChips(L,r){var a=shownPK(r);return L.map(function(K){return '<label title="'+esc(PIPE[K].n)+'"><input type="checkbox" data-pkr="'+K+'"'+(a.indexOf(K)>=0?' checked':'')+'> '+esc(PIPE[K].s)+'</label>'}).join("")}
+/* 配管カードの「その他の配管」の下の追加欄。追加するとこの配管にチェックが入る */
+var CPQ_DONE=null;
+function cpqHTML(r){var done=CPQ_DONE&&CPQ_DONE.id===r.id?CPQ_DONE.msg:"";
+return '<button type="button" class="cpq" data-act="cpq" aria-expanded="false">＋ 一覧にない配管を追加</button>'+
+(done?'<p class="cpqdone">'+esc(done)+'</p>':'')+
+'<div class="cpqf" hidden><div class="cpqg">'+
+'<div class="f"><label>名前</label><input data-q="name" list="cpNames" placeholder="例: SGP" autocomplete="off"></div>'+
+'<div class="f"><label>呼び</label><input data-q="n" placeholder="例: 25A" autocomplete="off"></div>'+
+'<div class="f"><label>内径(mm)</label><input data-q="id" type="number" inputmode="decimal" step="0.1" placeholder="例: 27.6"></div>'+
+'<div class="f"><label>外径(mm)</label><input data-q="od" type="number" inputmode="decimal" step="0.1" placeholder="任意"></div>'+
+'</div><p class="iwarn cpqm"></p><p class="note" style="margin-top:6px">名前が同じ配管があれば、そこにサイズを足します。</p>'+
+'<div class="cpqb"><button type="button" class="btn pri" data-act="cpqok">追加する</button><button type="button" class="btn" data-act="cpqx">やめる</button></div></div>'}
+function cpqAdd(card,r){
+var v=function(q){var el=card.querySelector('[data-q="'+q+'"]');return el?String(el.value).trim():""};
+var name=v("name").slice(0,30),n=v("n").slice(0,20),id=parseFloat(v("id")),od=v("od");
+if(!(id>0)||id>2000){card.querySelector(".cpqm").textContent="内径(mm)を入れてください";var d=card.querySelector('[data-q="id"]');if(d)d.focus();return}
+var c=null;if(name)(PJ.cp||[]).forEach(function(x){if(!c&&String(x.name||"").trim()===name)c=x});
+if(c){var emp=c.sz.filter(function(z){return !(parseFloat(z.id)>0)&&!String(z.n||"").trim()});if(emp.length)c.sz.splice(c.sz.indexOf(emp[0]),1);c.sz.push({n:n,od:od,id:String(id)})}
+else{var mx=0;(PJ.cp||[]).forEach(function(x){mx=Math.max(mx,+x.k.slice(1))});c={k:"U"+(mx+1),name:name,sz:[{n:n,od:od,id:String(id)}]};PJ.cp=(PJ.cp||[]).concat([c])}
+/* この配管と、これから追加する配管の結果に並べる */
+if(!Array.isArray(r.show))r.show=shownPK(r);if(r.show.indexOf(c.k)<0)r.show.push(c.k);if(PJ.show.indexOf(c.k)<0)PJ.show.push(c.k);
+applyCP();renderCP();renderRef();
+var i=rows.indexOf(r),idx=(PJ.cp||[]).indexOf(c);CPQ_DONE={id:r.id,msg:"「"+cpName(c,idx)+(n?" "+n:"")+"」(内径"+id+"mm)を追加して、チェックを入れました"};
+save();renderRows();goCard(i,true);reCalcKeep();CPQ_DONE=null}
 function rowHTML(r,pos){
 return '<article class="rc'+(r.cl?' cl':'')+'" data-id="'+r.id+'">'+
 '<div class="rh"><span class="rn">'+pos+'</span><input data-f="name" value="'+esc(r.name)+'" placeholder="配管番号(例: P-1)" aria-label="配管番号"><button type="button" class="mini" data-act="dup">複製</button><button type="button" class="mini" data-act="del">削除</button><button type="button" class="mini tg" data-act="tog" aria-expanded="'+(!r.cl)+'" aria-label="'+(r.cl?'ひらく':'たたむ')+'">'+CHEV+'</button></div>'+
@@ -1070,7 +1104,7 @@ r.items.map(function(it,i){return itemHTML(it,i,r)}).join("")+
 '<div class="isum">'+isumHTML(r)+'</div></div>'+
 '<div class="sec"><h3>占積率の基準</h3><div class="g2"><div class="f"><label>占積率</label><select data-f="rt">'+RT_OPTS.map(function(x){return opt(x[0],x[1],r.rt)}).join("")+'</select></div></div>'+
 '</div>'+
-'<div class="sec"><h3>結果の表と選定書に並べる管種</h3><div class="pks">'+pkChips(PK_DEF,r)+'</div><p class="pkx">その他の配管</p><div class="pks">'+pkChips(PK_OTH,r)+'</div>'+
+'<div class="sec"><h3>結果の表と選定書に並べる管種</h3><div class="pks">'+pkChips(PK_DEF,r)+'</div><p class="pkx">その他の配管</p><div class="pks">'+pkChips(PK_OTH,r)+'</div>'+cpqHTML(r)+
 (rows.length>1?'<button type="button" class="fgall" data-act="pkall" style="margin-top:8px">この選び方を全部の配管にする</button>':'')+'</div>'+
 '<div class="sec"><h3>メモ</h3><textarea data-f="memo" style="margin-top:8px" placeholder="空欄なら記載なし" aria-label="メモ">'+esc(r.memo)+'</textarea></div>'+
 '</div></article>'}
@@ -1112,7 +1146,8 @@ if(g==="t"){it.s="";if(it.t!=="other"){it.nm="";it.od=""}rerenderCard(r);var c2=
 else liveCard(card,r)}
 else return;
 mark();save()}
-$("rows").addEventListener("input",function(e){if(e.target.tagName==="SELECT")return;onField(e)});
+$("rows").addEventListener("input",function(e){if(e.target.tagName==="SELECT"||e.target.hasAttribute("data-q"))return;onField(e)});
+$("rows").addEventListener("keydown",function(e){if(e.key!=="Enter"||e.isComposing||!e.target.hasAttribute||!e.target.hasAttribute("data-q"))return;e.preventDefault();var card=e.target.closest(".rc"),r=card&&rowById(card.getAttribute("data-id"));if(r)cpqAdd(card,r)});
 $("rows").addEventListener("change",function(e){if(e.target.tagName!=="SELECT")return;onField(e)});
 /* 並べる管種(配管ごと)。最後に選んだ組み合わせは、新しく追加する配管の最初の選び方になる */
 function reCalcKeep(){var st=!$("stale").hidden;runCalc();if(st)mark()}
@@ -1121,6 +1156,8 @@ r.show=PK.filter(function(K){var b=card.querySelector('[data-pkr="'+K+'"]');retu
 $("rows").addEventListener("click",function(e){
 var b=e.target.closest("[data-act]");if(!b)return;var card=b.closest(".rc"),r=rowById(card.getAttribute("data-id"));if(!r)return;
 var act=b.getAttribute("data-act"),i=rows.indexOf(r);
+if(act==="cpq"||act==="cpqx"){var fm=card.querySelector(".cpqf"),open=act==="cpq"&&fm.hidden;fm.hidden=!open;card.querySelector('[data-act="cpq"]').setAttribute("aria-expanded",String(open));if(open){card.querySelector(".cpqm").textContent="";var dn=card.querySelector(".cpqdone");if(dn)dn.remove();card.querySelector('[data-q="name"]').focus()}return}
+if(act==="cpqok"){cpqAdd(card,r);return}
 if(act==="tog"||act==="open"){var v=act==="open"?false:!r.cl;r.cl=v;card.classList.toggle("cl",v);var t=card.querySelector('[data-act="tog"]');t.setAttribute("aria-label",v?"ひらく":"たたむ");t.setAttribute("aria-expanded",String(!v));save();if(v)afterClose(card);else revealTop(card);return}
 if(act==="iadd"){r.items.push(defItem());rerenderCard(r);var nc=$("rows").querySelector('.rc[data-id="'+r.id+'"]'),ss=nc.querySelectorAll('[data-g="s"],[data-g="nm"]');if(ss.length)ss[ss.length-1].focus();save();return}
 if(act==="idel"){var k=+b.getAttribute("data-i");r.items.splice(k,1);if(!r.items.length)r.items.push(defItem());rerenderCard(r);mark();save();return}
@@ -1176,7 +1213,7 @@ function renderCP(){var h=(PJ.cp||[]).map(function(c,i){
 return '<div class="cpb" data-cp="'+c.k+'"><div class="cph"><input data-cpf="name" value="'+esc(c.name)+'" placeholder="配管の名前(例: SGP、PE管)" aria-label="配管の名前"><button type="button" class="mini" data-cpa="del">削除</button></div>'+
 '<div class="cpr cpth" aria-hidden="true"><span>呼び</span><span>外径(mm)</span><span>内径(mm)</span><span></span></div>'+c.sz.map(cpRowHTML).join("")+
 '<button type="button" class="iadd" data-cpa="sadd">＋ サイズを追加</button><p class="iwarn cpw">'+cpWarn(c)+'</p></div>'}).join("");
-$("cps").innerHTML=h}
+$("cps").innerHTML=h;var nm=[];(PJ.cp||[]).forEach(function(c){var t=String(c.name||"").trim();if(t&&nm.indexOf(t)<0)nm.push(t)});$("cpNames").innerHTML=nm.map(function(t){return '<option value="'+esc(t)+'">'}).join("")}
 function cpById(k){var r=null;(PJ.cp||[]).forEach(function(c){if(c.k===k)r=c});return r}
 /* 配管の名前やサイズが変わったら、管種の一覧と結果を作り直す(入力中の欄はそのまま) */
 var cpT=0;function cpChanged(now){applyCP();renderRef();save();clearTimeout(cpT);function go(){var i=CUR_I;renderRows();goCard(i,true);reCalcKeep()}if(now)go();else cpT=setTimeout(go,400)}
