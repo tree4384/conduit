@@ -78,6 +78,8 @@ select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visi
 .pks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .pks label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:5px 11px;border:1px solid var(--line);border-radius:999px;font-size:.85rem;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:visible}
 .pks input{width:1rem;height:1rem;margin:0}
+.pkh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}.pkh span{font-size:.72rem;color:var(--sub)}
+.pka{font:inherit;font-size:.78rem;font-weight:700;padding:5px 12px;border:1px solid var(--acc);border-radius:999px;background:none;color:var(--acc);cursor:pointer;white-space:nowrap}
 .pkx{font-size:.72rem;color:var(--sub);margin:10px 0 -2px}
 /* 配管カードの中から一覧にない配管を追加する */
 .cpq{font:inherit;font-size:.82rem;font-weight:700;margin-top:8px;padding:6px 12px;border:1px dashed var(--acc);border-radius:999px;background:none;color:var(--acc);cursor:pointer}
@@ -1090,6 +1092,11 @@ if(o.its.length){a.push(esc(o.its[0].lbl)+" ×"+o.its[0].n+(o.its.length>1?" ほ
 else a.push("ケーブル未入力");
 if(o.total!=null)a.push('断面積計 <b>'+f1(o.total)+'</b> mm²('+rtText(o)+')');
 return (r.sec?esc(r.sec)+" ・ ":"")+a.join(" ・ ")}
+/* 管種のまとまり(d: 電線管、o: その他の配管)ごとの一括チェック */
+function pkGrp(g){return g==="o"?PK_OTH:PK_DEF}
+function pkAllOn(r,g){var a=shownPK(r),L=pkGrp(g);return L.length>0&&L.every(function(K){return a.indexOf(K)>=0})}
+function pkHead(r,g,lbl){return '<div class="pkh"><span>'+lbl+'</span><button type="button" class="pka" data-act="pka" data-grp="'+g+'">'+(pkAllOn(r,g)?'全部はずす':'全部チェック')+'</button></div>'}
+function pkHeadSync(card,r){Array.prototype.forEach.call(card.querySelectorAll('[data-act="pka"]'),function(b){b.textContent=pkAllOn(r,b.getAttribute("data-grp"))?"全部はずす":"全部チェック"})}
 function pkChips(L,r){var a=shownPK(r);return L.map(function(K){return '<label title="'+esc(PIPE[K].n)+'"><input type="checkbox" data-pkr="'+K+'"'+(a.indexOf(K)>=0?' checked':'')+'> '+esc(PIPE[K].s)+'</label>'}).join("")}
 /* 配管カードの「その他の配管」の下の追加欄。追加するとこの配管にチェックが入る */
 var CPQ_DONE=null;
@@ -1132,7 +1139,7 @@ r.items.map(function(it,i){return itemHTML(it,i,r)}).join("")+
 '<p class="iwarn rtw">'+(r.rt==="m"&&rtOf(r)==null&&String(r.rtm||"").trim()!==""?"1〜100の数字を入れてください":"")+'</p>'+
 '<label class="chk c15"><input type="checkbox" data-c15'+(r.c15!==false?' checked':'')+'> <span>ケーブル1本のときは 内径 ≧ 外径×1.5 で選ぶ<small>管が短く曲がりがなく、引き替えが簡単ならOFFにできます(内線規程3165-1)</small></span></label>'+
 '</div>'+
-'<div class="sec"><h3>結果の表と選定書に並べる管種</h3><div class="pks">'+pkChips(PK_DEF,r)+'</div><p class="pkx">その他の配管</p><div class="pks">'+pkChips(PK_OTH,r)+'</div>'+cpqHTML(r)+
+'<div class="sec"><h3>結果の表と選定書に並べる管種</h3>'+pkHead(r,"d","電線管")+'<div class="pks">'+pkChips(PK_DEF,r)+'</div>'+pkHead(r,"o","その他の配管")+'<div class="pks">'+pkChips(PK_OTH,r)+'</div>'+cpqHTML(r)+
 (rows.length>1?'<button type="button" class="fgall" data-act="pkall" style="margin-top:8px">この選び方を全部の配管にする</button>':'')+'</div>'+
 '<div class="sec"><h3>メモ</h3><textarea data-f="memo" style="margin-top:8px" placeholder="空欄なら記載なし" aria-label="メモ">'+esc(r.memo)+'</textarea></div>'+
 '</div></article>'}
@@ -1182,7 +1189,7 @@ $("rows").addEventListener("change",function(e){if(e.target.tagName!=="SELECT")r
 /* 並べる管種(配管ごと)。最後に選んだ組み合わせは、新しく追加する配管の最初の選び方になる */
 function reCalcKeep(){var st=!$("stale").hidden;runCalc();if(st)mark()}
 $("rows").addEventListener("change",function(e){var c=e.target.closest("[data-pkr]");if(!c)return;var card=c.closest(".rc"),r=card&&rowById(card.getAttribute("data-id"));if(!r)return;
-r.show=PK.filter(function(K){var b=card.querySelector('[data-pkr="'+K+'"]');return b&&b.checked});PJ.show=r.show.slice();save();reCalcKeep()});
+r.show=PK.filter(function(K){var b=card.querySelector('[data-pkr="'+K+'"]');return b&&b.checked});PJ.show=r.show.slice();pkHeadSync(card,r);save();reCalcKeep()});
 /* ケーブル1本のときの1.5倍ルール(配管ごとに切り替え) */
 $("rows").addEventListener("change",function(e){var c=e.target.closest("[data-c15]");if(!c)return;var card=c.closest(".rc"),r=card&&rowById(card.getAttribute("data-id"));if(!r)return;
 r.c15=c.checked;mark();save()});
@@ -1194,6 +1201,8 @@ if(act==="cpqok"){cpqAdd(card,r);return}
 if(act==="tog"||act==="open"){var v=act==="open"?false:!r.cl;r.cl=v;card.classList.toggle("cl",v);var t=card.querySelector('[data-act="tog"]');t.setAttribute("aria-label",v?"ひらく":"たたむ");t.setAttribute("aria-expanded",String(!v));save();if(v)afterClose(card);else revealTop(card);return}
 if(act==="iadd"){r.items.push(defItem());rerenderCard(r);var nc=$("rows").querySelector('.rc[data-id="'+r.id+'"]'),ss=nc.querySelectorAll('[data-g="s"],[data-g="ty"]');if(ss.length)ss[ss.length-1].focus();save();return}
 if(act==="idel"){var k=+b.getAttribute("data-i");r.items.splice(k,1);if(!r.items.length)r.items.push(defItem());rerenderCard(r);mark();save();return}
+if(act==="pka"){var g=b.getAttribute("data-grp"),on=!pkAllOn(r,g);pkGrp(g).forEach(function(K){var x=card.querySelector('[data-pkr="'+K+'"]');if(x)x.checked=on});
+r.show=PK.filter(function(K){var x=card.querySelector('[data-pkr="'+K+'"]');return x&&x.checked});PJ.show=r.show.slice();pkHeadSync(card,r);save();reCalcKeep();return}
 if(act==="pkall"){PJ.show=shownPK(r);rows.forEach(function(x){x.show=PJ.show.slice()});save();renderRows();goCard(i,true);reCalcKeep();return}
 if(act==="dup"){var c=normRow(JSON.parse(JSON.stringify(r)));c.id=nextId++;c.name=(r.name||"配管"+(i+1))+"(複製)";c.cl=false;rows.splice(i+1,0,c);renderRows();mark();save();goCard(i+1);return}
 if(act==="del"){rows.splice(i,1);if(!rows.length)rows.push(defRow());renderRows();mark();save();goCard(Math.min(i,rows.length-1),true);return}});
