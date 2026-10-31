@@ -78,6 +78,7 @@ select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visi
 .pks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .pks label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:5px 11px;border:1px solid var(--line);border-radius:999px;font-size:.85rem;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:visible}
 .pks input{width:1rem;height:1rem;margin:0}
+.pkx{font-size:.72rem;color:var(--sub);margin:10px 0 -2px}
 .pks label:has(input:checked){border-color:var(--acc);background:var(--brb)}
 .iadd{width:100%;margin-top:8px;height:2.5rem;font:inherit;font-size:.85rem;font-weight:700;border:1px dashed var(--acc);border-radius:8px;background:none;color:var(--acc);cursor:pointer}
 .isum{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--head);font-size:.85rem;font-variant-numeric:tabular-nums}
@@ -416,6 +417,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--acc)}
 <p><b>管の太さ</b>は、断面積の合計が管の内断面積の32%以下になる最小の太さです(内線規程 3110-5の考え方)。管の屈曲が少なく、引き入れ・引き替えが容易な場合は48%以下で選べます。どちらで選ぶかは配管ごとに決めてください。各管の許容断面積(内断面積×32%・48%)は1mm²未満を切り捨てています。</p>
 <p><b>ケーブル1本のとき</b>の「内径 ≧ 外径 × 1.5」は、内線規程 3165節(ケーブルを管に収める場合)の考え方による確認です。共通の条件でオン・オフできます。</p>
 <p><b>管の内径</b>は次の値です。厚鋼・薄鋼・ねじなし電線管は JIS C 8305 の外径と厚さから求めた値。VE管は JIS C 8430 の内径。PF管・CD管は JIS C 8411 製品の近似内径で、PFは安全側に PFD(複層管)の値を使っています(PFD 42は40mm、54は52mm。PFS は42・54mm)。MFXは未来工業「ミラレックスR」(PFS、JIS C 8411)のカタログ値。FEP管は JIS C 3653 附属書1相当の古河電工「エフレックス」の内径(許容差±2〜4mm)です。製品によって内径は少し違うので、使うメーカーのカタログでも確認してください。</p>
+<p><b>その他の配管</b>(電線管ではないもの)は、VP・VUが JIS K 6741 の外径と近似内径(積水化学エスロンの寸法図。呼び径13〜30はJIS K 6741の表の値)、ボイドスリーブがオカベ「ボイド(紙筒)」の内径・外径です。占積率は電線管と同じ考え方で計算しています(参考値)。VP・VUの実際の内径は近似内径より少し大きいので、安全側の値です。</p>
 <p><b>FEP・MFXを地中埋設に使うとき</b>は、JIS C 3653 で管の内径をケーブル外径の1.5倍以上(2条以上はケーブルをまとめた外接円の1.5倍以上)にすることになっています。1本のときは共通の条件の1.5倍チェックで確認できます。2本以上のときは別に確認してください。</p>
 <p><b>ケーブルの外径</b>は次の値です。電力用(IV・HIV・EM-IE・VVR・CV・CVD・CVT・CVQ・EM-CE系)は矢崎エナジーシステムのカタログ値。VVF・EM-EEFと、IVの2.6mm・3.2mm・250sq以上は住電HST、CV-4Cの100sq以上は古河電工産業電線の値です。CVD・CVT・CVQ・EM-CED・EM-CET・EM-CEQは、より合わせた外径の円で断面積を出しています。VVF・EM-EEFなどの平形は、短径×長径を断面積にしています(1.5倍の確認は長径で見ます)。制御・計装用(CVV・CVVS・CPEV・CPEVS・KPEV・KPEVS)は、送ってもらったExcel「電線管選定ツール ConduitSelector Ver.1.0」(計装屋の知恵袋)の値で、CVVの3.5sqはJMACS(仕様書S07001J)の値です。弱電・通信・防災用は、HP(消防用耐熱電線)・HP-S(しゃへい付)・AE(警報用、一般用の外径)がJMACSの仕様書(S02001V・S0203P・S03001L)、UTPが日本製線(Cat5e: NSEDT 5.2mm、Cat6: EM-NSGDT6 6.2mm)、同軸が冨士電線(S-5C-FB 7.7mm・S-7C-FB 10.2mm、±0.5mm)の値です。EV-CVFは弥栄電線の2×2.6mm+1.6mmアース(7.6×15.4mm)です。HP・AEの2心は平形です。表にないケーブルは「その他」を選んで外径を入れてください。メーカーで外径は1mmくらい違うことがあるので、使うケーブルが決まったら仕様書やカタログで確認してください。</p>
 <p>電線管の内径と許容断面積</p>
@@ -475,11 +477,15 @@ PF:{n:"PF管(合成樹脂製可とう)",s:"PF",t:"PF管",l:[["PF14","21.5",14],[
 CD:{n:"CD管(合成樹脂製可とう)",s:"CD",t:"CD管",l:[["CD14","19",14],["CD16","21",16],["CD22","27.5",22],["CD28","34",28],["CD36","42",36],["CD42","48",42],["CD54","60",54]]},
 VE:{n:"VE管(硬質ビニル)",s:"VE",t:"VE管",l:[["VE14","18",14],["VE16","22",18],["VE22","26",22],["VE28","34",28],["VE36","42",35],["VE42","48",40],["VE54","60",51],["VE70","76",67],["VE82","89",77]]},
 MFX:{n:"MFX(ミラレックスR)",s:"MFX",t:"MFX",l:[["MFX-22","30.5",22],["MFX-28","36.5",28],["MFX-36","45.5",36],["MFX-42","52",41],["MFX-54","64.5",52.5],["MFX-70","81",67],["MFX-82","94.5",78.5],["MFX-100","116.5",96],["MFX-125","150.5",125],["MFX-150","179",147]]},
-FEP:{n:"FEP管(波付硬質合成樹脂)",s:"FEP",t:"FEP管",l:[["FEP30","40.0±2.0",30],["FEP40","53.5±2.0",42],["FEP50","64.5±2.5",50],["FEP65","84.5±2.5",66],["FEP80","102.0±3.0",80],["FEP100","130.0±4.0",101],["FEP125","160.0±4.0",125],["FEP150","189.0±4.0",150],["FEP200","253.0±4.0",200]]}};
-var PK=["G","C","E","PF","CD","VE","MFX","FEP"];
+FEP:{n:"FEP管(波付硬質合成樹脂)",s:"FEP",t:"FEP管",l:[["FEP30","40.0±2.0",30],["FEP40","53.5±2.0",42],["FEP50","64.5±2.5",50],["FEP65","84.5±2.5",66],["FEP80","102.0±3.0",80],["FEP100","130.0±4.0",101],["FEP125","160.0±4.0",125],["FEP150","189.0±4.0",150],["FEP200","253.0±4.0",200]]},
+/* その他の配管(電線管ではないもの)。VP・VUは JIS K 6741 の外径と近似内径(積水化学エスロン 寸法図 D-VP-001P・D-VU-001P、13〜30はJIS K 6741の表)。ボイドスリーブはオカベ「ボイド(紙筒)」の内径・外径 */
+VP:{n:"VP(硬質ポリ塩化ビニル管)",s:"VP",t:"VP",o:1,l:[["VP13","18.0",13],["VP16","22.0",16],["VP20","26.0",20],["VP25","32.0",25],["VP30","38.0",31],["VP40","48.0",40],["VP50","60.0",51],["VP65","76.0",67],["VP75","89.0",77],["VP100","114.0",100],["VP125","140.0",125],["VP150","165.0",146],["VP200","216.0",194],["VP250","267.0",240],["VP300","318.0",286]]},
+VU:{n:"VU(硬質ポリ塩化ビニル管・薄肉)",s:"VU",t:"VU",o:1,l:[["VU40","48.0",44],["VU50","60.0",56],["VU65","76.0",71],["VU75","89.0",83],["VU100","114.0",107],["VU125","140.0",131],["VU150","165.0",154],["VU200","216.0",202],["VU250","267.0",250],["VU300","318.0",298]]},
+SV:{n:"ボイドスリーブ(紙製)",s:"ボイド",t:"ボイド<br>スリーブ",o:1,l:[["ボイド50","54",50],["ボイド75","80",75],["ボイド90","96",90],["ボイド100","106",100],["ボイド125","131",125],["ボイド150","157",150],["ボイド175","182",175],["ボイド200","208",200],["ボイド250","259",250],["ボイド300","311",300]]}};
+var PK=["G","C","E","PF","CD","VE","MFX","FEP","VP","VU","SV"],PK_DEF=PK.filter(function(K){return !PIPE[K].o}),PK_OTH=PK.filter(function(K){return PIPE[K].o});
 function pn(K){return PIPE[K].t.replace("<br>","")}
 function pl(K,p){return PIPE[K].x?PIPE[K].s+" "+p[0]:p[0]}
-function shownPK(r){var a=r&&Array.isArray(r.show)?r.show:(Array.isArray(PJ.show)?PJ.show:PK);return PK.filter(function(K){return a.indexOf(K)>=0})}
+function shownPK(r){var a=r&&Array.isArray(r.show)?r.show:(Array.isArray(PJ.show)?PJ.show:PK_DEF);return PK.filter(function(K){return a.indexOf(K)>=0})}
 var CT_PW=Object.keys(CABP),CT_CT=["CVV","CVVS","CPEV","CPEVS","KPEV","KPEVS"],CT_WK=Object.keys(CABW),CT=CT_PW.concat(CT_CT,CT_WK);
 var CT_GROUPS=[["電力用(電線・ケーブル)",CT_PW],["制御・計装用",CT_CT],["弱電・通信・防災用",CT_WK]];
 var CT_LBL={HP:"HP(消防用耐熱電線)","HP-S":"HP-S(耐熱・しゃへい付)",AE:"AE(警報用)","UTP(Cat5e)":"UTP Cat5e(LAN)","UTP(Cat6)":"UTP Cat6(LAN)","同軸":"同軸(S-5C-FB・S-7C-FB)","EV-CVF":"EV-CVF(平形・EV充電用 2.6mm-2C+E)","VVF-2C":"VVF-2C(平形)","VVF-3C":"VVF-3C(平形)","VVF-4C":"VVF-4C(平形)","EM-EEF-2C":"EM-EEF-2C(平形)","EM-EEF-3C":"EM-EEF-3C(平形)","EM-EEF-4C":"EM-EEF-4C(平形)",CVV:"CVV",CVVS:"CVVS(遮へい付)",CPEV:"CPEV",CPEVS:"CPEVS(遮へい付)",KPEV:"KPEV",KPEVS:"KPEVS(遮へい付)",other:"その他(外径を入力)"};
@@ -488,7 +494,7 @@ var PAPER={a4:{w:1123,h:794,mm:[297,210],sc:2},a3:{w:1587,h:1123,mm:[420,297],sc
 var CHEV='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>';
 var $=function(id){return document.getElementById(id)};
 var rows=[],nextId=1,LASTOS=[],LASTTSV="";
-var PJ={title:"",name:"",date:"",co:"",by:"",ppr:"a4",era:"w",r15:true,show:PK.slice(),figs:true,fk:""};
+var PJ={title:"",name:"",date:"",co:"",by:"",ppr:"a4",era:"w",r15:true,show:PK_DEF.slice(),figs:true,fk:""};
 
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function isNum(v){return String(v==null?"":v).trim()!==""&&isFinite(+v)}
@@ -973,7 +979,7 @@ var d=document.createElement("div");d.className="sheet";d.style.width=P.w+"px";d
 d.innerHTML='<div class="sh"><div class="l">件名<br><b>'+esc(PJ.name||"")+'</b></div><div class="t'+(docTitle().length>8?' tl':'')+'">'+esc(docTitle())+'</div><div class="r">'+esc(dateText())+(PJ.co?'<br>'+esc(PJ.co):'')+(PJ.by?'<br>担当 '+esc(PJ.by):'')+'</div></div>'+
 '<div class="cond">選定方法: 占積率による選定(内線規程 3110-5の考え方)/ 管種ごとに、ケーブル断面積の合計が許容断面積以下となる最小のサイズ'+(PJ.r15?' / ケーブル1本のときは内径 ≧ 外径×1.5 も確認':'')+'</div>'+
 '<div class="tb"><table><colgroup>'+COLS.map(function(x){return '<col style="width:'+x[1]+'%">'}).join("")+'</colgroup><thead><tr>'+COLS.map(function(x){return '<th>'+x[0]+'</th>'}).join("")+'</tr></thead></table></div>'+
-'<div class="ft"><div><p>○占積率 = ケーブル断面積の合計 ÷ 管の内断面積 × 100</p><p>○ケーブル断面積 = π/4 × D² × 本数(D: 被覆を含む仕上がり外径[mm]。1本あたり0.1mm²に丸め)</p><p>○管の内断面積 = π/4 × d²(d: 管の内径[mm])</p><p>○管の内径: 厚鋼・薄鋼・ねじなしは JIS C 8305 の外径・厚さから算出。VEは JIS C 8430、PF・CDは JIS C 8411 製品の近似内径(PFはPFDの値)、MFXは未来工業ミラレックスR、FEPは JIS C 3653 附属書1相当品(古河電工エフレックス)の内径</p></div>'+
+'<div class="ft"><div><p>○占積率 = ケーブル断面積の合計 ÷ 管の内断面積 × 100</p><p>○ケーブル断面積 = π/4 × D² × 本数(D: 被覆を含む仕上がり外径[mm]。1本あたり0.1mm²に丸め)</p><p>○管の内断面積 = π/4 × d²(d: 管の内径[mm])</p><p>○管の内径: 厚鋼・薄鋼・ねじなしは JIS C 8305 の外径・厚さから算出。VEは JIS C 8430、PF・CDは JIS C 8411 製品の近似内径(PFはPFDの値)、MFXは未来工業ミラレックスR、FEPは JIS C 3653 附属書1相当品(古河電工エフレックス)の内径。VP・VUは JIS K 6741 の近似内径、ボイドスリーブはオカベ「ボイド」の内径</p></div>'+
 '<div><p>○管の太さ: 断面積の合計が管の内断面積の32%以下となる最小の太さ。管の屈曲が少なく、引き入れ・引き替えが容易な場合は48%以下(内線規程 3110-5)。許容断面積は1mm²未満切り捨て</p><p>○ケーブル外径はメーカー資料による参考値(平形は短径×長径を断面積とする)。実際の外径は仕様書・カタログで確認のこと</p></div></div>'+
 '<div class="pg">'+pg+'</div>';
 return d}
@@ -1040,6 +1046,7 @@ if(o.its.length){a.push(esc(o.its[0].lbl)+" ×"+o.its[0].n+(o.its.length>1?" ほ
 else a.push("ケーブル未入力");
 if(o.total!=null)a.push('断面積計 <b>'+f1(o.total)+'</b> mm²('+o.rt+'%)');
 return (r.sec?esc(r.sec)+" ・ ":"")+a.join(" ・ ")}
+function pkChips(L,r){var a=shownPK(r);return L.map(function(K){return '<label title="'+esc(PIPE[K].n)+'"><input type="checkbox" data-pkr="'+K+'"'+(a.indexOf(K)>=0?' checked':'')+'> '+esc(PIPE[K].s)+'</label>'}).join("")}
 function rowHTML(r,pos){
 return '<article class="rc'+(r.cl?' cl':'')+'" data-id="'+r.id+'">'+
 '<div class="rh"><span class="rn">'+pos+'</span><input data-f="name" value="'+esc(r.name)+'" placeholder="配管番号(例: P-1)" aria-label="配管番号"><button type="button" class="mini" data-act="dup">複製</button><button type="button" class="mini" data-act="del">削除</button><button type="button" class="mini tg" data-act="tog" aria-expanded="'+(!r.cl)+'" aria-label="'+(r.cl?'ひらく':'たたむ')+'">'+CHEV+'</button></div>'+
@@ -1053,7 +1060,7 @@ r.items.map(function(it,i){return itemHTML(it,i,r)}).join("")+
 '<div class="isum">'+isumHTML(r)+'</div></div>'+
 '<div class="sec"><h3>占積率の基準</h3><div class="g2"><div class="f"><label>占積率</label><select data-f="rt">'+RT_OPTS.map(function(x){return opt(x[0],x[1],r.rt)}).join("")+'</select></div></div>'+
 '</div>'+
-'<div class="sec"><h3>結果の表と選定書に並べる管種</h3><div class="pks">'+PK.map(function(K){return '<label title="'+esc(PIPE[K].n)+'"><input type="checkbox" data-pkr="'+K+'"'+(shownPK(r).indexOf(K)>=0?' checked':'')+'> '+esc(PIPE[K].s)+'</label>'}).join("")+'</div>'+
+'<div class="sec"><h3>結果の表と選定書に並べる管種</h3><div class="pks">'+pkChips(PK_DEF,r)+'</div><p class="pkx">その他の配管</p><div class="pks">'+pkChips(PK_OTH,r)+'</div>'+
 (rows.length>1?'<button type="button" class="fgall" data-act="pkall" style="margin-top:8px">この選び方を全部の配管にする</button>':'')+'</div>'+
 '<div class="sec"><h3>メモ</h3><textarea data-f="memo" style="margin-top:8px" placeholder="空欄なら記載なし" aria-label="メモ">'+esc(r.memo)+'</textarea></div>'+
 '</div></article>'}
@@ -1147,9 +1154,9 @@ function siteName(d){var n=d&&d.pj&&String(d.pj.name||"").trim();return n||"無�
 function snap(){return clone({v:1,pj:PJ,rows:rows})}
 function load(d){
 d=d||{};var pj=d.pj||{};
-PJ={title:"",name:"",date:"",co:"",by:"",ppr:"a4",era:"w",r15:true,show:PK.slice(),figs:true,fk:""};
+PJ={title:"",name:"",date:"",co:"",by:"",ppr:"a4",era:"w",r15:true,show:PK_DEF.slice(),figs:true,fk:""};
 for(var k in PJ){if(pj[k]!=null)PJ[k]=pj[k]}
-PJ.r15=pj.r15!==false;PJ.figs=pj.figs!==false;if(!PIPE[PJ.fk])PJ.fk="";PJ.show=Array.isArray(pj.show)?pj.show.filter(function(K){return !!PIPE[K]}):PK.slice();
+PJ.r15=pj.r15!==false;PJ.figs=pj.figs!==false;if(!PIPE[PJ.fk])PJ.fk="";PJ.show=Array.isArray(pj.show)?pj.show.filter(function(K){return !!PIPE[K]}):PK_DEF.slice();
 nextId=1;rows=(Array.isArray(d.rows)?d.rows:[]).map(normRow);
 if(!rows.length)rows=[defRow()]}
 function writeLocal(){clearTimeout(lsT);lsT=null;try{localStorage.setItem(SKEY,JSON.stringify({list:SITES}));localStorage.setItem(CKEY,CUR||"")}catch(e){}}
