@@ -71,7 +71,12 @@ select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visi
 .g3.pipe{grid-template-columns:repeat(2,minmax(0,1fr))}.g3.pipe>.f:last-child{grid-column:1/-1}
 }
 .it.ith span{font-size:.75rem;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.oth{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 6.2em;gap:6px;min-width:0}
+.oth{display:grid;grid-template-columns:minmax(0,1fr) 6.2em;gap:6px;min-width:0}
+/* その他の種別の入力欄と、一覧に戻す▾ */
+.tin{display:grid;grid-template-columns:minmax(0,1fr) 2.5em;gap:4px;min-width:0}
+.tp{position:relative;display:flex;align-items:center;justify-content:center;height:2.5rem;margin:0;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--sub);cursor:pointer}
+.tp select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.tp:focus-within{outline:2px solid var(--acc);outline-offset:1px}
 .idel{height:2.5rem;font:inherit;font-size:.8rem;border:0;background:none;color:var(--sub);cursor:pointer;border-radius:8px;padding:0}
 .idel:hover{color:var(--ng);background:var(--bg)}
 .idel:disabled{visibility:hidden}
@@ -1059,9 +1064,12 @@ finally{if(host.parentNode)document.body.removeChild(host);btn.disabled=false}}
 function opt(v,l,cur){return '<option value="'+esc(v)+'"'+(String(v)===String(cur)?' selected':'')+'>'+esc(l)+'</option>'}
 function nOpts(v){var a=[opt("","本数",v)];for(var k=1;k<=20;k++)a.push(opt(String(k),String(k),v));if(v!==""&&!(+v>=1&&+v<=20&&Math.floor(+v)===+v))a.push(opt(v,v,v));return a.join("")}
 function itemHTML(it,i,r){
-var tsel='<select data-i="'+i+'" data-g="t" aria-label="ケーブル'+(i+1)+'の種類">'+CT_GROUPS.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(k){return opt(k,CT_LBL[k]||k,it.t)}).join("")+'</optgroup>'}).join("")+'<optgroup label="その他">'+opt("other",CT_LBL.other,it.t)+'</optgroup></select>';
+var tops=CT_GROUPS.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(k){return opt(k,CT_LBL[k]||k,it.t)}).join("")+'</optgroup>'}).join("")+'<optgroup label="その他">'+opt("other",CT_LBL.other,it.t)+'</optgroup>';
+/* その他は、種類の欄がそのまま種別の入力欄になる。横の▾から一覧の種類に戻せる */
+var tsel=it.t==="other"?'<div class="tin"><input data-i="'+i+'" data-g="ty" placeholder="種別を入力" value="'+esc(it.ty)+'" aria-label="ケーブル'+(i+1)+'の種別(例: CVV-S)" autocapitalize="characters" autocomplete="off"><label class="tp" title="一覧から選ぶ"><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><select data-i="'+i+'" data-g="t" aria-label="ケーブル'+(i+1)+'の種類を一覧から選ぶ">'+tops+'</select></label></div>'
+:'<select data-i="'+i+'" data-g="t" aria-label="ケーブル'+(i+1)+'の種類">'+tops+'</select>';
 var mid;
-if(it.t==="other")mid='<div class="oth"><input data-i="'+i+'" data-g="ty" placeholder="種別" value="'+esc(it.ty)+'" aria-label="ケーブル'+(i+1)+'の種別(例: CVV-S)" autocapitalize="characters" autocomplete="off"><input data-i="'+i+'" data-g="sz" placeholder="サイズ" value="'+esc(it.sz)+'" aria-label="ケーブル'+(i+1)+'のサイズ(例: 2sq-3C)" autocomplete="off"><input data-i="'+i+'" data-g="od" type="number" inputmode="decimal" step="0.1" placeholder="外径mm" value="'+esc(it.od)+'" aria-label="ケーブル'+(i+1)+'の外径(mm)"></div>';
+if(it.t==="other")mid='<div class="oth"><input data-i="'+i+'" data-g="sz" placeholder="サイズ" value="'+esc(it.sz)+'" aria-label="ケーブル'+(i+1)+'のサイズ(例: 2sq-3C)" autocomplete="off"><input data-i="'+i+'" data-g="od" type="number" inputmode="decimal" step="0.1" placeholder="外径mm" value="'+esc(it.od)+'" aria-label="ケーブル'+(i+1)+'の外径(mm)"></div>';
 else mid='<select data-i="'+i+'" data-g="s" aria-label="ケーブル'+(i+1)+'のサイズ・心数">'+opt("",/-\dC$/.test(it.t)||!CAB[it.t][0][1]?"サイズを選ぶ":"サイズ・心数を選ぶ",it.s)+CAB[it.t].map(function(c){return opt(cabKey(c),c[0]+(c[1]?"-"+c[1]:"")+(isFlat(c)?"("+c[2]+"×"+c[3]+")":"(φ"+c[2]+")"),it.s)}).join("")+'</select>';
 return '<div class="it">'+tsel+mid+'<select data-i="'+i+'" data-g="n" aria-label="ケーブル'+(i+1)+'の本数">'+nOpts(it.n)+'</select><button type="button" class="idel" data-act="idel" data-i="'+i+'" aria-label="ケーブル'+(i+1)+'を削除"'+(r.items.length>1?'':' disabled')+'>削除</button></div>'}
 function isumHTML(r){var o=calcRow(r);
