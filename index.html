@@ -78,14 +78,6 @@ select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visi
 .pks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .pks label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:5px 11px;border:1px solid var(--line);border-radius:999px;font-size:.85rem;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:visible}
 .pks input{width:1rem;height:1rem;margin:0}
-.cpb{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
-.cph{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center}
-.cph input{font-weight:700;background:var(--card)}
-.cpr{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) 2.6em;gap:6px;align-items:center;margin-top:6px}
-.cpr input{background:var(--card)}
-.cpth span{font-size:.72rem;color:var(--sub);white-space:nowrap}
-.cpth{margin-top:8px}
-.cpw:empty{display:none}
 .pkx{font-size:.72rem;color:var(--sub);margin:10px 0 -2px}
 /* 配管カードの中から一覧にない配管を追加する */
 .cpq{font:inherit;font-size:.82rem;font-weight:700;margin-top:8px;padding:6px 12px;border:1px dashed var(--acc);border-radius:999px;background:none;color:var(--acc);cursor:pointer}
@@ -415,15 +407,9 @@ input[type=checkbox],input[type=radio]{accent-color:var(--acc)}
 </section>
 <div class="layout"><div class="colL">
 
-<section class="card">
-<h2>共通の条件</h2>
-<label class="chk" for="r15"><input type="checkbox" id="r15"> ケーブルが1本だけのときは、管の内径がケーブル外径の1.5倍以上あるかも確認する</label>
-<p class="note" style="margin-top:6px">占積率32%なら1本でもほぼ満たします。48%で選ぶときに効いてきます。</p>
-<div class="sec"><h3>一覧にない配管</h3><p class="note" style="margin:6px 0 0">名前とサイズごとの内径を入れると、各配管の「その他の配管」に出てきて、ほかの管種と同じように太さを選べます。各配管カードの「＋ 一覧にない配管を追加」からも、その場で入れられます。内径はメーカーのカタログで確かめた値を入れてください。外径は断面図だけに使います(空欄でも計算できます)。この現場だけに保存されます。</p><div id="cps"></div><button type="button" class="iadd" id="cpAdd">＋ 配管の種類を追加</button><datalist id="cpNames"></datalist></div>
-</section>
-
 <div class="rnav" id="rnav"><button type="button" class="nb" id="rPrev" aria-label="前の配管"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5l-5 5 5 5"/></svg></button><div class="chips" id="chips" aria-label="配管の一覧"></div><span class="rcount" id="rcount" aria-live="polite"></span><button type="button" class="nb" id="rNext" aria-label="次の配管"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button><button type="button" class="tadd" id="add" title="配管を追加" aria-label="配管を追加"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>追加</button></div>
 <div id="rows"></div>
+<datalist id="cpNames"></datalist>
 
 <div class="btns">
 <button type="button" class="btn pri" id="go">計算する</button>
@@ -434,11 +420,11 @@ input[type=checkbox],input[type=radio]{accent-color:var(--acc)}
 <div class="note" style="margin-top:10px">
 <p><b>ケーブルの断面積</b> = π ×(外径 ÷ 2)²。被覆を含む仕上がり外径で、0.1mm²に丸めます。本数をかけて足したものが断面積の合計です。</p>
 <p><b>管の太さ</b>は、断面積の合計が管の内断面積の32%以下になる最小の太さです(内線規程 3110-5の考え方)。管の屈曲が少なく、引き入れ・引き替えが容易な場合は48%以下で選べます。どちらで選ぶかは配管ごとに決めてください。各管の許容断面積(内断面積×32%・48%)は1mm²未満を切り捨てています。</p>
-<p><b>ケーブル1本のとき</b>の「内径 ≧ 外径 × 1.5」は、内線規程 3165節(ケーブルを管に収める場合)の考え方による確認です。共通の条件でオン・オフできます。</p>
+<p><b>ケーブル1本のとき</b>の「内径 ≧ 外径 × 1.5」は、内線規程 3165節(ケーブルを管に収める場合)の考え方による確認で、いつも確認します。</p>
 <p><b>管の内径</b>は次の値です。厚鋼・薄鋼・ねじなし電線管は JIS C 8305 の外径と厚さから求めた値。VE管は JIS C 8430 の内径。PF管・CD管は JIS C 8411 製品の近似内径で、PFは安全側に PFD(複層管)の値を使っています(PFD 42は40mm、54は52mm。PFS は42・54mm)。MFXは未来工業「ミラレックスR」(PFS、JIS C 8411)のカタログ値。FEP管は JIS C 3653 附属書1相当の古河電工「エフレックス」の内径(許容差±2〜4mm)です。製品によって内径は少し違うので、使うメーカーのカタログでも確認してください。</p>
-<p><b>一覧にない配管</b>は、入力した内径で計算します。</p>
+<p><b>一覧にない配管</b>は、各配管カードの「＋ 一覧にない配管を追加」で入れた内径で計算します。この現場だけに保存されます。</p>
 <p><b>その他の配管</b>(電線管ではないもの)は、VP・VUが JIS K 6741 の外径と近似内径(積水化学エスロンの寸法図。呼び径13〜30はJIS K 6741の表の値)、ボイドスリーブがオカベ「ボイド(紙筒)」の内径・外径です。占積率は電線管と同じ考え方で計算しています(参考値)。VP・VUの実際の内径は近似内径より少し大きいので、安全側の値です。</p>
-<p><b>FEP・MFXを地中埋設に使うとき</b>は、JIS C 3653 で管の内径をケーブル外径の1.5倍以上(2条以上はケーブルをまとめた外接円の1.5倍以上)にすることになっています。1本のときは共通の条件の1.5倍チェックで確認できます。2本以上のときは別に確認してください。</p>
+<p><b>FEP・MFXを地中埋設に使うとき</b>は、JIS C 3653 で管の内径をケーブル外径の1.5倍以上(2条以上はケーブルをまとめた外接円の1.5倍以上)にすることになっています。1本のときは1.5倍の確認が自動で入ります。2本以上のときは別に確認してください。</p>
 <p><b>ケーブルの外径</b>は次の値です。電力用(IV・HIV・EM-IE・VVR・CV・CVD・CVT・CVQ・EM-CE系)は矢崎エナジーシステムのカタログ値。VVF・EM-EEFと、IVの2.6mm・3.2mm・250sq以上は住電HST、CV-4Cの100sq以上は古河電工産業電線の値です。CVD・CVT・CVQ・EM-CED・EM-CET・EM-CEQは、より合わせた外径の円で断面積を出しています。VVF・EM-EEFなどの平形は、短径×長径を断面積にしています(1.5倍の確認は長径で見ます)。制御・計装用(CVV・CVVS・CPEV・CPEVS・KPEV・KPEVS)は、送ってもらったExcel「電線管選定ツール ConduitSelector Ver.1.0」(計装屋の知恵袋)の値で、CVVの3.5sqはJMACS(仕様書S07001J)の値です。弱電・通信・防災用は、HP(消防用耐熱電線)・HP-S(しゃへい付)・AE(警報用、一般用の外径)がJMACSの仕様書(S02001V・S0203P・S03001L)、UTPが日本製線(Cat5e: NSEDT 5.2mm、Cat6: EM-NSGDT6 6.2mm)、同軸が冨士電線(S-5C-FB 7.7mm・S-7C-FB 10.2mm、±0.5mm)の値です。EV-CVFは弥栄電線の2×2.6mm+1.6mmアース(7.6×15.4mm)です。HP・AEの2心は平形です。表にないケーブルは「その他」を選んで外径を入れてください。メーカーで外径は1mmくらい違うことがあるので、使うケーブルが決まったら仕様書やカタログで確認してください。</p>
 <p>電線管の内径と許容断面積</p>
 <div class="tw" id="reftbl" style="border:0"></div>
@@ -1077,19 +1063,20 @@ return '<button type="button" class="cpq" data-act="cpq" aria-expanded="false">�
 '<div class="f"><label>呼び</label><input data-q="n" placeholder="例: 25A" autocomplete="off"></div>'+
 '<div class="f"><label>内径(mm)</label><input data-q="id" type="number" inputmode="decimal" step="0.1" placeholder="例: 27.6"></div>'+
 '<div class="f"><label>外径(mm)</label><input data-q="od" type="number" inputmode="decimal" step="0.1" placeholder="任意"></div>'+
-'</div><p class="iwarn cpqm"></p><p class="note" style="margin-top:6px">名前が同じ配管があれば、そこにサイズを足します。</p>'+
+'</div><p class="iwarn cpqm"></p><p class="note" style="margin-top:6px">名前が同じ配管があれば、そこにサイズを足します。名前と呼びが同じなら、内径を入れ直します。</p>'+
 '<div class="cpqb"><button type="button" class="btn pri" data-act="cpqok">追加する</button><button type="button" class="btn" data-act="cpqx">やめる</button></div></div>'}
 function cpqAdd(card,r){
 var v=function(q){var el=card.querySelector('[data-q="'+q+'"]');return el?String(el.value).trim():""};
 var name=v("name").slice(0,30),n=v("n").slice(0,20),id=parseFloat(v("id")),od=v("od");
 if(!(id>0)||id>2000){card.querySelector(".cpqm").textContent="内径(mm)を入れてください";var d=card.querySelector('[data-q="id"]');if(d)d.focus();return}
 var c=null;if(name)(PJ.cp||[]).forEach(function(x){if(!c&&String(x.name||"").trim()===name)c=x});
-if(c){var emp=c.sz.filter(function(z){return !(parseFloat(z.id)>0)&&!String(z.n||"").trim()});if(emp.length)c.sz.splice(c.sz.indexOf(emp[0]),1);c.sz.push({n:n,od:od,id:String(id)})}
+var fix=false;if(c){var emp=c.sz.filter(function(z){return !(parseFloat(z.id)>0)&&!String(z.n||"").trim()});if(emp.length)c.sz.splice(c.sz.indexOf(emp[0]),1);
+var same=null;c.sz.forEach(function(z){if(!same&&String(z.n||"").trim()===n)same=z});if(same){same.id=String(id);same.od=od;fix=true}else c.sz.push({n:n,od:od,id:String(id)})}
 else{var mx=0;(PJ.cp||[]).forEach(function(x){mx=Math.max(mx,+x.k.slice(1))});c={k:"U"+(mx+1),name:name,sz:[{n:n,od:od,id:String(id)}]};PJ.cp=(PJ.cp||[]).concat([c])}
 /* この配管と、これから追加する配管の結果に並べる */
 if(!Array.isArray(r.show))r.show=shownPK(r);if(r.show.indexOf(c.k)<0)r.show.push(c.k);if(PJ.show.indexOf(c.k)<0)PJ.show.push(c.k);
 applyCP();renderCP();renderRef();
-var i=rows.indexOf(r),idx=(PJ.cp||[]).indexOf(c);CPQ_DONE={id:r.id,msg:"「"+cpName(c,idx)+(n?" "+n:"")+"」(内径"+id+"mm)を追加して、チェックを入れました"};
+var i=rows.indexOf(r),idx=(PJ.cp||[]).indexOf(c);CPQ_DONE={id:r.id,msg:"「"+cpName(c,idx)+(n?" "+n:"")+"」"+(fix?"の内径を"+id+"mmに直して":"(内径"+id+"mm)を追加して")+"、チェックを入れました"};
 save();renderRows();goCard(i,true);reCalcKeep();CPQ_DONE=null}
 function rowHTML(r,pos){
 return '<article class="rc'+(r.cl?' cl':'')+'" data-id="'+r.id+'">'+
@@ -1177,13 +1164,12 @@ var PJF=[["pjName","name"],["pjDate","date"],["pjCo","co"],["pjBy","by"]];
 PJF.forEach(function(p){$(p[0]).addEventListener("input",function(){PJ[p[1]]=$(p[0]).value;save();renderPreview()})});
 $("ppr").addEventListener("change",function(){PJ.ppr=$("ppr").value;save();renderPreview()});
 $("pera").addEventListener("change",function(){PJ.era=$("pera").value;save();renderPreview()});
-$("r15").addEventListener("change",function(){PJ.r15=$("r15").checked;save();rows.forEach(function(r){var c=$("rows").querySelector('.rc[data-id="'+r.id+'"]');if(c)liveCard(c,r)});mark()});
 /* 選定書の題名(空なら最初の題名) */
 function docTitle(){return String(PJ.title||"").trim()||"電線管選定書"}
 var ttT=0;
 $("pjTitle").addEventListener("input",function(){PJ.title=$("pjTitle").value;$("ttl").textContent=docTitle();save();clearTimeout(ttT);ttT=setTimeout(renderPreview,250)});
 $("pjTitle").addEventListener("change",function(){if(!$("pjTitle").value.trim()){PJ.title="";$("pjTitle").value=docTitle();save();renderPreview()}});
-function syncPJ(){$("pjTitle").value=docTitle();$("ttl").textContent=docTitle();PJF.forEach(function(p){$(p[0]).value=PJ[p[1]]||""});$("ppr").value=PAPER[PJ.ppr]?PJ.ppr:"a4";$("pera").value=PJ.era==="s"?"s":"w";$("r15").checked=PJ.r15!==false;$("pfig").checked=PJ.figs!==false;renderCP();renderRef()}
+function syncPJ(){$("pjTitle").value=docTitle();$("ttl").textContent=docTitle();PJF.forEach(function(p){$(p[0]).value=PJ[p[1]]||""});$("ppr").value=PAPER[PJ.ppr]?PJ.ppr:"a4";$("pera").value=PJ.era==="s"?"s":"w";$("pfig").checked=PJ.figs!==false;renderCP();renderRef()}
 $("pfig").addEventListener("change",function(){PJ.figs=$("pfig").checked;save();renderPreview()});
 
 /* 電線管の内径と許容断面積の表 */
@@ -1207,29 +1193,8 @@ c.sz.forEach(function(z,j){var d=parseFloat(z.id);if(!(d>0))return;var o=parseFl
 l.sort(function(a,b){return a[2]-b[2]});
 PIPE[c.k]={n:nm+"(手入力)",s:nm,t:esc(nm),o:1,u:1,x:1,l:l}});
 rebuildPK()}
-function cpRowHTML(z,j){return '<div class="cpr" data-cj="'+j+'"><input data-cps="n" value="'+esc(z.n)+'" placeholder="例: 25A" aria-label="呼び"><input data-cps="od" type="number" inputmode="decimal" step="0.1" value="'+esc(z.od)+'" placeholder="任意" aria-label="外径(mm)"><input data-cps="id" type="number" inputmode="decimal" step="0.1" value="'+esc(z.id)+'" placeholder="例: 27.6" aria-label="内径(mm)"><button type="button" class="idel" data-cpa="sdel" aria-label="このサイズを削除">削除</button></div>'}
-function cpWarn(c){var n=c.sz.filter(function(z){return parseFloat(z.id)>0}).length;return n?'':'内径を入れると、各配管の「その他の配管」に出てきます'}
-function renderCP(){var h=(PJ.cp||[]).map(function(c,i){
-return '<div class="cpb" data-cp="'+c.k+'"><div class="cph"><input data-cpf="name" value="'+esc(c.name)+'" placeholder="配管の名前(例: SGP、PE管)" aria-label="配管の名前"><button type="button" class="mini" data-cpa="del">削除</button></div>'+
-'<div class="cpr cpth" aria-hidden="true"><span>呼び</span><span>外径(mm)</span><span>内径(mm)</span><span></span></div>'+c.sz.map(cpRowHTML).join("")+
-'<button type="button" class="iadd" data-cpa="sadd">＋ サイズを追加</button><p class="iwarn cpw">'+cpWarn(c)+'</p></div>'}).join("");
-$("cps").innerHTML=h;var nm=[];(PJ.cp||[]).forEach(function(c){var t=String(c.name||"").trim();if(t&&nm.indexOf(t)<0)nm.push(t)});$("cpNames").innerHTML=nm.map(function(t){return '<option value="'+esc(t)+'">'}).join("")}
-function cpById(k){var r=null;(PJ.cp||[]).forEach(function(c){if(c.k===k)r=c});return r}
-/* 配管の名前やサイズが変わったら、管種の一覧と結果を作り直す(入力中の欄はそのまま) */
-var cpT=0;function cpChanged(now){applyCP();renderRef();save();clearTimeout(cpT);function go(){var i=CUR_I;renderRows();goCard(i,true);reCalcKeep()}if(now)go();else cpT=setTimeout(go,400)}
-$("cps").addEventListener("input",function(e){var b=e.target.closest(".cpb");if(!b)return;var c=cpById(b.getAttribute("data-cp"));if(!c)return;
-var f=e.target.getAttribute("data-cpf"),g=e.target.getAttribute("data-cps");
-if(f==="name")c.name=e.target.value;else if(g){var j=+e.target.closest(".cpr").getAttribute("data-cj");if(c.sz[j])c.sz[j][g]=e.target.value}else return;
-b.querySelector(".cpw").textContent=cpWarn(c);cpChanged()});
-$("cps").addEventListener("click",function(e){var a=e.target.closest("[data-cpa]");if(!a)return;var b=a.closest(".cpb"),c=b&&cpById(b.getAttribute("data-cp"));if(!c)return;var act=a.getAttribute("data-cpa");
-if(act==="sadd"){c.sz.push({n:"",od:"",id:""});renderCP();var rs=$("cps").querySelectorAll('.cpb[data-cp="'+c.k+'"] .cpr[data-cj] [data-cps="n"]');if(rs.length)rs[rs.length-1].focus();cpChanged();return}
-if(act==="sdel"){var j=+a.closest(".cpr").getAttribute("data-cj");c.sz.splice(j,1);if(!c.sz.length)c.sz.push({n:"",od:"",id:""});renderCP();cpChanged(true);return}
-if(act==="del"){PJ.cp=PJ.cp.filter(function(x){return x!==c});PJ.show=PJ.show.filter(function(K){return K!==c.k});rows.forEach(function(r){if(Array.isArray(r.show))r.show=r.show.filter(function(K){return K!==c.k})});renderCP();cpChanged(true);return}});
-$("cpAdd").addEventListener("click",function(){var n=0;(PJ.cp||[]).forEach(function(c){n=Math.max(n,+c.k.slice(1))});var k="U"+(n+1);
-PJ.cp=(PJ.cp||[]).concat([{k:k,name:"",sz:[{n:"",od:"",id:""}]}]);
-/* 追加した配管は、どの配管の結果にも並べる(いらない配管はチェックを外す) */
-if(PJ.show.indexOf(k)<0)PJ.show.push(k);rows.forEach(function(r){if(Array.isArray(r.show)&&r.show.indexOf(k)<0)r.show.push(k)});
-renderCP();var ins=$("cps").querySelectorAll('[data-cpf="name"]');if(ins.length)ins[ins.length-1].focus();cpChanged(true)});
+/* 名前の候補(配管カードの追加欄で、前に入れた名前を選べる) */
+function renderCP(){var nm=[];(PJ.cp||[]).forEach(function(c){var t=String(c.name||"").trim();if(t&&nm.indexOf(t)<0)nm.push(t)});$("cpNames").innerHTML=nm.map(function(t){return '<option value="'+esc(t)+'">'}).join("")}
 
 /* ===================== 現場ごとの保存と切り替え ===================== */
 var SKEY="cs-sites-v1",CKEY="cs-sites-cur",SITES=[],CUR=null,COL=null,lsT=null,pushT={},dirty={},inflight={},firstSync=false;
@@ -1244,7 +1209,7 @@ d=d||{};var pj=d.pj||{};
 PJ={title:"",name:"",date:"",co:"",by:"",ppr:"a4",era:"w",r15:true,show:PK_DEF.slice(),figs:true,fk:"",cp:[]};
 for(var k in PJ){if(pj[k]!=null)PJ[k]=pj[k]}
 PJ.cp=normCP(pj.cp);applyCP();
-PJ.r15=pj.r15!==false;PJ.figs=pj.figs!==false;if(!PIPE[PJ.fk])PJ.fk="";PJ.show=Array.isArray(pj.show)?pj.show.filter(function(K){return !!PIPE[K]}):PK_DEF.slice();
+PJ.r15=true;PJ.figs=pj.figs!==false;if(!PIPE[PJ.fk])PJ.fk="";PJ.show=Array.isArray(pj.show)?pj.show.filter(function(K){return !!PIPE[K]}):PK_DEF.slice();
 nextId=1;rows=(Array.isArray(d.rows)?d.rows:[]).map(normRow);
 if(!rows.length)rows=[defRow()]}
 function writeLocal(){clearTimeout(lsT);lsT=null;try{localStorage.setItem(SKEY,JSON.stringify({list:SITES}));localStorage.setItem(CKEY,CUR||"")}catch(e){}}
