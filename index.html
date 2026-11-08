@@ -394,6 +394,47 @@ h1{display:flex;align-items:center;gap:10px;font-size:1.45rem;letter-spacing:.03
 input[type=checkbox],input[type=radio]{accent-color:var(--acc)}
 /* iPhoneで入力欄をタップしたときに画面が勝手に拡大されないように(16px未満だと拡大される) */
 @media (pointer:coarse){input,select,textarea{font-size:16px!important}.pjcard .pjn input{font-size:18px!important}}
+/* AIチェック(Gemini) */
+.aic{--wa:#9a5b00}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .aic{--wa:#f0b45a}}
+:root[data-theme="dark"] .aic{--wa:#f0b45a}
+.aic h2{display:flex;align-items:center;gap:8px}
+.aitag{font-size:.7rem;font-weight:700;color:var(--sub);border:1px solid var(--line);border-radius:999px;padding:0 8px;letter-spacing:0}
+.aic .aiq{margin-top:10px}
+.aibar{display:flex;gap:10px;margin-top:10px}
+.aibar .btn{flex:1}
+.aimsg{margin-top:8px}
+.aimsg:empty{display:none}
+.aimsg.ng{color:var(--ng)}
+.aiout:empty{display:none}
+.aiout{margin-top:12px;transition:opacity .15s}
+.aiout.stale{opacity:.45}
+@media (prefers-reduced-motion:reduce){.aiout{transition:none}}
+.aiv{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.aiv .sub{font-size:.75rem;color:var(--sub)}
+.aic .badge.wa{color:var(--wa)}
+.ais{margin:8px 0 0;line-height:1.7}
+.aia{margin-top:10px;padding:8px 12px;border-left:3px solid var(--acc);border-radius:0 8px 8px 0;background:var(--brb)}
+.aia p{margin:2px 0 0;white-space:pre-wrap}
+.ail{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:8px}
+.ail li{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--bg);line-height:1.65}
+.ail li.ng{border-left-color:var(--ng);color:var(--ink)}
+.ail li.wa{border-left-color:var(--wa)}
+.ail .ait{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:2px}
+.ail .ait b{font-size:.9rem}
+.ail .ail-l{font-size:.72rem;font-weight:700;white-space:nowrap}
+.ail li.ng .ail-l{color:var(--ng)}
+.ail li.wa .ail-l{color:var(--wa)}
+.ail li .ail-l{color:var(--sub)}
+.airaw{white-space:pre-wrap;margin:8px 0 0;font-size:.9rem}
+.aifoot{margin-top:10px}
+.aiset{margin-top:12px}
+.aiset summary{margin-top:0}
+.aiset .note{margin-top:8px}
+.aiset a{color:var(--acc)}
+.aikey{display:flex;gap:8px;margin-top:8px}
+.aikey input{flex:1}
+.aikey .mini{flex:none;height:2.5rem}
 </style>
 </head>
 <body>
@@ -633,8 +674,8 @@ h+='<div class="fg">'+figInner(o)+'</div>'}
 h+='</section>'});
 $("rt").innerHTML=h||'<p class="note">配管がありません</p>';LASTTSV=tsv.join("\n");
 $("rt").classList.remove("stale");$("pv").classList.remove("stale");$("stale").hidden=true;
-renderPreview()}
-function mark(){$("rt").classList.add("stale");$("pv").classList.add("stale");$("stale").hidden=false}
+renderPreview();if(window.aiSync)aiSync()}
+function mark(){$("rt").classList.add("stale");$("pv").classList.add("stale");$("stale").hidden=false;if(window.aiStale)aiStale()}
 
 /* ===================== 断面図 =====================
    選んだ管種の選定サイズの管に、ケーブルを並べた図。管とケーブルの寸法の比率は実物どおり。
@@ -1268,7 +1309,7 @@ PJ.r15=true;PJ.figs=pj.figs!==false;if(!PIPE[PJ.fk])PJ.fk="";PJ.show=Array.isArr
 nextId=1;rows=(Array.isArray(d.rows)?d.rows:[]).map(normRow);
 if(!rows.length)rows=[defRow()]}
 function writeLocal(){clearTimeout(lsT);lsT=null;try{localStorage.setItem(SKEY,JSON.stringify({list:SITES}));localStorage.setItem(CKEY,CUR||"")}catch(e){}}
-function applyState(d){
+function applyState(d){if(window.aiReset)aiReset();
 LASTTSV="";$("tsv").hidden=true;$("cmsg").textContent="";$("pdfmsg").textContent="";
 load(d?clone(d):null);syncPJ();CUR_I=0;renderRows();$("rows").scrollLeft=0;setActive(0);runCalc()}
 function siteTouch(){
@@ -1738,6 +1779,174 @@ if(ios&&!standalone)$("sHint").hidden=false;
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){})}catch(e){}
 if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1")){
 window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}})();
+</script>
+<script>
+/* ===== AIチェック(Gemini)・電線管選定アプリの設定 ===== */
+var AICFG=(function(){
+/* 選定書の欄外(選定方法・根拠)をそのまま使う。件名・会社名・担当者は入れない */
+function method(){var sh=sheetShell(""),a=[];var c=sh.querySelector(".cond");if(c)a.push(c.textContent);Array.prototype.forEach.call(sh.querySelectorAll(".ft p"),function(p){a.push(p.textContent)});return a.join("\n")}
+function row(o,i){
+var r=o.r,L=[];
+L.push("■配管"+(i+1)+(r.name?": "+r.name:"")+(r.sec?"(区間・用途: "+r.sec+")":""));
+if(o.its.length)L.push("[ケーブル] "+o.its.map(function(x){return x.lbl+" 外径"+x.odT+"mm"+(x.fl?"(平形・短径×長径)":"")+" 1本"+f1(x.a1)+"mm² ×"+x.n+"本 = "+f1(x.sub)+"mm²"}).join(" / "));
+if(o.warn&&o.warn.length)L.push("[入力の抜け] "+o.warn.join("、"));
+if(o.err){L.push("[結果] 計算できず: "+o.err);if(r.memo)L.push("[備考] "+r.memo);return L.join("\n")}
+var c=["断面積の合計 "+f1(o.total)+"mm²(計"+o.cnt+"本)","占積率の基準 "+o.rt+"%"+(r.rt==="m"?"(手動入力)":"")];
+if(o.chk15)c.push("1本なので内径 ≧ 外径×1.5 も確認(外径"+n2(o.maxOd)+"mm)");
+if(o.off15)c.push("1本だが外径×1.5の確認は省略(短小で屈曲がない配管として)");
+L.push("[条件] "+c.join(" / "));
+var ps=shownPipes(o);
+L.push("[管種ごとの選定] "+(ps.length?ps.map(function(q){var P=PIPE[q.K];
+if(!q.p)return P.n+": 入らない(最大の"+P.l[P.l.length-1][0]+"でも不足)";
+return P.n+": "+q.p[0]+"(内径"+q.p[2]+"mm、内断面積"+q.Ai.toFixed(1)+"mm²、許容断面積"+q.allow+"mm²)占積率"+q.fill.toFixed(1)+"%"+(o.chk15?"、内径÷外径="+q.x15.toFixed(2):"")+(q.by15?"(外径×1.5の条件で決まったサイズ)":"")}).join(" / "):"並べる管種が選ばれていません"));
+var m=o.notes||[];if(m.length)L.push("[アプリのメモ] "+m.join("、"));
+if(r.memo)L.push("[備考] "+r.memo);
+return L.join("\n")}
+var cfg={
+sends:"配管名・区間や備考",
+lead:"計算結果をGoogleのAI(Gemini)に送って、ケーブルの入れまちがいや見落としがないか見てもらいます。",
+qph:"例: 配管2に弱電と動力をいっしょに入れて大丈夫?",
+empty:"ケーブルの入力がまだないので、チェックするものがありません。ケーブルと本数を入れて「計算する」を押してください。",
+sys:"あなたは日本の電気工事(電線管の配管・配線)にくわしい技術者です。電線管選定アプリ(占積率による選定)の結果を、第三者の目でチェックしてください。\n"+
+"# 見るところ\n"+
+"1. 入力の不自然さ: ケーブルの種類・サイズ・心数・本数の組み合わせ(例: 三相の幹線なのに本数が合わない、CVTを3本など)、「その他」で入れた外径が一般的な値から大きく外れていないか、区間・用途とケーブルの組み合わせ。\n"+
+"2. 検算: ケーブル断面積、合計、占積率、許容断面積を、下の方法で数字を当てはめて確かめる。\n"+
+"3. 選定の妥当性: 占積率の基準(32%と48%)の使い分け、1本のときの内径≧外径×1.5、太いケーブルや本数が多いときの引き入れのしやすさ。\n"+
+"4. 現場で見落としやすい点: 低圧の電線と弱電流電線(通信・LAN・警報など)を同じ管に入れていないか、耐火・耐熱が必要な回路(消防用設備など)の配線、FEP・MFXを地中に埋めるときの注意など。必要なときだけ。\n"+
+"# このアプリの約束(これ自体はまちがいとしない)\n"+
+"- ケーブル断面積は π/4×外径²(1本あたり0.1mm²に丸め)、平形は短径×長径。許容断面積は内断面積×基準の%(1mm²未満切り捨て)。\n"+
+"- 管種ごとに、基準以下で入る最小のサイズを並べている。どの管種を使うかは利用者が決める。\n"+
+"- 外径・内径はアプリの表(メーカー資料やJIS)の値。",
+place:function(el){var host=$("rt").closest(".card");if(host&&host.nextSibling!==el)host.parentNode.insertBefore(el,host.nextSibling)},
+ensure:function(){if(!$("stale").hidden)runCalc()},
+data:function(){
+if(!LASTOS.some(function(o){return o.its&&o.its.length}))return "";
+return "# 電線管選定(占積率)の計算結果\n## 選定方法と根拠\n"+method()+"\n## 配管ごとの入力と結果\n"+LASTOS.map(row).join("\n\n")}};
+return cfg})();
+/* ===== AIチェック(Gemini)・共通部分 =====
+   計算結果を文字にしてGoogleのGemini APIに送り、入力のまちがいや見落としを見てもらう。
+   APIキーはこの端末のlocalStorage("gemini-key")だけに保存(現場データ・クラウド・書き出しには入れない)。
+   件名・会社名・担当者は送らない。アプリごとの違い(送る文・指示)は AICFG に書く */
+(function(){
+var KEYS="gemini-key",API="https://generativelanguage.googleapis.com/v1beta/models/";
+/* 上から順に試す。latestは新しいFlashを指す名前(モデルの入れ替わりに強い)。使えないとき・混んでいるときは次へ */
+var MODELS=["gemini-flash-latest","gemini-3.8-flash","gemini-2.5-flash"];
+var SCHEMA={type:"OBJECT",properties:{
+verdict:{type:"STRING",format:"enum",enum:["問題なし","要確認","誤りの疑い"]},
+summary:{type:"STRING"},
+answer:{type:"STRING"},
+items:{type:"ARRAY",items:{type:"OBJECT",properties:{target:{type:"STRING"},level:{type:"STRING",format:"enum",enum:["誤りの疑い","要確認","参考"]},text:{type:"STRING"}},required:["target","level","text"]}}},
+required:["verdict","summary","items"]};
+var COMMON="\n\n# 返し方(JSONで返す)\n"+
+"- 形: {\"verdict\":\"…\",\"summary\":\"…\",\"answer\":\"…\",\"items\":[{\"target\":\"…\",\"level\":\"…\",\"text\":\"…\"}]}\n"+
+"- 日本語、です・ます調で、現場の人がすぐわかるように短く書く。専門用語はそのままでよい。\n"+
+"- verdict: 全体の結論。「問題なし」「要確認」「誤りの疑い」のどれか。\n"+
+"- summary: 全体のまとめを2〜3文。\n"+
+"- items: 指摘を1件ずつ。target はどの回路・配管か(例「回路2 L-2」「全体」)、level は「誤りの疑い」(計算や選定がまちがっている可能性が高い)「要確認」(入力や条件を確かめてほしい)「参考」(知っておくとよいこと)、text は2〜3文で、何がなぜ気になるか・どう確かめるか。\n"+
+"- 問題がなければ items は空でよい。指摘を無理に作らない。同じことを何度も書かない。\n"+
+"- 利用者からの質問があれば answer に答える。なければ answer は空にする。\n"+
+"- 検算は実際に数字を当てはめて行う。四捨五入・切り捨てによる差(1%程度まで)は問題にしない。\n"+
+"- 規程・法令の条番号や数値は、確かなものだけ書く。自信がないときは「〜を確認してください」と書き、断定しない。\n"+
+"- アプリの表の値(許容電流・外径・内径など)は根拠のある資料の値として受け入れる。明らかに桁がおかしいときだけ指摘する。";
+var BUSY=false,card,tick=null,GEN=0,SENT=null;
+function $a(id){return document.getElementById(id)}
+function E(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var MEMKEY="";
+function keyGet(){var k="";try{k=localStorage.getItem(KEYS)||""}catch(e){}return k||MEMKEY}
+function keySet(v){MEMKEY=v;try{if(v)localStorage.setItem(KEYS,v);else localStorage.removeItem(KEYS)}catch(e){}}
+function keyShow(){var k=keyGet(),i=$a("aiKey");i.value="";i.placeholder=k?"保存済み(…"+k.slice(-4)+")":"APIキーを貼り付け";$a("aiDel").hidden=!k}
+function msg(t,ng){var m=$a("aiMsg");m.textContent=t||"";m.classList.toggle("ng",!!ng)}
+function kmsg(t){$a("aiKMsg").textContent=t||""}
+
+function build(){
+card=document.createElement("section");card.className="card aic";card.id="aiCard";card.setAttribute("aria-labelledby","aiH");
+card.innerHTML='<h2 id="aiH">AIチェック<span class="aitag">Gemini</span></h2>'+
+'<p class="note">'+E(AICFG.lead)+'AIもまちがえることがあるので、指摘は参考にして、最後は自分で確かめてください。</p>'+
+'<div class="f aiq"><label for="aiQ">聞きたいこと(空欄でOK)</label><input id="aiQ" type="text" autocomplete="off" placeholder="'+E(AICFG.qph)+'"></div>'+
+'<div class="aibar"><button type="button" class="btn pri" id="aiGo">AIにチェックしてもらう</button></div>'+
+'<p class="note aimsg" id="aiMsg" role="status"></p>'+
+'<div class="aiout" id="aiOut" aria-live="polite"></div>'+
+'<details class="aiset" id="aiSet"><summary>AIの設定(APIキー)</summary>'+
+'<div class="note"><p>Google AI Studio(<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>)で無料のAPIキーを作って、下に貼り付けてください。キーはこの端末の中だけに保存されます(現場データやクラウド、書き出したファイルには入りません)。</p>'+
+'<p>無料枠では、送った内容がGoogleのAIの改善に使われることがあります。件名・会社名・担当者は送りません('+E(AICFG.sends)+'は送ります)。</p></div>'+
+'<div class="aikey"><input id="aiKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Gemini APIキー"><button type="button" class="mini" id="aiSave">保存</button><button type="button" class="mini" id="aiDel">消す</button></div>'+
+'<p class="note" id="aiKMsg" role="status"></p></details>';
+AICFG.place(card);
+$a("aiGo").addEventListener("click",run);
+$a("aiQ").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){e.preventDefault();run()}});
+$a("aiSave").addEventListener("click",function(){var v=$a("aiKey").value.replace(/\s+/g,"");if(!v){kmsg("キーが入っていません。貼り付けてから「保存」を押してください。");return}keySet(v);keyShow();kmsg("保存しました。");msg("")});
+$a("aiKey").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){e.preventDefault();$a("aiSave").click()}});
+$a("aiDel").addEventListener("click",function(){keySet("");keyShow();kmsg("この端末からキーを消しました。")});
+keyShow()}
+
+function render(res){
+var o=null,t=String(res.text||"").trim();
+try{o=JSON.parse(t)}catch(e){var m=t.match(/\{[\s\S]*\}/);if(m){try{o=JSON.parse(m[0])}catch(e2){}}}
+var d=new Date(),hm=d.getHours()+":"+(d.getMinutes()<10?"0":"")+d.getMinutes(),h;
+var meta='<span class="sub">'+hm+' ・ '+E(res.model)+'</span>';
+if(!o||typeof o!=="object"){h='<div class="aiv">'+meta+'</div><p class="airaw">'+E(t)+'</p>'}
+else{
+var V=String(o.verdict||"要確認"),vc=V==="問題なし"?"ok":(V==="誤りの疑い"?"ng":"wa");
+var its=Array.isArray(o.items)?o.items.filter(function(x){return x&&x.text}):[];
+var rank={"誤りの疑い":0,"要確認":1,"参考":2};its.sort(function(a,b){return (rank[a.level]!=null?rank[a.level]:3)-(rank[b.level]!=null?rank[b.level]:3)});
+h='<div class="aiv"><span class="badge '+vc+'">'+E(V)+'</span>'+meta+'</div>';
+if(o.summary)h+='<p class="ais">'+E(o.summary)+'</p>';
+if(o.answer&&String(o.answer).trim())h+='<div class="aia"><b>質問への答え</b><p>'+E(o.answer)+'</p></div>';
+if(its.length)h+='<ul class="ail">'+its.map(function(x){var c=x.level==="誤りの疑い"?"ng":(x.level==="要確認"?"wa":"");
+return '<li class="'+c+'"><div class="ait"><span class="ail-l">'+E(x.level||"参考")+'</span><b>'+E(x.target||"")+'</b></div>'+E(x.text)+'</li>'}).join("")+'</ul>'}
+h+='<p class="note aifoot">AIの指摘はまちがっていることもあります。直す前に、根拠を確かめてください。</p>';
+var out=$a("aiOut");out.innerHTML=h;out.classList.remove("stale")}
+
+function textOf(b){try{var c=b.candidates&&b.candidates[0];if(!c||!c.content||!c.content.parts)return null;
+var t=c.content.parts.filter(function(p){return p&&!p.thought&&typeof p.text==="string"}).map(function(p){return p.text}).join("");return t.trim()?t:null}catch(e){return null}}
+
+async function call(key,sys,user){
+function req(sc){var g={responseMimeType:"application/json"};if(sc)g.responseSchema=SCHEMA;return JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:"user",parts:[{text:user}]}],generationConfig:g})}
+/* 返し方の指定(responseSchema)が通らないモデルのときは、指定なしでもう一度送る(形は指示文に書いてある) */
+var busy=false,last="",sc=true;
+for(var i=0;i<MODELS.length;i++){
+var m=MODELS[i],body=req(sc),ctl=window.AbortController?new AbortController():null,to=setTimeout(function(){if(ctl)ctl.abort()},120000),res,b=null;
+try{res=await fetch(API+m+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:body,signal:ctl?ctl.signal:undefined,cache:"no-store",referrerPolicy:"no-referrer"})}
+catch(e){clearTimeout(to);if(e&&e.name==="AbortError")throw new Error("時間がかかりすぎたので止めました。もう一度押してみてください。");throw new Error("通信できませんでした。電波のよいところで、もう一度押してください。")}
+clearTimeout(to);
+try{b=await res.json()}catch(e){b=null}
+if(res.ok){var t=textOf(b);if(t)return {text:t,model:m};
+var fr=b&&b.candidates&&b.candidates[0]&&b.candidates[0].finishReason,pf=b&&b.promptFeedback&&b.promptFeedback.blockReason;
+if(pf||fr==="SAFETY"||fr==="PROHIBITED_CONTENT")throw new Error("AIが返事をしませんでした(内容の制限)。聞きたいことの書き方を変えてみてください。");
+last="返事が空でした";continue}
+var er=(b&&b.error)||{},em=String(er.message||""),det=JSON.stringify(er.details||"");
+if(/API_KEY_INVALID|API key not valid|API key expired/i.test(em+det))throw new Error("APIキーが正しくないようです。下の「AIの設定」から入れ直してください。");
+if(res.status===403)throw new Error("このAPIキーではGeminiが使えないようです(キーの制限やGoogle AI Studioの設定を確かめてください)。");
+if(res.status===429){busy=true;last="回数の上限";continue}
+if(res.status===400&&sc){sc=false;i--;last="400";continue}
+last=res.status+(em?" "+em.slice(0,80):"")}
+if(busy)throw new Error("無料枠の回数の上限に当たりました。1分ほど待ってから、もう一度押してください。1日の上限のときは、夕方(16〜17時ごろ)にリセットされます。");
+throw new Error("AIから返事がもらえませんでした("+last+")。少し待ってから、もう一度押してください。")}
+
+async function run(){
+if(BUSY)return;
+var key=keyGet();
+if(!key){msg("先にAPIキーを入れてください(下の「AIの設定」)。");var s=$a("aiSet");s.open=true;setTimeout(function(){$a("aiKey").focus()},50);return}
+AICFG.ensure();
+var data=AICFG.data();
+if(!data){msg(AICFG.empty,true);return}
+var q=$a("aiQ").value.trim();
+var user=data+(q?"\n\n# 利用者からの質問\n"+q:"\n\n# 利用者からの質問\n(なし)");
+BUSY=true;var g=GEN,btn=$a("aiGo"),t0=Date.now();btn.disabled=true;
+function upd(){var s=Math.round((Date.now()-t0)/1000);btn.textContent="チェック中… "+s+"秒";}
+upd();tick=setInterval(upd,1000);msg("計算結果を送って、AIに見てもらっています(30秒〜1分ほど)。");
+try{var res=await call(key,AICFG.sys+COMMON,user);if(g===GEN){SENT=data;render(res);msg("")}}
+catch(e){if(g===GEN)msg(e&&e.message?e.message:"うまくいきませんでした。もう一度押してください。",true)}
+finally{clearInterval(tick);tick=null;BUSY=false;btn.disabled=false;btn.textContent="AIにチェックしてもらう"}}
+
+/* 入力が変わったら、前のAIの結果を薄くする。現場やタブを切り替えたら消す */
+window.aiStale=function(){var o=$a("aiOut");if(o&&o.innerHTML)o.classList.add("stale")};
+window.aiReset=function(){if(!card)return;GEN++;SENT=null;$a("aiOut").innerHTML="";msg("")};
+/* 計算し直したとき、AIに送った結果と同じなら薄くしない */
+window.aiSync=function(){var o=$a("aiOut");if(!o||!o.innerHTML||SENT==null)return;var d="";try{d=AICFG.data()}catch(e){}o.classList.toggle("stale",d!==SENT)};
+window.aiPlace=function(){if(card)AICFG.place(card)};
+build();
+})();
 </script>
 
 </body></html>
