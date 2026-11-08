@@ -399,6 +399,16 @@ input[type=checkbox],input[type=radio]{accent-color:var(--acc)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .aic{--wa:#f0b45a}}
 :root[data-theme="dark"] .aic{--wa:#f0b45a}
 .aic h2{display:flex;align-items:center;gap:8px}
+details.aic>summary{list-style:none;display:flex;align-items:center;gap:8px;margin:0;color:var(--ink);font-size:1rem}
+details.aic>summary::-webkit-details-marker{display:none}
+details.aic>summary h2{margin:0;flex:1;min-width:0}
+.aisb .badge{font-size:.72rem}
+.aisb.stale{opacity:.45}
+.aich{flex:none;width:2.4em;height:2.4em;margin:-8px -8px -8px 0;display:grid;place-items:center;color:var(--acc)}
+.aich svg{width:20px;height:20px;transition:transform .15s}
+details.aic[open]>summary .aich svg{transform:rotate(180deg)}
+@media (prefers-reduced-motion:reduce){.aich svg{transition:none}}
+.aibody{margin-top:10px}
 .aitag{font-size:.7rem;font-weight:700;color:var(--sub);border:1px solid var(--line);border-radius:999px;padding:0 8px;letter-spacing:0}
 .aic .aiq{margin-top:10px}
 .aibar{display:flex;gap:10px;margin-top:10px}
@@ -435,6 +445,16 @@ input[type=checkbox],input[type=radio]{accent-color:var(--acc)}
 .aikey{display:flex;gap:8px;margin-top:8px}
 .aikey input{flex:1}
 .aikey .mini{flex:none;height:2.5rem}
+/* 計算結果のカード(折りたたみ) */
+details.rcard>summary{list-style:none;display:flex;align-items:center;gap:8px;margin:0;color:var(--ink);font-size:1rem}
+details.rcard>summary::-webkit-details-marker{display:none}
+details.rcard>summary h2{margin:0;flex:none}
+details.rcard>summary .mini{flex:none}
+.rst{flex:1;min-width:0;font-size:.8rem;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rst.stale{opacity:.45}
+.rst .ng,.rst .ok{font-weight:700}
+details.rcard[open]>summary .aich svg{transform:rotate(180deg)}
+.rbody{margin-top:10px}
 </style>
 </head>
 <body>
@@ -488,14 +508,14 @@ input[type=checkbox],input[type=radio]{accent-color:var(--acc)}
 </div>
 </details>
 </div><div class="colR">
-<section class="card" aria-live="polite">
-<div class="rh" style="grid-template-columns:minmax(0,1fr) auto;margin-bottom:8px"><h2 style="margin:0">計算結果</h2><button type="button" class="mini" id="copy">表をコピー</button></div>
+<details class="card rcard" id="rcL" open>
+<summary><h2>計算結果</h2><span class="rst" id="rstL"></span><button type="button" class="mini" id="copy">表をコピー</button></summary><div class="rbody" aria-live="polite">
 <p class="stale-msg" id="stale" hidden>入力が変わりました。「計算する」を押すと表と選定書が更新されます。</p>
 <div id="rt"></div>
 <p class="note" style="margin-top:8px">管種ごとに、占積率の基準以下で入る最小のサイズと、そのときの占積率です。バーの全長が管の内断面積(100%)で、塗った部分がケーブルの占める割合、縦線が基準(32%か48%)の位置です。</p>
 <p class="note" id="cmsg" style="margin-top:8px"></p>
 <textarea id="tsv" hidden readonly aria-label="コピー用の表"></textarea>
-</section>
+</div></details>
 
 <section class="card">
 <h2><span id="ttl">電線管選定書</span>(PDF・Excel)</h2>
@@ -674,8 +694,8 @@ h+='<div class="fg">'+figInner(o)+'</div>'}
 h+='</section>'});
 $("rt").innerHTML=h||'<p class="note">配管がありません</p>';LASTTSV=tsv.join("\n");
 $("rt").classList.remove("stale");$("pv").classList.remove("stale");$("stale").hidden=true;
-renderPreview();if(window.aiSync)aiSync()}
-function mark(){$("rt").classList.add("stale");$("pv").classList.add("stale");$("stale").hidden=false;if(window.aiStale)aiStale()}
+renderPreview();if(window.resSum)resSum("rstL",LASTOS,"配管",false);if(window.aiSync)aiSync()}
+function mark(){$("rt").classList.add("stale");$("pv").classList.add("stale");$("stale").hidden=false;if(window.resStale)resStale("rstL");if(window.aiStale)aiStale()}
 
 /* ===================== 断面図 =====================
    選んだ管種の選定サイズの管に、ケーブルを並べた図。管とケーブルの寸法の比率は実物どおり。
@@ -1248,7 +1268,7 @@ if(act==="pkall"){PJ.show=shownPK(r);rows.forEach(function(x){x.show=PJ.show.sli
 if(act==="dup"){var c=normRow(JSON.parse(JSON.stringify(r)));c.id=nextId++;c.name=(r.name||"配管"+(i+1))+"(複製)";c.cl=false;rows.splice(i+1,0,c);renderRows();mark();save();goCard(i+1);return}
 if(act==="del"){rows.splice(i,1);if(!rows.length)rows.push(defRow());renderRows();mark();save();goCard(Math.min(i,rows.length-1),true);return}});
 $("add").addEventListener("click",function(){rows.push(defRow());renderRows();mark();save();goCard(rows.length-1)});
-$("go").addEventListener("click",function(){runCalc();if(window.matchMedia("(max-width:1099px)").matches)$("rt").scrollIntoView({block:"start",behavior:"smooth"})});
+$("go").addEventListener("click",function(){if(window.resOpen)resOpen("rcL");runCalc();if(window.matchMedia("(max-width:1099px)").matches)$("rt").scrollIntoView({block:"start",behavior:"smooth"})});
 $("pdf").addEventListener("click",makePdf);
 $("copy").addEventListener("click",function(){
 var t=LASTTSV;
@@ -1859,8 +1879,9 @@ function msg(t,ng){var m=$a("aiMsg");m.textContent=t||"";m.classList.toggle("ng"
 function kmsg(t){$a("aiKMsg").textContent=t||""}
 
 function build(){
-card=document.createElement("section");card.className="card aic";card.id="aiCard";card.setAttribute("aria-labelledby","aiH");
-card.innerHTML='<h2 id="aiH">AIチェック<span class="aitag">Gemini</span></h2>'+
+/* 折りたためるカード。開いているかどうかはこの端末に覚えておく(はじめは閉じている) */
+card=document.createElement("details");card.className="card aic";card.id="aiCard";
+card.innerHTML='<summary><h2>AIチェック<span class="aitag">Gemini</span></h2><span class="aisb" id="aiSB"></span><span class="aich" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5 7.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary><div class="aibody">'+
 '<p class="note">'+E(AICFG.lead)+'AIもまちがえることがあるので、指摘は参考にして、最後は自分で確かめてください。</p>'+
 '<div class="f aiq"><label for="aiQ">聞きたいこと(空欄でOK)</label><input id="aiQ" type="text" autocomplete="off" placeholder="'+E(AICFG.qph)+'"></div>'+
 '<div class="aibar"><button type="button" class="btn pri" id="aiGo">AIにチェックしてもらう</button></div>'+
@@ -1870,7 +1891,11 @@ card.innerHTML='<h2 id="aiH">AIチェック<span class="aitag">Gemini</span></h2
 '<div class="note"><p>Google AI Studio(<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>)で無料のAPIキーを作って、下に貼り付けてください。キーはこの端末の中だけに保存されます(現場データやクラウド、書き出したファイルには入りません)。</p>'+
 '<p>無料枠では、送った内容がGoogleのAIの改善に使われることがあります。件名・会社名・担当者は送りません('+E(AICFG.sends)+'は送ります)。</p></div>'+
 '<div class="aikey"><input id="aiKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Gemini APIキー"><button type="button" class="mini" id="aiSave">保存</button><button type="button" class="mini" id="aiDel">消す</button></div>'+
-'<p class="note" id="aiKMsg" role="status"></p></details>';
+'<p class="note" id="aiKMsg" role="status"></p></details></div>';
+var op=false;try{op=localStorage.getItem("ai-open")==="1"}catch(e){}
+/* data-init: 起動時に開いた状態へ戻すときは、画面を動かさない */
+if(op){card.setAttribute("data-init","1");card.open=true}
+card.addEventListener("toggle",function(e){if(e.target!==card)return;card.removeAttribute("data-init");try{localStorage.setItem("ai-open",card.open?"1":"0")}catch(err){}});
 AICFG.place(card);
 $a("aiGo").addEventListener("click",run);
 $a("aiQ").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){e.preventDefault();run()}});
@@ -1884,9 +1909,9 @@ var o=null,t=String(res.text||"").trim();
 try{o=JSON.parse(t)}catch(e){var m=t.match(/\{[\s\S]*\}/);if(m){try{o=JSON.parse(m[0])}catch(e2){}}}
 var d=new Date(),hm=d.getHours()+":"+(d.getMinutes()<10?"0":"")+d.getMinutes(),h;
 var meta='<span class="sub">'+hm+' ・ '+E(res.model)+'</span>';
-if(!o||typeof o!=="object"){h='<div class="aiv">'+meta+'</div><p class="airaw">'+E(t)+'</p>'}
+var V="",vc="";if(!o||typeof o!=="object"){h='<div class="aiv">'+meta+'</div><p class="airaw">'+E(t)+'</p>'}
 else{
-var V=String(o.verdict||"要確認"),vc=V==="問題なし"?"ok":(V==="誤りの疑い"?"ng":"wa");
+V=String(o.verdict||"要確認");vc=V==="問題なし"?"ok":(V==="誤りの疑い"?"ng":"wa");
 var its=Array.isArray(o.items)?o.items.filter(function(x){return x&&x.text}):[];
 var rank={"誤りの疑い":0,"要確認":1,"参考":2};its.sort(function(a,b){return (rank[a.level]!=null?rank[a.level]:3)-(rank[b.level]!=null?rank[b.level]:3)});
 h='<div class="aiv"><span class="badge '+vc+'">'+E(V)+'</span>'+meta+'</div>';
@@ -1895,7 +1920,9 @@ if(o.answer&&String(o.answer).trim())h+='<div class="aia"><b>質問への答え<
 if(its.length)h+='<ul class="ail">'+its.map(function(x){var c=x.level==="誤りの疑い"?"ng":(x.level==="要確認"?"wa":"");
 return '<li class="'+c+'"><div class="ait"><span class="ail-l">'+E(x.level||"参考")+'</span><b>'+E(x.target||"")+'</b></div>'+E(x.text)+'</li>'}).join("")+'</ul>'}
 h+='<p class="note aifoot">AIの指摘はまちがっていることもあります。直す前に、根拠を確かめてください。</p>';
-var out=$a("aiOut");out.innerHTML=h;out.classList.remove("stale")}
+var out=$a("aiOut");out.innerHTML=h;out.classList.remove("stale");
+/* 閉じていても結論がわかるように、見出しの横にも出す */
+var sb=$a("aiSB");sb.innerHTML=(o&&typeof o==="object")?'<span class="badge '+vc+'">'+E(V)+'</span>':"";sb.classList.remove("stale")}
 
 function textOf(b){try{var c=b.candidates&&b.candidates[0];if(!c||!c.content||!c.content.parts)return null;
 var t=c.content.parts.filter(function(p){return p&&!p.thought&&typeof p.text==="string"}).map(function(p){return p.text}).join("");return t.trim()?t:null}catch(e){return null}}
@@ -1940,12 +1967,32 @@ catch(e){if(g===GEN)msg(e&&e.message?e.message:"うまくいきませんでし�
 finally{clearInterval(tick);tick=null;BUSY=false;btn.disabled=false;btn.textContent="AIにチェックしてもらう"}}
 
 /* 入力が変わったら、前のAIの結果を薄くする。現場やタブを切り替えたら消す */
-window.aiStale=function(){var o=$a("aiOut");if(o&&o.innerHTML)o.classList.add("stale")};
-window.aiReset=function(){if(!card)return;GEN++;SENT=null;$a("aiOut").innerHTML="";msg("")};
+window.aiStale=function(){var o=$a("aiOut");if(o&&o.innerHTML){o.classList.add("stale");$a("aiSB").classList.add("stale")}};
+window.aiReset=function(){if(!card)return;GEN++;SENT=null;$a("aiOut").innerHTML="";$a("aiSB").innerHTML="";msg("")};
 /* 計算し直したとき、AIに送った結果と同じなら薄くしない */
-window.aiSync=function(){var o=$a("aiOut");if(!o||!o.innerHTML||SENT==null)return;var d="";try{d=AICFG.data()}catch(e){}o.classList.toggle("stale",d!==SENT)};
+window.aiSync=function(){var o=$a("aiOut");if(!o||!o.innerHTML||SENT==null)return;var d="";try{d=AICFG.data()}catch(e){}o.classList.toggle("stale",d!==SENT);$a("aiSB").classList.toggle("stale",d!==SENT)};
 window.aiPlace=function(){if(card)AICFG.place(card)};
 build();
+})();
+window.resInit=function(){resSum("rstL",LASTOS,"配管",false)};
+/* ===== 計算結果のカードを折りたためるようにする =====
+   開いているかどうかはこの端末に覚えておく(はじめは開いている)。閉じていても見出しの横に件数とNGの数を出す */
+(function(){
+var CH='<span class="aich" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5 7.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+Array.prototype.forEach.call(document.querySelectorAll("details.rcard"),function(d){
+d.querySelector("summary").insertAdjacentHTML("beforeend",CH);
+var k="fold-"+d.id,v=null;try{v=localStorage.getItem(k)}catch(e){}
+if(v==="0")d.open=false;
+d.addEventListener("toggle",function(e){if(e.target!==d)return;try{localStorage.setItem(k,d.open?"1":"0")}catch(err){}})});
+/* 見出しの中の「表をコピー」を押しても、開け閉めしない */
+Array.prototype.forEach.call(document.querySelectorAll("details.rcard>summary button"),function(b){b.addEventListener("click",function(e){e.preventDefault()})});
+window.resOpen=function(id){var d=document.getElementById(id);if(d&&!d.open)d.open=true};
+window.resStale=function(id){var s=document.getElementById(id);if(s)s.classList.add("stale")};
+window.resSum=function(id,os,unit,judge){var s=document.getElementById(id);if(!s)return;
+var n=os.length,ng=0,er=0;os.forEach(function(o){if(o.err)er++;else if(judge&&o.ok===false)ng++});
+var a=[n+unit];if(ng)a.push('<span class="ng">NG '+ng+'</span>');if(er)a.push('<span class="ng">要確認 '+er+'</span>');if(judge&&n&&!ng&&!er&&os.some(function(o){return o.ok===true}))a.push('<span class="ok">すべてOK</span>');
+s.innerHTML=a.join(" ・ ");s.classList.remove("stale")};
+if(window.resInit)resInit();
 })();
 </script>
 
