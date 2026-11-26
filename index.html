@@ -550,7 +550,7 @@ body.km #aiCard{display:none!important}
 <p><b>管の太さ</b>は、断面積の合計が管の内断面積の32%以下になる最小の太さです(内線規程 3110-5の考え方)。管の屈曲が少なく、引き入れ・引き替えが容易な場合は48%以下で選べます。どちらで選ぶかは配管ごとに決めてください。各管の許容断面積(内断面積×32%・48%)は1mm²未満を切り捨てています。</p>
 <p><b>ケーブル1本のとき</b>の「内径 ≧ 外径 × 1.5」は、内線規程 3165節(ケーブルを管に収める場合)の考え方による確認で、いつも確認します。</p>
 <p><b>管の内径</b>は次の値です。厚鋼・薄鋼・ねじなし電線管は JIS C 8305 の外径と厚さから求めた値。VE管は JIS C 8430 の内径。PF管・CD管は JIS C 8411 製品の近似内径で、PFは安全側に PFD(複層管)の値を使っています(PFD 42は40mm、54は52mm。PFS は42・54mm)。MFXは未来工業「ミラレックスR」(PFS、JIS C 8411)のカタログ値。FEP管は JIS C 3653 附属書1相当の古河電工「エフレックス」の内径(許容差±2〜4mm)です。製品によって内径は少し違うので、使うメーカーのカタログでも確認してください。</p>
-<p class="conly"><b>貫通処理穴・スリーブの検討</b>は、上の「区画貫通選定」に切り替えて使います。通す物に電線管も入れられ、処理方法の判定もできます。</p>
+<p class="conly"><b>電線管を管の中に入れる</b>ときは、ケーブルの種類で「電線管」を選びます。電線管は外径(JISなどの基準寸法。許容差は省略)で断面積を計算し、ケーブルと合わせて占積率を出します。電線管を含むときは、ケーブル1本のときの1.5倍の確認はしません。区画貫通の処理方法の判定は、上の「区画貫通選定」に切り替えて使います。</p>
 <p class="konly"><b>区画貫通選定</b>は、貫通ごとに通す物(ケーブル・電線管)を入れると、スリーブや開口に使う管種ごとに、占積率の基準以下で入る最小の太さを出し、選んだ処理方法の条件に合うかをOK・NGで判定します。</p>
 <p class="konly"><b>金属管で貫通</b>は、建築基準法施行令 第129条の2の4 第1項第七号イ(貫通する部分と両側1m以内を不燃材料で造る)によります。通す物がすべて鋼製の電線管(厚鋼・薄鋼・ねじなし)のときOKにします。</p>
 <p class="konly"><b>鋼製スリーブを両側1m以上出す</b>は、同じ七号イの扱いで、スリーブを区画の両側に1m以上突き出すと、スリーブの中の条件は問われません(国土交通省 令和2年度建築基準整備促進事業 P13の資料)。スリーブの管種が鋼管(厚鋼・薄鋼・ねじなし)のときOKにします。</p>
@@ -770,7 +770,7 @@ if(o.rt==null){o.err="占積率(%)を入れてください(1〜100)";return o}
 if(r.rt==="m")o.notes.push("占積率の基準 "+o.rt+"%(手動入力)");
 /* 管種ごとに、基準の占積率以下で入る最小サイズと、そのときの占積率 */
 o.pipes=PK.map(function(K){var p=first(K,o.rt,o.chk15),q={K:K,p:p};if(p){q.Ai=circ(p[2]);q.allow=allowA(p[2],o.rt);q.fill=o.total/q.Ai*100;if(o.chk15){var f=first(K,o.rt,false);q.by15=!f||f[0]!==p[0];q.x15=p[2]/o.maxOd}}return q});
-if(o.hasP&&!r.kk)o.notes.push("電線管を含む(貫通処理穴・スリーブの検討。電線管は外径の基準寸法で計算)");
+if(o.hasP&&!r.kk)o.notes.push("電線管を含む(電線管は外径の基準寸法で計算)");
 if(r.kk&&r.rt==="k"){var km0=kmFind(r.mt);o.notes.push(km0&&/^N/.test(km0.k)&&kmNum(km0.rt)?"占積率の基準は処理方法の上限("+o.rt+"%)":"占積率の基準 "+o.rt+"%(処理方法に上限なし)")}
 if(o.chk15)o.notes.push("1本のため内径≧外径×1.5を確認(外径"+n2(o.maxOd)+"mm×1.5="+n2(1.5*o.maxOd)+"mm以上。どの管種も満たすサイズを選定)");
 if(o.off15)o.notes.push("1本だが外径×1.5の確認は省略(管が短小で屈曲がなく、引き替えが容易なもの。内線規程3165-1)");
@@ -1304,7 +1304,7 @@ function opt(v,l,cur){return '<option value="'+esc(v)+'"'+(String(v)===String(cu
 function nOpts(v){var a=[opt("","本数",v)];for(var k=1;k<=20;k++)a.push(opt(String(k),String(k),v));if(v!==""&&!(+v>=1&&+v<=20&&Math.floor(+v)===+v))a.push(opt(v,v,v));return a.join("")}
 function itemHTML(it,i,r){
 var pg='<optgroup label="電線管">'+PK_IN.map(function(K){return opt("P:"+K,PIPE[K].n,it.t)}).join("")+'</optgroup>';
-var tsel='<select data-i="'+i+'" data-g="t" aria-label="ケーブル'+(i+1)+'の種類">'+(r.kk?pg:'')+CT_GROUPS.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(k){return opt(k,CT_LBL[k]||k,it.t)}).join("")+'</optgroup>'}).join("")+(!r.kk&&itPK(it.t)?pg:'')+'<optgroup label="その他">'+opt("other",CT_LBL.other,it.t)+'</optgroup></select>';
+var tsel='<select data-i="'+i+'" data-g="t" aria-label="ケーブル'+(i+1)+'の種類">'+(r.kk?pg:'')+CT_GROUPS.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(k){return opt(k,CT_LBL[k]||k,it.t)}).join("")+'</optgroup>'}).join("")+(!r.kk?pg:'')+'<optgroup label="その他">'+opt("other",CT_LBL.other,it.t)+'</optgroup></select>';
 var mid,pK=itPK(it.t);
 if(pK)mid='<select data-i="'+i+'" data-g="s" aria-label="電線管'+(i+1)+'のサイズ">'+opt("","サイズを選ぶ",it.s)+PIPE[pK].l.map(function(p){return opt(p[0],p[0]+"(外径"+podT(p)+")",it.s)}).join("")+'</select>';
 else if(it.t==="other")mid='<div class="oth"><input data-i="'+i+'" data-g="ty" placeholder="種別" value="'+esc(it.ty)+'" aria-label="ケーブル'+(i+1)+'の種別(例: CVV-S)" autocapitalize="characters" autocomplete="off"><input data-i="'+i+'" data-g="sz" placeholder="サイズ" value="'+esc(it.sz)+'" aria-label="ケーブル'+(i+1)+'のサイズ(例: 2sq-3C)" autocomplete="off"><input data-i="'+i+'" data-g="od" type="number" inputmode="decimal" step="0.1" placeholder="外径mm" value="'+esc(it.od)+'" aria-label="ケーブル'+(i+1)+'の外径(mm)"></div>';
