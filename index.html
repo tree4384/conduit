@@ -527,7 +527,8 @@ body.km .conly{display:none!important}
 .sttag{display:inline-block;font-size:.7rem;font-weight:700;line-height:1.5;padding:0 6px;border-radius:4px;margin-left:5px;vertical-align:1px;background:var(--head);color:var(--sub);white-space:nowrap}
 .sttag.old{background:var(--ng);color:#fff}
 .kmd .kma{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
-.klbar{display:flex;justify-content:flex-end;margin:-6px 0 12px}
+.klbar{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin:-6px 0 12px}
+.kmsh .fmb2>.note{margin:0}
 .klb{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:.85rem;font-weight:700;padding:7px 14px;border-radius:999px;border:1px solid var(--acc);background:var(--card);color:var(--acc);cursor:pointer}
 .klb svg{width:1.1em;height:1.1em}
 .klb:hover{background:var(--brb)}
@@ -1745,7 +1746,7 @@ function kmSelHTML(r){var u=PJ.km||[],cur=kmFind(r.mt),mk=KM_MK.filter(function(
 return '<select data-f="mt" aria-label="処理方法">'+opt("AUTO","おまかせ(使える工法を自動で提案)",r.mt)+'<optgroup label="法令による方法">'+KM_BI.map(function(m){return opt(m.k,m.name,r.mt)}).join("")+'</optgroup>'+
 '<optgroup label="メーカーの認定工法(この区画・開口に合うもの)">'+(mk.length?mk.map(function(m){return opt(m.k,m.pr+" "+m.no+(m.st==="eol"?"(在庫限り)":""),r.mt)}).join(""):'<option disabled>(合う工法がありません)</option>')+'</optgroup>'+
 (cur&&isMK(cur)&&(!kmFits(r,cur)||cur.st==="old")?'<optgroup label="'+(cur.st==="old"?'廃番(使えない)':'区画・開口に合わない')+'">'+opt(cur.k,cur.pr+" "+cur.no,r.mt)+'</optgroup>':'')+
-'<optgroup label="登録した認定工法">'+(u.length?u.map(function(m){return opt(m.k,kmName(m),r.mt)}).join(""):'<option disabled>(下の「区画貫通の処理方法」で登録)</option>')+'</optgroup>'+(cur||r.mt==="AUTO"?'':opt(r.mt,"(消えた処理方法)",r.mt))+'</select>'}
+'<optgroup label="登録した認定工法">'+(u.length?u.map(function(m){return opt(m.k,kmName(m),r.mt)}).join(""):'<option disabled>(上の「工法を追加」で登録)</option>')+'</optgroup>'+(cur||r.mt==="AUTO"?'':opt(r.mt,"(消えた処理方法)",r.mt))+'</select>'}
 function kSecHTML(r){var m=kmFind(r.mt),R=r.sh==="r";
 return '<div class="sec"><h3>区画と処理方法</h3><div class="g2"><div class="f"><label>区画</label><select data-f="kz">'+KM_KZ.map(function(x){return opt(x[0],x[1],r.kz)}).join("")+'</select></div>'+
 '<div class="f"><label>区画の厚さ(mm)</label><input data-f="kt" type="text" inputmode="decimal" value="'+esc(r.kt)+'" placeholder="例: 150" autocomplete="off"></div>'+
@@ -2587,6 +2588,12 @@ b.addEventListener("click",function(){var c=document.getElementById("aiCard");if
 var sb=document.getElementById("aiSB");if(sb&&sb.parentNode!==b)b.appendChild(sb);
 var f=rfoot(host);if(f&&b.parentNode!==f)f.appendChild(b)}
 howDock(document.getElementById("howC"),document.getElementById("rcL"));fmDock(document.getElementById("fmOpen"),document.getElementById("rcL"));
+/* 認定工法の登録カードもシートに移し、「工法一覧」の隣の「工法を追加」ボタンから開く */
+(function(det){if(!det)return;var sm=det.querySelector("summary"),d=sheet("kmDlg","kmsh","認定工法の追加(この現場)"),bx=d.querySelector(".fmb2");
+Array.prototype.slice.call(det.childNodes).forEach(function(n){if(n!==sm)bx.appendChild(n)});det.remove();
+var bar=document.querySelector(".klbar");if(!bar)return;var b=document.createElement("button");b.type="button";b.className="klb";b.id="kmOpenB";b.setAttribute("aria-haspopup","dialog");
+b.innerHTML='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>工法を追加';
+b.addEventListener("click",function(){sheetOpen(d)});bar.insertBefore(b,bar.firstChild)})(document.getElementById("kmCard"));
 var AICFG=(function(){
 /* 選定書の欄外(選定方法・根拠)をそのまま使う。件名・会社名・担当者は入れない */
 /* full: 欄外の根拠まで入れる(AIチェックではいつも入れる) */
