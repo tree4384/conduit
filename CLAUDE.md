@@ -1,14 +1,14 @@
 # このリポジトリで作業するClaudeへ
 
-電線管選定アプリ(GitHub Pagesで公開しているアプリ)です。持ち主はタイチ。
+配管区画選定アプリ(GitHub Pagesで公開しているアプリ。2026-11-26に「電線管選定アプリ」から名前を変更。中に「電線管選定」と「区画貫通選定」の切り替えがある)です。持ち主はタイチ。
 
 ## アプリを更新したら、Googleドライブにバックアップする
 タイチの希望で、アプリを更新して main に push したら、そのたびに Googleドライブ「電気 › アプリ」へ zip でバックアップします。
 ドライブへの保存はバックアップページ(Claudeのアーティファクト)が行います。ページを開くと、まだの分を自動でドライブに保存し、同じアプリの古いzipをゴミ箱に移します。
 
 - バックアップページ: https://claude.ai/artifact/Rzjzq7G4T7dycu5ozNWEAi
-- このリポジトリの key: `conduit` / アプリ名: `電線管選定アプリ`
-- もう一方のアプリ: tree4384/conduit(conduit・電線管選定アプリ)、tree4384/vd-calc(vd-calc・電圧降下アプリ)
+- このリポジトリの key: `conduit` / アプリ名: `配管区画選定アプリ`
+- もう一方のアプリ: tree4384/vd-calc(vd-calc・電圧降下アプリ)
 
 手順(push したあと):
 1. 下のスクリプトで zip を作り、ページのデータ置き場に入れる JSON を作る(REPO_DIR はこのリポジトリのパス)。
@@ -22,7 +22,7 @@
 zip の中身を書き写して Googleドライブに直接アップロードしないこと(1文字でも間違えると壊れたファイルが黙って保存されるため)。
 
 ```bash
-set -e; KEY=conduit; APP=電線管選定アプリ; REPO_DIR=/home/claude/conduit
+set -e; KEY=conduit; APP=配管区画選定アプリ; REPO_DIR=/home/claude/conduit
 W=$(mktemp -d); SHA=$(git -C $REPO_DIR rev-parse HEAD)
 WHEN=$(TZ=Asia/Tokyo git -C $REPO_DIR log -1 --date=format-local:'%Y-%m-%d_%H%M' --format=%cd); MSG=$(git -C $REPO_DIR log -1 --format=%s)
 git -C $REPO_DIR archive --format=zip -9 --prefix=$KEY/ -o $W/b.zip HEAD

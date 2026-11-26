@@ -6,14 +6,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="referrer" content="no-referrer">
-<title>電線管選定</title>
-<meta name="description" content="配管ごとのケーブルと本数から電線管の太さを選定し、電線管選定書をPDFで出力します。">
+<title>配管区画選定</title>
+<meta name="description" content="ケーブルと本数から電線管の太さを選定し、区画貫通のスリーブ・開口と処理方法(認定工法)も選定。選定書をPDF・Excelで出力します。">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="電線管">
+<meta name="apple-mobile-web-app-title" content="配管区画">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#eef2f3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e1719" media="(prefers-color-scheme: dark)">
@@ -520,7 +520,7 @@ body.km #aiCard{display:none!important}
 <p class="shint" id="sHint" hidden>ホーム画面に追加して使うと、保存した現場が消えにくくなります(Safariの共有ボタン →「ホーム画面に追加」)。</p>
 </aside>
 <main>
-<header class="top"><div class="topbar"><button type="button" class="sbtn" id="sOpen" aria-controls="side" aria-expanded="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h9"/></svg><span id="sCur">現場一覧</span></button><div class="thm" id="thm" role="group" aria-label="画面の色"><button type="button" data-th="auto" aria-pressed="false" title="端末の設定に合わせる">自動</button><button type="button" data-th="light" aria-pressed="false">ライト</button><button type="button" data-th="dark" aria-pressed="false">ダーク</button></div></div><h1><img class="appi" src="icon-192.png" alt="" width="36" height="36">電線管選定</h1>
+<header class="top"><div class="topbar"><button type="button" class="sbtn" id="sOpen" aria-controls="side" aria-expanded="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h9"/></svg><span id="sCur">現場一覧</span></button><div class="thm" id="thm" role="group" aria-label="画面の色"><button type="button" data-th="auto" aria-pressed="false" title="端末の設定に合わせる">自動</button><button type="button" data-th="light" aria-pressed="false">ライト</button><button type="button" data-th="dark" aria-pressed="false">ダーク</button></div></div><h1><img class="appi" src="icon-192.png" alt="" width="36" height="36">配管区画選定</h1>
 <p class="lead">配管ごとにケーブルと本数を入れて「計算する」を押すと、管種ごとの太さと占積率が出ます。断面図と選定書(PDF・Excel)、断面図のDXFも作れます。</p></header>
 <section class="card pjcard">
 <div class="pjgrid">
@@ -2037,7 +2037,7 @@ var c=siteById(CUR);if(c){c.data=snap();c.name=siteName(c.data)}
 var list=SITES.filter(function(s){return !s.fresh}).map(function(s){return {id:s.id,name:s.name,updated:s.updated,data:s.data||{}}});
 if(!list.length){bkMsg("書き出す現場がまだありません。",true);return}
 var body=JSON.stringify({app:"cs-calc",format:1,exported:Date.now(),list:list},null,1);
-deliverFile(new Blob([body],{type:"application/json"}),"電線管選定_現場データ_"+ymd()+".json",$("bkMsg"),true)});
+deliverFile(new Blob([body],{type:"application/json"}),"配管区画選定_現場データ_"+ymd()+".json",$("bkMsg"),true)});
 $("bkIn").addEventListener("click",function(){$("bkFile").value="";$("bkFile").click()});
 $("bkFile").addEventListener("change",function(){
 var f=this.files&&this.files[0];if(!f)return;
@@ -2207,7 +2207,7 @@ if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostnam
 window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}})();
 </script>
 <script>
-/* ===== AI要約・チェック(Gemini)・電線管選定アプリの設定 ===== */
+/* ===== AI要約・チェック(Gemini)・配管区画選定アプリ(電線管選定)の設定 ===== */
 var AICFG=(function(){
 /* 選定書の欄外(選定方法・根拠)をそのまま使う。件名・会社名・担当者は入れない */
 /* full: 欄外の根拠まで入れる(AIチェックではいつも入れる) */
@@ -2234,7 +2234,7 @@ sends:"配管名・区間や備考",
 lead:"計算結果をGoogleのAI(Gemini)に送ります。",
 empty:"ケーブルの入力がまだないので、AIに送るものがありません。ケーブルと本数を入れて「計算する」を押してください。",
 sys:function(){return CHK+"\n# 要約(overview・points)の書き方\n"+PTS}};
-var CHK="あなたは日本の電気工事(電線管の配管・配線)にくわしい技術者です。電線管選定アプリ(占積率による選定)の結果を、第三者の目でチェックし、あわせて現場の人がひと目でわかる要約も書いてください。\n"+
+var CHK="あなたは日本の電気工事(電線管の配管・配線)にくわしい技術者です。配管区画選定アプリの電線管選定(占積率による選定)の結果を、第三者の目でチェックし、あわせて現場の人がひと目でわかる要約も書いてください。\n"+
 "# 見るところ\n"+
 "1. 入力の不自然さ: ケーブルの種類・サイズ・心数・本数の組み合わせ(例: 三相の幹線なのに本数が合わない、CVTを3本など)、「その他」で入れた外径が一般的な値から大きく外れていないか、区間・用途とケーブルの組み合わせ。\n"+
 "2. 検算: ケーブル断面積、合計、占積率、許容断面積を、下の方法で数字を当てはめて確かめる。\n"+
