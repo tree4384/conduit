@@ -740,7 +740,7 @@ function kmAll(){return KM_BI.concat(KM_MK,PJ.km||[])}
 function kmFind(k){var L=kmAll();for(var i=0;i<L.length;i++){if(L[i].k===k)return L[i]}return null}
 function isMK(m){return !!(m&&m.mk)}
 function isUser(m){return !!(m&&/^N/.test(m.k))}
-function kmName(m){if(!m)return "(処理方法が見つかりません)";if(isUser(m))return (String(m.name||"").trim()||"認定工法")+(String(m.no||"").trim()?"("+String(m.no).trim()+")":"");if(isMK(m))return m.pr+"("+m.no+")";return m.name}
+function kmName(m){if(!m)return "該当なし";if(isUser(m))return (String(m.name||"").trim()||"認定工法")+(String(m.no||"").trim()?"("+String(m.no).trim()+")":"");if(isMK(m))return m.pr+"("+m.no+")";return m.name}
 function kmNum(v){var x=parseFloat(String(v==null?"":v).replace(/[^\d.]/g,""));return isFinite(x)&&x>0?x:null}
 /* 認定工法の条件を、メーカー工法と登録した工法で同じ形にする */
 function kmCond(m){if(!m)return null;if(isMK(m))return {kz:m.kz,fr:1,sh:m.sh,dmax:m.dmax||null,dmaxN:m.dmaxN||null,amax:m.amax||null,rmax:m.rmax||null,fill:m.fill==null?null:m.fill,kits:m.kits||null,c:!!m.c,csq:m.csq||null,cod:m.cod||null,p:m.p,pod:m.pod||null,pn:m.pn||null,mix:m.mix!==false,tmin:m.tmin||null};
@@ -828,7 +828,7 @@ function afterClose(el){if(el&&el.getBoundingClientRect().top<0)revealTop(el)}
 
 function defItem(){return {t:"IV",s:"",n:"",ty:"",sz:"",od:""}}
 function defRow(md){md=md||APPM;var r={id:nextId++,name:"",sec:"",items:[defItem()],k:(PJ&&PIPE[PJ.fk])?PJ.fk:"G",rt:"32",rtm:"",sz:"",memo:"",cl:false,c15:true,show:md==="k"?kShowDef():(Array.isArray(PJ.show)?PJ.show.slice():PK_DEF.slice())};
-if(md==="k"){r.kk=true;r.kz="w";r.fr="1";r.mt="M1";r.rt="k";r.c15=false;r.sh="c";r.kt="";r.rw="";r.rh="";r.items=[{t:"P:G",s:"",n:"",ty:"",sz:"",od:""}]}return r}
+if(md==="k"){r.kk=true;r.kz="w";r.fr="1";r.mt="AUTO";r.rt="k";r.c15=false;r.sh="c";r.kt="";r.rw="";r.rh="";r.items=[{t:"P:G",s:"",n:"",ty:"",sz:"",od:""}]}return r}
 /* 区画貫通の、スリーブ・開口に並べる管種の初めの選び方 */
 function kShowDef(){return Array.isArray(PJ.kshow)?PJ.kshow.filter(function(K){return !!PIPE[K]}):["G","VP","VU","SV"]}
 function normItem(o){var it=defItem();o=o||{};for(var k in it){if(o[k]!=null)it[k]=String(o[k])}
@@ -859,10 +859,31 @@ var FIG_TW={CVD:2,CVT:3,"AL-CVT":3,CVQ:4,"EM-CED":2,"EM-CET":3,"EM-CEQ":4};
 /* 占積率の基準(%)。32・48のほか、手動入力(rt:"m")は rtm の値。0.1%単位に丸め、1〜100%の外はnull */
 function rtOf(r){if(r.rt==="k"&&r.kk){var C=kmCond(kmFind(r.mt)),v=C&&C.fill;return v&&v<=100?Math.round(v*10)/10:32}if(r.rt==="48")return 48;if(r.rt!=="m")return 32;var v=parseFloat(String(r.rtm||"").replace(/[%％\s]/g,""));if(!isFinite(v))return null;v=Math.round(v*10)/10;return v>=1&&v<=100?v:null}
 function rtText(o){return o.rt!=null?o.rt+"%":"-"}
-function calcRow(r){
+/* おまかせの順番: 金属管 → 告示1422号 → メーカー・登録の認定工法 → 告示+運用指針 → 鋼製スリーブ1m。同じ順位なら開口が小さい方(角穴は占積率に余裕がある方) */
+function kRank(m){return m.k==="M1"?0:m.k==="K1"?1:m.k==="K2"?3:m.k==="M2"?4:2}
+function kProbeList(r){return KM_BI.filter(function(m){return !(m.k==="M2"&&r.sh==="r")}).concat(KM_MK.filter(function(m){return kmFits(r,m)}),(PJ.km||[]).filter(function(m){return kmFits(r,m)}))}
+function kSize(o){if(o.r.sh==="r"){var R=o.rect;if(!R)return 1e9;return R.fill!=null?-(R.lim-R.fill):R.need}var b=null;shownPipes(o).forEach(function(q){if(q.kok){var d=pipeOD(q.p)||q.p[2];if(b==null||d<b)b=d}});return b==null?1e9:b}
+function kAuto(r){var R=r.sh==="r",res=kProbeList(r).map(function(m){var r2={};for(var k in r)r2[k]=r[k];r2.mt=m.k;var o=calcRow(r2,{probe:true});o.r=r;return {m:m,o:o}});
+var f=res.length?res[0].o:null;if(!f||f.err){var oe=f||calcRow(r,{lite:true});oe.r=r;oe.auto=true;oe.km=null;oe.kw=[];oe.cands=[];return oe}
+/* 角穴で幅・高さがまだのときは、通す物と区画の条件だけで選ぶ */
+var pend=R&&!(res[0].o.rect&&res[0].o.rect.area);
+function good(x){return pend?!(x.o.kw||[]).length:!!x.o.ok}
+var cands=res.map(function(x){var oo=x.o,why=(oo.kw||[]).concat(R&&!pend?(oo.rw||[]):[]),best=null;
+if(!R){shownPipes(oo).forEach(function(q){if(q.kok){var d=pipeOD(q.p)||q.p[2];if(!best||d<(pipeOD(best.p)||best.p[2]))best={K:q.K,p:q.p,fill:q.fill}}});
+if(!best&&!why.length){var u={};shownPipes(oo).forEach(function(q){(q.p?(q.kw||[]):["入らない"]).forEach(function(w){u[w]=1})});why=["並べた管種に合うスリーブがない"].concat(Object.keys(u).slice(0,2))}}
+else if(pend&&oo.rect)best={need:oo.rect.need};
+return {m:x.m,ok:good(x),why:why,best:best,o:oo}});
+cands.sort(function(a,b){return (b.ok-a.ok)||kRank(a.m)-kRank(b.m)||kSize(a.o)-kSize(b.o)});
+var pick=cands[0]&&cands[0].ok?cands[0]:null,o;
+if(pick){o=pick.o}
+else{o=res[0].o;o.km=null;o.kw=["条件に合う処理方法が見つかりません(候補の理由を見て、通す物・開口・区画を見直してください)"];o.kok=false;o.ok=false;o.rw=[];(o.pipes||[]).forEach(function(q){q.kok=false;q.kw=[]})}
+o.r=r;o.auto=true;o.cands=cands;return o}
+function calcRow(r,opt){opt=opt||{};
+/* 処理方法が「おまかせ」の貫通は、使える処理方法を全部試して一番よいものを選ぶ */
+if(r.kk&&r.mt==="AUTO"&&!opt.lite&&!opt.probe)return kAuto(r);
 var o={r:r,its:[],warn:[],notes:[]};
 r.items.forEach(function(it,i){var x=readItem(it);if(!x)return;if(x.bad){o.warn.push((i+1)+"行目の"+x.why+"が入っていません(計算に入れていません)");return}o.its.push(x)});
-if(!o.its.length){o.err=r.kk?"通す物(ケーブル・電線管)と本数を入れてください":"ケーブルと本数を入れてください";if(r.kk){o.km=kmFind(r.mt);o.kw=[]}return o}
+if(!o.its.length){o.err=r.kk?"通す物(ケーブル・電線管)と本数を入れてください":"ケーブルと本数を入れてください";if(r.kk){o.km=kmFind(r.mt);o.kw=[];o.cands=[]}return o}
 o.total=r1(o.its.reduce(function(a,x){return a+x.sub},0));
 o.cnt=o.its.reduce(function(a,x){return a+x.n},0);
 o.maxOd=Math.max.apply(null,o.its.map(function(x){return x.od}));
@@ -883,14 +904,14 @@ if(r.kk&&r.rt==="k"){var C0=kmCond(kmFind(r.mt));o.notes.push(C0&&C0.fill?"占�
 if(o.chk15)o.notes.push("1本のため内径≧外径×1.5を確認(外径"+n2(o.maxOd)+"mm×1.5="+n2(1.5*o.maxOd)+"mm以上。どの管種も満たすサイズを選定)");
 if(o.off15)o.notes.push("1本だが外径×1.5の確認は省略(管が短小で屈曲がなく、引き替えが容易なもの。内線規程3165-1)");
 o.ok=!o.warn.length;
-if(r.kk){o.km=kmFind(r.mt);o.kw=kRowWhy(o);var any=false;
+if(r.kk&&!opt.lite){o.km=kmFind(r.mt);o.kw=kRowWhy(o);var any=false;
 if(r.sh==="r"){var W=kmNum(r.rw),H=kmNum(r.rh),C1=kmCond(o.km),lim=C1&&C1.fill?C1.fill:o.rt;o.rect={w:W,h:H,lim:lim,need:o.total/(lim/100)};
 if(W&&H){o.rect.area=W*H;o.rect.fill=o.total/o.rect.area*100}else if(W){o.rect.needH=Math.ceil(o.total/(lim/100)/W/5)*5}
 o.rw=o.rect.area?kRectWhy(o):[];if(!o.rect.area)o.rw=["開口の幅と高さを入れてください"];o.kok=!o.kw.length&&!o.rw.length}
 else{var mm=o.km,geo=!!(kmCond(mm)||(mm&&mm.k==="M2"));
 o.pipes.forEach(function(q){if(geo&&q.p&&kSlvWhy(o,q).length){var p2=kPick(o,mm,q.K,o.rt);if(p2){q.p=p2;q.Ai=circ(p2[2]);q.allow=allowA(p2[2],o.rt);q.fill=o.total/q.Ai*100}}
 q.kw=kSlvWhy(o,q);q.kok=!!q.p&&!o.kw.length&&!q.kw.length;if(q.kok&&shownPK(r).indexOf(q.K)>=0)any=true});o.kok=any}
-o.ok=o.ok&&o.kok;o.cands=kCands(o)}
+o.ok=o.ok&&o.kok;if(!opt.probe)o.cands=kCands(o)}
 return o}
 /* 小数2けたまで(余分な0は付けない) */
 function n2(x){return String(Math.round(x*100)/100)}
@@ -909,7 +930,7 @@ return '<tr><td><b>'+esc(ty)+'</b></td><td>'+esc(sz)+'</td><td class="n">'+esc(x
 function fillBar(q,rt){var w=Math.min(100,q.fill);return '<span class="fb" style="--rt:'+rt+'%" aria-hidden="true"><i style="width:'+w.toFixed(1)+'%"></i></span>'}
 function kWhyAll(o,q){return (o.kw||[]).concat(q&&q.kw?q.kw:[])}
 /* 計算結果の、処理方法の判定 */
-function kHead(o){var r=o.r;return '<b>処理方法</b> '+esc(kmName(o.km))+'<span class="dim"> ・ '+esc(kzText(r.kz))+(kmNum(r.kt)?' '+kmNum(r.kt)+'mm':'')+' ・ '+esc(kfrText(r.fr))+' ・ '+(r.sh==="r"?'角穴':'丸穴')+'</span>'}
+function kHead(o){var r=o.r;return '<b>処理方法'+(o.auto?'(おまかせ)':'')+'</b> '+esc(kmName(o.km))+'<span class="dim"> ・ '+esc(kzText(r.kz))+(kmNum(r.kt)?' '+kmNum(r.kt)+'mm':'')+' ・ '+esc(kfrText(r.fr))+' ・ '+(r.sh==="r"?'角穴':'丸穴')+'</span>'}
 function kJudgeBox(o){var r=o.r,w=o.kw||[],head=kHead(o);
 if(o.err)return '<div class="kjr">'+head+'</div>';
 if(w.length)return '<div class="kjr ng">'+head+'<br><span class="ng"><b>NG</b></span><ul>'+w.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul></div>'+kCandHTML(o);
@@ -921,10 +942,11 @@ function kLimT(c){var C=kmCond(c.m),f=C&&C.fill;return f?"上限"+(Math.round(f*
 function kBestText(o,c){if(!c.best)return "";if(c.best.p)return c.best.p[0]+"(外径"+podT(c.best.p)+"・占積率"+c.best.fill.toFixed(1)+"%/"+kLimT(c)+")";if(c.best.need)return "開口"+(c.best.need/1e6).toFixed(3)+"m²以上("+kLimT(c)+(o.rect&&o.rect.w?"、幅"+o.rect.w+"なら高さ"+Math.ceil(c.best.need/o.rect.w/5)*5+"mm以上":"")+")";return ""}
 function kCandHTML(o){var C=o.cands||[];if(!C.length)return '<p class="note rbn">この区画・開口の形に合うメーカーの認定工法はありません(登録した工法もなし)</p>';
 var ok=C.filter(function(c){return c.ok}),ng=C.filter(function(c){return !c.ok});
-function li(c){var cur=c.m.k===o.r.mt;return '<li class="'+(c.ok?'':'kng')+'">'+badge(c.ok)+' <b>'+esc(isMK(c.m)?c.m.pr:kmName(c.m))+'</b> <span class="dim">'+esc(isMK(c.m)?c.m.no:"登録")+'</span>'+
+function li(c){var cur=o.auto?c.m===o.km:c.m.k===o.r.mt;return '<li class="'+(c.ok?'':'kng')+'">'+badge(c.ok)+' <b>'+esc(isMK(c.m)?c.m.pr:kmName(c.m))+'</b> <span class="dim">'+esc(isMK(c.m)?c.m.no:isUser(c.m)?"登録":"法令")+'</span>'+
 (!c.best?' <span class="dim">(占積率'+kLimT(c)+')</span>':'')+(c.best?'<br><span class="kbs">'+esc(kBestText(o,c))+'</span>':'')+(c.why.length?'<br><span class="kwy">'+esc(c.why.join("、"))+'</span>':'')+
-(cur?' <span class="kcur">選択中</span>':(c.ok?' <button type="button" class="mini" data-kmset="'+esc(c.m.k)+'">この工法にする</button>':''))+'</li>'}
-return '<div class="kcd"><b>使える認定工法の候補</b><span class="dim">(区画・開口の形・厚さ・通す物で判定。丸穴は並べた管種から一番細いスリーブ)</span><ul>'+ok.map(li).join("")+'</ul>'+
+(cur?' <span class="kcur">'+(o.auto?'おすすめ':'選択中')+'</span>':'')+(c.ok&&!(cur&&!o.auto)?' <button type="button" class="mini" data-kmset="'+esc(c.m.k)+'">'+(cur?'この工法に決める':'この工法にする')+'</button>':'')+'</li>'}
+return '<div class="kcd"><b>'+(o.auto?'処理方法の候補(おまかせで選んだ順)':'使える認定工法の候補')+'</b><span class="dim">('+(o.auto?'金属管・告示 → メーカーの認定工法(開口が小さい順) → 運用指針 → 鋼製スリーブ1mの順。':'')+'区画・開口の形・厚さ・通す物で判定。丸穴は並べた管種から一番細いスリーブ)</span><ul>'+ok.slice(0,3).map(li).join("")+'</ul>'+
+(ok.length>3?'<details><summary>ほかに使える工法 '+(ok.length-3)+'件</summary><ul>'+ok.slice(3).map(li).join("")+'</ul></details>':'')+
 (ng.length?'<details><summary>条件に合わない工法 '+ng.length+'件</summary><ul>'+ng.map(li).join("")+'</ul></details>':'')+'</div>'}
 function runCalc(){
 var os=rows.map(calcRow);LASTOS=os;
@@ -1449,14 +1471,14 @@ if(pK)mid='<select data-i="'+i+'" data-g="s" aria-label="電線管'+(i+1)+'の�
 else if(it.t==="other")mid='<div class="oth"><input data-i="'+i+'" data-g="ty" placeholder="種別" value="'+esc(it.ty)+'" aria-label="ケーブル'+(i+1)+'の種別(例: CVV-S)" autocapitalize="characters" autocomplete="off"><input data-i="'+i+'" data-g="sz" placeholder="サイズ" value="'+esc(it.sz)+'" aria-label="ケーブル'+(i+1)+'のサイズ(例: 2sq-3C)" autocomplete="off"><input data-i="'+i+'" data-g="od" type="number" inputmode="decimal" step="0.1" placeholder="外径mm" value="'+esc(it.od)+'" aria-label="ケーブル'+(i+1)+'の外径(mm)"></div>';
 else mid='<select data-i="'+i+'" data-g="s" aria-label="ケーブル'+(i+1)+'のサイズ・心数">'+opt("",/-\dC$/.test(it.t)||!CAB[it.t][0][1]?"サイズを選ぶ":"サイズ・心数を選ぶ",it.s)+CAB[it.t].map(function(c){return opt(cabKey(c),c[0]+(c[1]?"-"+c[1]:"")+(isFlat(c)?"("+c[2]+"×"+c[3]+")":"(φ"+c[2]+")"),it.s)}).join("")+'</select>';
 return '<div class="it">'+tsel+mid+'<select data-i="'+i+'" data-g="n" aria-label="ケーブル'+(i+1)+'の本数">'+nOpts(it.n)+'</select><button type="button" class="idel" data-act="idel" data-i="'+i+'" aria-label="ケーブル'+(i+1)+'を削除"'+(r.items.length>1?'':' disabled')+'>削除</button></div>'}
-function isumHTML(r){var o=calcRow(r);
+function isumHTML(r){var o=calcRow(r,{lite:true});
 var s=o.total==null?'<span>ケーブルと本数を入れると、ここに合計が出ます</span>':'<span>合計 <b>'+o.cnt+'</b> 本</span><span>断面積計 <b>'+f1(o.total)+'</b> mm²</span>';
 return s}
-function iwarnHTML(r){var o=calcRow(r),w=o.warn.filter(function(x){return /行目/.test(x)});return w.join(" / ")}
-function sumText(r,i){var o=calcRow(r),a=[];
+function iwarnHTML(r){var o=calcRow(r,{lite:true}),w=o.warn.filter(function(x){return /行目/.test(x)});return w.join(" / ")}
+function sumText(r,i){var o=calcRow(r,{lite:true}),a=[];
 if(o.its.length){a.push(esc(o.its[0].lbl)+" ×"+o.its[0].n+(o.its.length>1?" ほか"+(o.its.length-1)+"種":""));a.push(o.cnt+"本")}
 else a.push(r.kk?"通す物未入力":"ケーブル未入力");
-if(r.kk){var mm=kmFind(r.mt);a.unshift(kzText(r.kz)+" "+kfrText(r.fr)+(r.sh==="r"?" 角穴":"")+" ・ "+esc(mm?(isMK(mm)?mm.pr:kmName(mm)):"処理方法なし"))}
+if(r.kk){var mm=kmFind(r.mt);a.unshift(kzText(r.kz)+" "+kfrText(r.fr)+(r.sh==="r"?" 角穴":"")+" ・ "+esc(r.mt==="AUTO"?"おまかせ":mm?(isMK(mm)?mm.pr:kmName(mm)):"処理方法なし"))}
 if(o.total!=null)a.push('断面積計 <b>'+f1(o.total)+'</b> mm²('+rtText(o)+')');
 return (r.sec?esc(r.sec)+" ・ ":"")+a.join(" ・ ")}
 /* 管種のまとまり(d: 電線管、o: その他の配管)ごとの一括チェック */
@@ -1493,10 +1515,10 @@ save();renderRows();goCard(i,true);reCalcKeep();CPQ_DONE=null}
 /* 区画貫通の処理方法の選択欄 */
 function kmFits(r,m){var C=kmCond(m);if(!C)return true;var sh=r.sh==="r"?"r":"c";return C.kz.indexOf(r.kz)>=0&&(C.sh==="cr"||C.sh===sh)}
 function kmSelHTML(r){var u=PJ.km||[],cur=kmFind(r.mt),mk=KM_MK.filter(function(m){return kmFits(r,m)});
-return '<select data-f="mt" aria-label="処理方法"><optgroup label="法令による方法">'+KM_BI.map(function(m){return opt(m.k,m.name,r.mt)}).join("")+'</optgroup>'+
+return '<select data-f="mt" aria-label="処理方法">'+opt("AUTO","おまかせ(使える工法を自動で提案)",r.mt)+'<optgroup label="法令による方法">'+KM_BI.map(function(m){return opt(m.k,m.name,r.mt)}).join("")+'</optgroup>'+
 '<optgroup label="メーカーの認定工法(この区画・開口に合うもの)">'+(mk.length?mk.map(function(m){return opt(m.k,m.pr+" "+m.no,r.mt)}).join(""):'<option disabled>(合う工法がありません)</option>')+'</optgroup>'+
 (cur&&isMK(cur)&&!kmFits(r,cur)?'<optgroup label="区画・開口に合わない">'+opt(cur.k,cur.pr+" "+cur.no,r.mt)+'</optgroup>':'')+
-'<optgroup label="登録した認定工法">'+(u.length?u.map(function(m){return opt(m.k,kmName(m),r.mt)}).join(""):'<option disabled>(下の「区画貫通の処理方法」で登録)</option>')+'</optgroup>'+(cur?'':opt(r.mt,"(消えた処理方法)",r.mt))+'</select>'}
+'<optgroup label="登録した認定工法">'+(u.length?u.map(function(m){return opt(m.k,kmName(m),r.mt)}).join(""):'<option disabled>(下の「区画貫通の処理方法」で登録)</option>')+'</optgroup>'+(cur||r.mt==="AUTO"?'':opt(r.mt,"(消えた処理方法)",r.mt))+'</select>'}
 function kSecHTML(r){var m=kmFind(r.mt),R=r.sh==="r";
 return '<div class="sec"><h3>区画と処理方法</h3><div class="g2"><div class="f"><label>区画</label><select data-f="kz">'+KM_KZ.map(function(x){return opt(x[0],x[1],r.kz)}).join("")+'</select></div>'+
 '<div class="f"><label>区画の厚さ(mm)</label><input data-f="kt" type="text" inputmode="decimal" value="'+esc(r.kt)+'" placeholder="例: 150" autocomplete="off"></div>'+
@@ -1505,7 +1527,7 @@ return '<div class="sec"><h3>区画と処理方法</h3><div class="g2"><div clas
 (R?'<div class="f"><label>開口の幅(mm)</label><input data-f="rw" type="text" inputmode="decimal" value="'+esc(r.rw)+'" placeholder="例: 400" autocomplete="off"></div>'+
 '<div class="f"><label>開口の高さ(mm)</label><input data-f="rh" type="text" inputmode="decimal" value="'+esc(r.rh)+'" placeholder="空欄なら必要な高さを計算" autocomplete="off"></div>':'')+'</div>'+
 '<div class="f" style="margin-top:8px"><label>処理方法</label>'+kmSelHTML(r)+'</div>'+
-'<p class="kmd">'+(m?esc(kmDesc(m)):'処理方法が見つかりません。選び直してください')+'</p></div>'}
+'<p class="kmd">'+(r.mt==="AUTO"?'通す物・区画・厚さ・開口の形から、使える処理方法を自動で選びます(金属管・告示1422号 → メーカーの認定工法で開口が一番小さいもの → 運用指針 → 鋼製スリーブ1m の順)。結果の候補から別の工法に決めることもできます':(m?esc(kmDesc(m)):'処理方法が見つかりません。選び直してください'))+'</p></div>'}
 function rowHTML(r,pos){var K=!!r.kk;
 return '<article class="rc'+(r.cl?' cl':'')+'" data-id="'+r.id+'">'+
 '<div class="rh"><span class="rn">'+pos+'</span><input data-f="name" value="'+esc(r.name)+'" placeholder="'+(K?'貫通番号(例: K-1)':'配管番号(例: P-1)')+'" aria-label="'+(K?'貫通番号':'配管番号')+'"><button type="button" class="mini" data-act="dup">複製</button><button type="button" class="mini" data-act="del">削除</button><button type="button" class="mini tg" data-act="tog" aria-expanded="'+(!r.cl)+'" aria-label="'+(r.cl?'ひらく':'たたむ')+'">'+CHEV+'</button></div>'+
