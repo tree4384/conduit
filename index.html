@@ -709,16 +709,16 @@ body.km #aiCard{display:none!important}
 <h3>記号の意味</h3>
 <table class="gl">
 <tr><td>ΣA</td><td>通す物(ケーブル・電線管)の断面積の合計[mm²]。電線管選定と同じ求め方</td></tr>
-<tr><td>Dh</td><td>躯体の穴の径[mm]。スリーブはスリーブの外径、穴のみは穴径</td></tr>
-<tr><td>Sh</td><td>穴の面積[mm²](躯体に開ける穴の大きさ)</td></tr>
+<tr><td>Dh</td><td>貫通穴の径[mm]。スリーブはスリーブの外径、穴のみは穴径</td></tr>
+<tr><td>Sh</td><td>貫通穴面積[mm²](躯体に開ける穴の大きさ)</td></tr>
 <tr><td>d</td><td>中が使える径[mm]。スリーブは内径、穴のみは穴径</td></tr>
 <tr><td>Ai</td><td>中が使える面積[mm²]。占積率はこの面積で出す</td></tr>
 <tr><td>W・H</td><td>角穴の幅・高さ[mm]</td></tr>
-<tr><td>S</td><td>角穴の面積[mm²](1m² = 1,000,000mm²)</td></tr>
+<tr><td>S</td><td>角穴の貫通穴面積[mm²](1m² = 1,000,000mm²)</td></tr>
 <tr><td>ρ</td><td>占積率の上限[%]。工法の上限(なければ32%)</td></tr>
 </table>
 <h3>1. 丸穴(スリーブ・穴のみ)</h3>
-<div class="fx">Sh = π × (Dh ÷ 2)² <small>躯体の穴の面積</small></div>
+<div class="fx">Sh = π × (Dh ÷ 2)² <small>貫通穴面積</small></div>
 <div class="fx">Ai = π × (d ÷ 2)²</div>
 <div class="fx">占積率 = ΣA ÷ Ai × 100 [%]</div>
 <div class="fx">ΣA ≦ Ai × ρ ÷ 100 <small>を満たす一番細いスリーブ・穴</small></div>
@@ -999,7 +999,7 @@ else{var rt=C.fill||rtOf(r)||32;kSlKeys(m,r.kz).forEach(function(K){var p=kPick(
 var all=w.concat(bw||[]);out.push({m:m,ok:!all.length,why:all,best:best})});
 out.sort(function(a,b){return (b.ok-a.ok)});return out}
 /* 許容断面積 = 内断面積 × 占積率(1mm²未満切り捨て。元のExcelと同じ) */
-/* 躯体の穴の面積(丸穴): スリーブは外径、穴のみは穴径の円 */
+/* 貫通穴面積(丸穴): スリーブは外径、穴のみは穴径の円 */
 function holeA(q){var d=pipeOD(q.p)||q.p[2];return circ(d)}
 function mm2T(a){return Math.round(a).toLocaleString("ja-JP")}
 function allowA(id,rt){return Math.floor(circ(id)*rt/100)}
@@ -1145,7 +1145,7 @@ if(KK)h+=kJudgeBox(o);
 function kT(q,a){return tl([nm,r.sec,kzText(r.kz),kfrText(r.fr),kmName(o.km),cabT].concat(a).concat([q?(q.kok?"OK":"NG"):(o.err?"":(o.kok?"OK":"NG")),(q?kWhyAll(o,q):(o.kw||[]).concat(o.rw||[])).concat(memo?[memo]:[]).join(" / ")]))}
 if(o.err){h+='<p class="rbe ng">'+esc(o.err)+'</p>';tsv.push(KK?kT(null,["","","","","","","","","","",""]):tl([nm,r.sec,cabT,"","","","","","","","","","","",memo]))}
 else if(KK&&r.sh==="r"){var R=o.rect,lim=R.lim;
-h+='<div class="tw"><table><thead><tr><th class="c1">開口</th><th>幅×高さ(mm)</th><th>判定</th><th style="text-align:left">占積率<span class="fh"><i></i>縦線＝上限 '+n2(lim)+'%</span></th><th>面積<br>(m²)</th><th>必要な面積<br>(m²)</th></tr></thead><tbody>';
+h+='<div class="tw"><table><thead><tr><th class="c1">開口</th><th>幅×高さ(mm)</th><th>判定</th><th style="text-align:left">占積率<span class="fh"><i></i>縦線＝上限 '+n2(lim)+'%</span></th><th>貫通穴面積<br>(m²)</th><th>必要な面積<br>(m²)</th></tr></thead><tbody>';
 if(R.area)h+='<tr><td class="c1">角穴</td><td><b>'+n2(R.w)+'×'+n2(R.h)+'</b></td><td title="'+esc((o.kw||[]).concat(o.rw||[]).join(" / "))+'">'+badge(o.kok)+'</td><td class="fc"><span class="fv">'+R.fill.toFixed(1)+'%</span>'+fillBar({fill:R.fill},lim)+'</td><td>'+(R.area/1e6).toFixed(3)+'<span class="x15">'+mm2T(R.area)+'mm²</span></td><td>'+(R.need/1e6).toFixed(3)+'<span class="x15">'+mm2T(R.need)+'mm²</span></td></tr>';
 else h+='<tr><td class="c1">角穴</td><td colspan="5" style="text-align:left">'+(R.w?'幅'+n2(R.w)+'mmなら、高さ<b>'+R.needH+'mm</b>以上(必要な面積 '+(R.need/1e6).toFixed(3)+'m²)':'必要な面積 <b>'+(R.need/1e6).toFixed(3)+'m²</b>('+mm2T(R.need)+'mm²)以上。幅と高さを入れると判定します')+'</td></tr>';
 h+='</tbody></table></div>';
@@ -1153,7 +1153,7 @@ tsv.push(kT(null,[o.cnt,f1(o.total),n2(lim),"角穴",R.area?n2(R.w)+"×"+n2(R.h)
 if(memo)h+='<p class="note rbn">'+esc(memo)+'</p>'}
 else{
 var ps=shownPipes(o),any15=false,fk=figK(o);
-h+=(KK?'<p class="note rbn" style="margin-top:8px"><b>使えるスリーブ・開口</b>('+esc(o.km?kmName(o.km)+"の認定で使えるスリーブ":"処理方法が決まらないので、スリーブの種類ごと")+'に、通す物が入る一番細いサイズ。「穴のみ」はスリーブなしの躯体の穴で、5mmきざみの穴径)</p>':'')+'<div class="tw"><table><thead><tr><th class="c1">'+(KK?'スリーブ':'管種')+'</th><th>サイズ</th>'+(KK?'<th>判定</th>':'')+'<th style="text-align:left">占積率<span class="fh"><i></i>縦線＝基準 '+o.rt+'%</span></th><th>外径<br>(mm)</th>'+(KK?'<th>穴の面積<br>(mm²)</th>':'')+'<th>内径<br>(mm)</th><th>内断面積<br>(mm²)</th><th>許容断面積<br>('+o.rt+'%)</th></tr></thead><tbody>';
+h+=(KK?'<p class="note rbn" style="margin-top:8px"><b>使えるスリーブ・開口</b>('+esc(o.km?kmName(o.km)+"の認定で使えるスリーブ":"処理方法が決まらないので、スリーブの種類ごと")+'に、通す物が入る一番細いサイズ。「穴のみ」はスリーブなしの躯体の穴で、5mmきざみの穴径)</p>':'')+'<div class="tw"><table><thead><tr><th class="c1">'+(KK?'スリーブ':'管種')+'</th><th>サイズ</th>'+(KK?'<th>判定</th>':'')+'<th style="text-align:left">占積率<span class="fh"><i></i>縦線＝基準 '+o.rt+'%</span></th><th>外径<br>(mm)</th>'+(KK?'<th>貫通穴面積<br>(mm²)</th>':'')+'<th>内径<br>(mm)</th><th>内断面積<br>(mm²)</th><th>許容断面積<br>('+o.rt+'%)</th></tr></thead><tbody>';
 if(!ps.length)h+='<tr><td colspan="'+(KK?8:7)+'" class="dim">並べる管種が選ばれていません('+(KK?'処理方法を選び直してください':'配管の「並べる管種」で選んでください')+')</td></tr>';
 ps.forEach(function(q){var P=PIPE[q.K];
 if(!q.p){h+='<tr><td class="c1" title="'+esc(P.n)+'">'+(KK?esc(kSlLbl(q.K)):pn(q.K))+'</td><td class="ng" colspan="'+(KK?8:6)+'" style="text-align:left">入らない(最大の'+esc(P.l[P.l.length-1][0])+'でも不足)</td></tr>';tsv.push(KK?kT(q,[o.cnt,f1(o.total),o.rt,kSlLbl(q.K),"入らない","","","","",""]):tl([nm,r.sec,cabT,o.cnt,f1(o.total),o.rt,P.n,"入らない","","","","","","",memo]));return}
@@ -1540,7 +1540,7 @@ window.addEventListener("load",function(){setTimeout(function(){sjLoad().catch(f
 function dateText(){var s=String(PJ.date||"").trim();if(s)return s;var d=new Date();if(PJ.era==="s")return d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日";var y=d.getFullYear()-2018;return "令和"+(y===1?"元":y)+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日"}
 var COLS=[["No.",3],["配管番号<br>区間・用途",9],["ケーブル",13],["外径<br>(mm)",5],["本数",4],["断面積<br>(mm²)",6],["断面積計<br>(mm²)",6],["占積率<br>の基準",5],["管種",9],["選定<br>サイズ",7],["管外径<br>(mm)",5],["管内径<br>(mm)",5],["内断面積<br>(mm²)",6],["許容<br>断面積<br>(mm²)",6],["占積率<br>(%)",5],["備考",6]];
 function lines(a){return a.map(function(t){return '<span class="ln">'+t+'</span>'}).join("")}
-var KCOLS=[["No.",3],["貫通番号<br>場所",9],["区画<br>耐火",6],["通す物",11],["外径<br>(mm)",5],["本数",4],["断面積計<br>(mm²)",6],["占積率<br>の基準",5],["スリーブ<br>・開口",8],["選定<br>サイズ",7],["外径<br>(mm)",5],["内径<br>(mm)",5],["占積率<br>(%)",5],["処理方法",10],["判定",4],["備考",7]];
+var KCOLS=[["No.",3],["貫通番号<br>場所",8],["区画<br>耐火",6],["通す物",10],["外径<br>(mm)",5],["本数",4],["断面積計<br>(mm²)",5],["占積率<br>の基準",5],["スリーブ<br>・開口",7],["選定<br>サイズ",7],["貫通穴面積<br>(mm²)",6],["外径<br>(mm)",5],["内径<br>(mm)",5],["占積率<br>(%)",5],["処理方法",9],["判定",4],["備考",6]];
 function curCols(){return APPM==="k"?KCOLS:COLS}
 function ksheetRow(o,i){
 var r=o.r,its=o.its,RC=r.sh==="r",ps=o.err||RC?[]:shownPipes(o);
@@ -1556,13 +1556,13 @@ td('n',its.length?lines(its.map(function(x){return x.odT})):"-")+
 td('n',its.length?lines(its.map(function(x){return x.n})):"-")+
 td('n',o.total!=null?f1(o.total):"-")+td('',o.err?"-":o.rt+"%");
 var M=td('l',esc(kmName(o.km))),Rn=td('l',esc(notes.join(" / ")));
-function prow(q){var P=PIPE[q.K],nm=r.kk?kSlShort(q.K):P.t.replace("<br>","");if(!q.p)return '<td class="l">'+nm+'</td><td class="ngc" colspan="4">入らない</td>';
+function prow(q){var P=PIPE[q.K],nm=r.kk?kSlShort(q.K):P.t.replace("<br>","");if(!q.p)return '<td class="l">'+nm+'</td><td class="ngc" colspan="5">入らない</td>';
 var w=q.kw&&q.kw.length?'<span class="s2">'+esc(q.kw.join("、"))+'</span>':'';
-return '<td class="l">'+nm+'</td><td><b>'+esc(q.p[0])+'</b>'+(r.kk?'<span class="s2">穴 '+mm2T(holeA(q))+'mm²</span>':'')+'</td><td class="n">'+esc(podT(q.p))+'</td><td class="n">'+q.p[2]+'</td><td class="n">'+q.fill.toFixed(1)+'</td>'}
+return '<td class="l">'+nm+'</td><td><b>'+esc(q.p[0])+'</b></td><td class="n">'+mm2T(holeA(q))+'</td><td class="n">'+esc(podT(q.p))+'</td><td class="n">'+q.p[2]+'</td><td class="n">'+q.fill.toFixed(1)+'</td>'}
 function jd(q){return '<td'+(q.kok?'':' class="ngc"')+'>'+(q.kok?'OK':'NG')+'</td>'}
 var h='<tbody class="blk">';
-if(RC&&!o.err){var R=o.rect;h+='<tr>'+L+'<td class="l">角穴</td><td><b>'+(R.area?n2(R.w)+'×'+n2(R.h):'-')+'</b>'+(R.area?'<span class="s2">'+(R.area/1e6).toFixed(3)+'m²('+mm2T(R.area)+'mm²)</span>':'')+'</td><td class="n">-</td><td class="n">-</td><td class="n">'+(R.area?R.fill.toFixed(1):'-')+'</td>'+M+'<td'+(o.kok?'':' class="ngc"')+'>'+(o.kok?'OK':'NG')+'</td>'+Rn+'</tr>'}
-else if(!ps.length)h+='<tr>'+L+'<td colspan="5">'+(o.err?"-":"管種が選ばれていません")+'</td>'+M+'<td>-</td>'+Rn+'</tr>';
+if(RC&&!o.err){var R=o.rect;h+='<tr>'+L+'<td class="l">角穴</td><td><b>'+(R.area?n2(R.w)+'×'+n2(R.h):'-')+'</b></td><td class="n">'+(R.area?mm2T(R.area)+'<span class="s2">'+(R.area/1e6).toFixed(3)+'m²</span>':'-')+'</td><td class="n">-</td><td class="n">-</td><td class="n">'+(R.area?R.fill.toFixed(1):'-')+'</td>'+M+'<td'+(o.kok?'':' class="ngc"')+'>'+(o.kok?'OK':'NG')+'</td>'+Rn+'</tr>'}
+else if(!ps.length)h+='<tr>'+L+'<td colspan="6">'+(o.err?"-":"管種が選ばれていません")+'</td>'+M+'<td>-</td>'+Rn+'</tr>';
 else ps.forEach(function(q,k){h+='<tr>'+(k===0?L:'')+prow(q)+(k===0?M:'')+jd(q)+(k===0?Rn:'')+'</tr>'});
 return h+'</tbody>'}
 function sheetRow(o,i){if(o.r.kk)return ksheetRow(o,i);
@@ -2296,7 +2296,7 @@ h+=R&&R.area?'<p class="'+(o.kok?'fmok':'fmng')+'">判定 '+(o.kok?'OK':'NG')+'<
 else{var q=pick(o);if(!q){el.innerHTML=h+'<p>入る管がありません。</p>';return}
 var dd=q.p[2],nm=K?kSlLbl(q.K)+' '+q.p[0]:PIPE[q.K].s+' '+q.p[0];
 h+='<p>'+esc(nm)+'(内径 '+dd+'mm'+(pipeOD(q.p)?'・外径 '+podT(q.p)+'mm':'')+')</p>';
-if(K)h+='<div class="fx">Sh = π × ('+(pipeOD(q.p)||dd)+' ÷ 2)² = <b>'+F(holeA(q),0)+'</b> mm² <small>躯体の穴の面積</small></div>';
+if(K)h+='<div class="fx">Sh = π × ('+(pipeOD(q.p)||dd)+' ÷ 2)² = <b>'+F(holeA(q),0)+'</b> mm² <small>貫通穴面積</small></div>';
 h+='<div class="fx">Ai = π × ('+dd+' ÷ 2)² = <b>'+F(q.Ai,1)+'</b> mm²</div>'+
 '<div class="fx">Aa = '+F(q.Ai,1)+' × '+rt+' ÷ 100 = <b>'+q.allow+'</b> mm² <small>切り捨て</small></div>'+
 '<div class="fx">ΣA '+F(o.total,1)+' ≦ Aa '+q.allow+' <small>'+(o.total<=q.allow+1e-9?'入る':'入らない')+'</small></div>'+
