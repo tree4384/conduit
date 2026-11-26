@@ -1215,7 +1215,7 @@ td('n',its.length?lines(its.map(function(x){return x.odT})):"-")+
 td('n',its.length?lines(its.map(function(x){return x.n})):"-")+
 td('n',o.total!=null?f1(o.total):"-")+td('',o.err?"-":o.rt+"%");
 var M=td('l',esc(kmName(o.km))),Rn=td('l',esc(notes.join(" / ")));
-function prow(q){var P=PIPE[q.K],nm=P.t.replace("<br>","");if(!q.p)return '<td class="l">'+nm+'</td><td class="ngc" colspan="5">入らない</td>';
+function prow(q){var P=PIPE[q.K],nm=P.t.replace("<br>","");if(!q.p)return '<td class="l">'+nm+'</td><td class="ngc" colspan="4">入らない</td>';
 var w=q.kw&&q.kw.length?'<span class="s2">'+esc(q.kw.join("、"))+'</span>':'';
 return '<td class="l">'+nm+'</td><td><b>'+esc(q.p[0])+'</b></td><td class="n">'+esc(podT(q.p))+'</td><td class="n">'+q.p[2]+'</td><td class="n">'+q.fill.toFixed(1)+'</td>'}
 function jd(q){return '<td'+(q.kok?'':' class="ngc"')+'>'+(q.kok?'OK':'NG')+'</td>'}
