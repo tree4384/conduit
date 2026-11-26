@@ -564,7 +564,7 @@ body.km #aiCard{display:none!important}
 <p class="konly"><b>金属管で貫通</b>は、建築基準法施行令 第129条の2の4 第1項第七号イ(貫通する部分と両側1m以内を不燃材料で造る)によります。通す物がすべて鋼製の電線管(厚鋼・薄鋼・ねじなし)のときOKにします。</p>
 <p class="konly"><b>鋼製スリーブを両側1m以上出す</b>は、同じ七号イの扱いで、スリーブを区画の両側に1m以上突き出すと、スリーブの中の条件は問われません(国土交通省 令和2年度建築基準整備促進事業 P13の資料)。スリーブの管種が鋼管(厚鋼・薄鋼・ねじなし)のときOKにします。</p>
 <p class="konly"><b>告示1422号</b>は、七号ロの平成12年建設省告示第1422号で、配電管は難燃材料または硬質塩化ビニルで、肉厚5.5mm以上・外径90mm未満(防火構造〜2時間耐火で同じ)。肉厚はVPがJIS K 6741の厚さ、VEはJIS C 8430の外径と内径から求めた値です。外径の表の値未満のVPは、肉厚が足りなくても同じ性能として扱う運用(日本建築行政会議「建築設備設計・施工上の運用指針」)があるため、それによる判定も選べます(使えるかは特定行政庁・確認検査機関に確認してください)。内部に電線を入れない予備配管は、管の先端を密閉します。</p>
-<p class="konly"><b>メーカーの認定工法</b>は、古河テクノマテリアル・古河電気工業・因幡電機産業の電気用の工法を、メーカーの仕様書・カタログと日建連の設備工事情報シートの値で入れています(2026年11月に調べた値)。区画の種類(RC・ALC壁・中空壁・片壁・RC・ALC床)、開口の形(丸穴・角穴)、丸穴の最大径と製品の適用穴径、角穴の最大面積、占積率の上限、区画の厚さ、通せるケーブルの太さ・電線管の種類と太さで判定し、結果の「使える認定工法の候補」に並べます。丸穴の大きさはスリーブの外径で比べ、占積率はスリーブの内径で計算します(開口面積で計算するより安全側)。角穴は入れた幅×高さで計算します。製品の改良や認定の更新で条件が変わることがあるので、採用する前に必ず最新の認定書・施工要領書で確認してください。</p>
+<p class="konly"><b>メーカーの認定工法</b>は、古河テクノマテリアル・古河電気工業・因幡電機産業・積水化学工業(フィブロック)・日東化成工業(プラシール)・未来工業の電気用の工法を、メーカーのホームページ・仕様書・カタログと日建連の設備工事情報シートの値で入れています(2026年11月に調べた値)。区画の種類(RC・ALC壁・中空壁・片壁・RC・ALC床)、開口の形(丸穴・角穴)、丸穴の最大径と製品の適用穴径、角穴の最大面積、占積率の上限、区画の厚さ、通せるケーブルの太さ・電線管の種類と太さで判定し、結果の「使える認定工法の候補」に並べます。丸穴の大きさはスリーブの外径で比べ、占積率はスリーブの内径で計算します(開口面積で計算するより安全側)。角穴は入れた幅×高さで計算します。製品の改良や認定の更新で条件が変わることがあるので、採用する前に必ず最新の認定書・施工要領書で確認してください。</p>
 <p class="konly"><b>登録した認定工法</b>は、入れた条件(区画・耐火時間・開口の形・最大径や最大面積・占積率の上限・最小厚さ・通せる物・最大外径)で同じように判定します。</p>
 <div class="konly tw" id="kmRef" style="border:0"></div>
 <p class="konly"><b>すき間</b>は、どの方法でもモルタルその他の不燃材料で埋めます(令第112条第20項)。</p>
@@ -712,7 +712,26 @@ var KM_MK=[
 {k:"I-IKD-H",mk:"因幡電機産業",pr:"耐火テープ 電線管タイプ IKD-N",no:"PS060WL-0728",kz:["h"],sh:"c",dmax:160,fill:93.3,c:false,p:STEELK,tmin:80,memo:"鋼製電線管(JIS C 8305)の貫通。準耐火45分(木軸)は PS045WL-0727",src:"因幡電機産業 タイカエックス 電気用カタログ 2024-25",url:"https://www.inaba.co.jp/abaniact/taikax/uploads/taikax_denki_2024-25.pdf"},
 {k:"I-IKD-K",mk:"因幡電機産業",pr:"耐火テープ 電線管タイプ IKD-N",no:"PS060WL-0726-1",kz:["k"],sh:"c",dmax:160,fill:93.3,c:false,p:STEELK,tmin:42,memo:"鋼製電線管(JIS C 8305)の貫通",src:"因幡電機産業 タイカエックス 電気用カタログ 2024-25",url:"https://www.inaba.co.jp/abaniact/taikax/uploads/taikax_denki_2024-25.pdf"},
 {k:"I-IKX-F",mk:"因幡電機産業",pr:"耐火クロスカバー IKX",no:"PS060FL-1231",kz:["f"],sh:"c",dmax:157,fill:64.0,kits:[[100,106],[125,132],[150,157]],c:true,csq:250,p:{G:0,C:0,E:0,VE:0,PF:0,CD:0},pod:48,tmin:100,memo:"床専用。PFは外径45.5以下・CDは48.0以下(機種による)。ケーブルの総導体断面積2558.4sq以下",src:"因幡電機産業 タイカエックス 電気用カタログ 2024-25",url:"https://www.inaba.co.jp/abaniact/taikax/uploads/taikax_denki_2024-25.pdf"},
-{k:"I-IRBS-FR",mk:"因幡電機産業",pr:"耐火ボックスS IRBS(角穴)",no:"PS060FL-0964",kz:["f"],sh:"r",amax:0.75,fill:39.8,c:true,p:"*",tmin:100,memo:"ALC・RC床。ケーブル・電線管の仕様は認定書で確認",src:"因幡電工 認定書 PS060FL-0964",url:"https://www.inaba-denko.com/storage/gamedios/ja/file/IRBS_PS060FL-0964_20180622.PDF"}];
+{k:"I-IRBS-FR",mk:"因幡電機産業",pr:"耐火ボックスS IRBS(角穴)",no:"PS060FL-0964",kz:["f"],sh:"r",amax:0.75,fill:39.8,c:true,p:"*",tmin:100,memo:"ALC・RC床。ケーブル・電線管の仕様は認定書で確認",src:"因幡電工 認定書 PS060FL-0964",url:"https://www.inaba-denko.com/storage/gamedios/ja/file/IRBS_PS060FL-0964_20180622.PDF"},
+{k:"S-PF-0297",mk:"積水化学工業",pr:"フィブロック PF管・ケーブル貫通用(ケーブル直のみ)",no:"PS060WL-0297",kz:["w","h"],sh:"c",dmax:110,fill:34.0,c:true,csq:60,p:null,memo:"ケーブル直のみ(PF・CD管は貫通不可)",src:"積水化学工業 フィブロック PF管・ケーブル貫通用 適用範囲",url:"https://www.sekisui.co.jp/fp/products/pfcd.html"},
+{k:"S-PF-0213-W",mk:"積水化学工業",pr:"フィブロック PF管・ケーブル貫通用(PF・CD管のみ)",no:"PS060WL-0213",kz:["w"],sh:"c",dmax:110,fill:51.3,c:false,p:{PF:36,CD:36},pn:3,tmin:70,memo:"PF・CD管のみ3本以下(ケーブルは管の中)。ALC壁は75mm以上・コンクリート壁は70mm以上",src:"積水化学工業 フィブロック PF管・ケーブル貫通用 適用範囲",url:"https://www.sekisui.co.jp/fp/products/pfcd.html"},
+{k:"S-PF-0213-H",mk:"積水化学工業",pr:"フィブロック PF管・ケーブル貫通用(PF・CD管のみ)",no:"PS060WL-0213",kz:["h"],sh:"c",dmax:110,fill:51.3,c:false,p:{PF:36,CD:36},pn:3,tmin:100,memo:"PF・CD管のみ3本以下(ケーブルは管の中)",src:"積水化学工業 フィブロック PF管・ケーブル貫通用 適用範囲",url:"https://www.sekisui.co.jp/fp/products/pfcd.html"},
+{k:"S-PF-0372",mk:"積水化学工業",pr:"フィブロック PF管・ケーブル貫通用(混合)",no:"PS060WL-0372",kz:["w"],sh:"c",dmax:110,fill:26.3,c:true,p:{PF:36,CD:42},tmin:100,memo:"ケーブル直・PF・CD管の混合貫通可。本数制限なし",src:"積水化学工業 フィブロック PF管・ケーブル貫通用 適用範囲",url:"https://www.sekisui.co.jp/fp/products/pfcd.html"},
+{k:"S-PF-0371",mk:"積水化学工業",pr:"フィブロック PF管・ケーブル貫通用(混合)",no:"PS060WL-0371",kz:["h"],sh:"c",dmax:110,fill:26.3,c:true,p:{PF:36,CD:42},tmin:100,memo:"ケーブル直・PF・CD管の混合貫通可。本数制限なし",src:"積水化学工業 フィブロック PF管・ケーブル貫通用 適用範囲",url:"https://www.sekisui.co.jp/fp/products/pfcd.html"},
+{k:"S-PF-0358",mk:"積水化学工業",pr:"フィブロック PF管・ケーブル貫通用(片壁)",no:"PS060WL-0358-1",kz:["k"],sh:"c",dmax:110,fill:45.1,c:true,csq:60,p:{PF:36,CD:42},tmin:42,memo:"片面強化せっこうボード重張。ケーブル直・PF・CD管の混合可",src:"積水化学工業 フィブロック PF管・ケーブル貫通用 適用範囲",url:"https://www.sekisui.co.jp/fp/products/pfcd.html"},
+{k:"S-PF-0638",mk:"積水化学工業",pr:"フィブロック PF管・ケーブル貫通用(床)",no:"PS060FL-0638",kz:["f"],sh:"c",dmax:110,fill:79.0,c:true,csq:60,p:{PF:36,CD:42},tmin:100,memo:"ケーブル直・PF・CD管の混合可",src:"積水化学工業 フィブロック PF管・ケーブル貫通用 適用範囲",url:"https://www.sekisui.co.jp/fp/products/pfcd.html"},
+{k:"S-NEO-W",mk:"積水化学工業",pr:"フィブロックNEO(ALC・コンクリート壁)",no:"PS060WL-1301",kz:["w"],sh:"c",dmax:280,dmaxN:165,fill:90.1,c:true,csq:325,p:{PF:54,CD:54,FEP:80,VE:100},tmin:75,memo:"スリーブなしφ165以下、鋼製・塩ビスリーブありφ280以下(モルタル埋め戻し)。ケーブル総導体断面積1776sq以下",src:"積水化学工業 フィブロックNEO 適用範囲",url:"https://www.sekisui.co.jp/fp/products/neo.html"},
+{k:"S-NEO-H",mk:"積水化学工業",pr:"フィブロックNEO(中空壁・押出成形セメント板壁)",no:"PS060WL-1339",kz:["h"],sh:"c",dmax:160,fill:92.9,c:true,csq:325,p:{PF:54,CD:54},tmin:60,memo:"ケーブル総導体断面積1734sq以下",src:"積水化学工業 フィブロックNEO 適用範囲",url:"https://www.sekisui.co.jp/fp/products/neo.html"},
+{k:"S-NEO-K",mk:"積水化学工業",pr:"フィブロックNEO(片壁)",no:"PS060WL-1338",kz:["k"],sh:"c",dmax:160,fill:92.9,c:true,csq:325,p:{PF:54,CD:54},tmin:42,memo:"片面強化せっこうボード重張。ケーブル総導体断面積1734sq以下",src:"積水化学工業 フィブロックNEO 適用範囲",url:"https://www.sekisui.co.jp/fp/products/neo.html"},
+{k:"S-NEO-F",mk:"積水化学工業",pr:"フィブロックNEO(ALC・コンクリート床)",no:"PS060FL-1341",kz:["f"],sh:"c",dmax:280,dmaxN:165,fill:91.7,c:true,csq:325,p:{PF:54,CD:54,FEP:80,VE:100},tmin:75,memo:"コンクリート床75mm以上・ALC床100mm以上。スリーブなしφ165以下、鋼製・塩ビスリーブありφ280以下。ケーブル総導体断面積1659sq以下",src:"積水化学工業 フィブロックNEO 適用範囲",url:"https://www.sekisui.co.jp/fp/products/neo.html"},
+{k:"N-1158",mk:"日東化成工業",pr:"プラシールNF-12HM(ALC・コンクリート壁 丸穴)",no:"PS060WL-1158",kz:["w"],sh:"c",dmax:216,fill:50.6,c:true,csq:325,p:{PF:54,CD:54,VE:54,FEP:50},tmin:75,memo:"充填厚70mm以上。塩ビ管スリーブを後付けする工法はφ260以下。樹脂管の本数制限なし",src:"日東化成工業 工法詳細 PS060WL-1158",url:"https://www.nitto-kasei.co.jp/method_detail?koho=32"},
+{k:"N-1160",mk:"日東化成工業",pr:"プラシールNF-12HM(コンクリート床 丸穴)",no:"PS060FL-1160",kz:["f"],sh:"c",dmax:216,fill:50.6,c:true,csq:325,p:{PF:54,CD:54,VE:54,FEP:50},tmin:70,memo:"コンクリート床。充填厚70mm以上。樹脂管の本数制限なし",src:"日東化成工業 工法詳細 PS060FL-1160",url:"https://nitto-kasei.co.jp/method/koho-nf12-28/"},
+{k:"N-1316",mk:"日東化成工業",pr:"プラシールNF-12HM(中空壁 丸穴・角穴)",no:"PS060WL-1316",kz:["h"],sh:"cr",dmax:160,rmax:[160,160],fill:62.4,c:true,csq:325,p:{PF:54,CD:54,FEP:50},tmin:60,memo:"60分準耐火・60分耐火の中空壁。充填厚40mm以上+40mm以上(かぶせ10mm以上)。樹脂管の本数制限なし",src:"日東化成工業 工法詳細 PS060WL-1316",url:"https://nitto-kasei.co.jp/method/koho-nf12-54/"},
+{k:"N-1317",mk:"日東化成工業",pr:"プラシールNF-12HM(片壁 丸穴・角穴)",no:"PS060WL-1317",kz:["k"],sh:"cr",dmax:160,rmax:[160,160],fill:62.4,c:true,csq:325,p:{PF:54,CD:54,FEP:50},tmin:42,memo:"充填厚70mm以上・壁面から30mm以上(かぶせ10mm以上)。樹脂管の本数制限なし",src:"日東化成工業 工法詳細 PS060WL-1317",url:"https://nitto-kasei.co.jp/method/koho-nf12-51/"},
+{k:"N-1318",mk:"日東化成工業",pr:"プラシールNF-12HM(中空壁 大きい角穴)",no:"PS060WL-1318",kz:["h"],sh:"r",rmax:[200,600],fill:29.0,c:true,csq:325,p:{PF:54,CD:54,FEP:50},tmin:60,memo:"60分準耐火・60分耐火の中空壁。充填厚60mm以上。樹脂管の本数制限なし",src:"日東化成工業 工法詳細 PS060WL-1318",url:"https://nitto-kasei.co.jp/method/koho-nf12-55/"},
+{k:"N-1161",mk:"日東化成工業",pr:"プラシールNF-12HM(ALC・コンクリート壁 丸穴・角穴)",no:"PS060WL-1161",kz:["w"],sh:"cr",dmax:160,rmax:[160,160],fill:62.2,c:true,csq:325,p:{PF:54,CD:54},tmin:60,memo:"メーカーの案内ではPS060WL-1316に集約。ケーブル直・PF・CD管",src:"日東化成工業 工法詳細 PS060WL-1161(角穴)",url:"https://www.nitto-kasei.co.jp/method_detail?koho=29"},
+{k:"M-TS-W",mk:"未来工業",pr:"タイカスール(壁・中空壁)",no:"PS060WL-0441",kz:["w","h"],sh:"c",dmax:120,dmaxN:106.4,fill:38.7,c:true,csq:250,cod:62,p:{PF:36,CD:28,VE:28,G:104,C:0,E:0},tmin:70,memo:"中空壁(100mm以上)はスリーブ必須。スリーブなし・コンクリートに直接埋設はφ106.4以下。資料の表の読み取りがはっきりしないため、占積率は小さい方(38.7%)で判定。PF外径45.5・CD/VE外径34以下",src:"未来工業 タイカブラック 電気工事用 認定&評定一覧",url:"https://www.mirai.co.jp/product/taika/file/sanko-9.pdf"},
+{k:"M-TS-F",mk:"未来工業",pr:"タイカスール(床)",no:"PS060FL-0736 / 0809",kz:["f"],sh:"c",dmax:133,dmaxN:106.4,fill:38.7,c:true,csq:250,cod:62,p:{PF:36,CD:36,VE:28,G:104,C:0,E:0},tmin:100,memo:"資料の表の読み取りがはっきりしないため、開口φ133・占積率38.7%・厚さ100mm以上(小さい方・厳しい方)で判定。認定書で確認",src:"未来工業 タイカブラック 電気工事用 認定&評定一覧",url:"https://www.mirai.co.jp/product/taika/file/sanko-9.pdf"}];
 var RESINK=["PF","CD","VE","MFX","FEP","VP","VU","SU"];
 function kmDef(){return {k:"",name:"",no:"",kz:"wf",fr:"1",sh:"c",hole:"",amax:"",rt:"",tmin:"",m:true,r:true,c:true,pmax:"",cmax:"",memo:""}}
 function normKM(a){var out=[],mx=0;(Array.isArray(a)?a:[]).forEach(function(o){var m=kmDef();o=o||{};for(var k in m){if(o[k]!=null)m[k]=typeof m[k]==="boolean"?!!o[k]:String(o[k])}if(!/^N\d+$/.test(m.k))m.k="";if(m.k)mx=Math.max(mx,+m.k.slice(1));out.push(m)});
@@ -724,22 +743,24 @@ function isUser(m){return !!(m&&/^N/.test(m.k))}
 function kmName(m){if(!m)return "(処理方法が見つかりません)";if(isUser(m))return (String(m.name||"").trim()||"認定工法")+(String(m.no||"").trim()?"("+String(m.no).trim()+")":"");if(isMK(m))return m.pr+"("+m.no+")";return m.name}
 function kmNum(v){var x=parseFloat(String(v==null?"":v).replace(/[^\d.]/g,""));return isFinite(x)&&x>0?x:null}
 /* 認定工法の条件を、メーカー工法と登録した工法で同じ形にする */
-function kmCond(m){if(!m)return null;if(isMK(m))return {kz:m.kz,fr:1,sh:m.sh,dmax:m.dmax||null,amax:m.amax||null,fill:m.fill==null?null:m.fill,kits:m.kits||null,c:!!m.c,csq:m.csq||null,cod:null,p:m.p,pod:m.pod||null,mix:m.mix!==false,tmin:m.tmin||null};
+function kmCond(m){if(!m)return null;if(isMK(m))return {kz:m.kz,fr:1,sh:m.sh,dmax:m.dmax||null,dmaxN:m.dmaxN||null,amax:m.amax||null,rmax:m.rmax||null,fill:m.fill==null?null:m.fill,kits:m.kits||null,c:!!m.c,csq:m.csq||null,cod:m.cod||null,p:m.p,pod:m.pod||null,pn:m.pn||null,mix:m.mix!==false,tmin:m.tmin||null};
 if(!isUser(m))return null;
 var p=null;if(m.m&&m.r)p="*";else if(m.m)p=STEELK;else if(m.r){p={};RESINK.forEach(function(K){p[K]=0})}
 return {kz:m.kz==="w"?["w","h","k"]:m.kz==="f"?["f"]:["w","h","k","f"],fr:parseFloat(m.fr)||1,sh:m.sh==="r"?"r":m.sh==="cr"?"cr":"c",dmax:kmNum(m.hole),amax:kmNum(m.amax),fill:kmNum(m.rt),kits:null,c:!!m.c,csq:null,cod:kmNum(m.cmax),p:p,pod:kmNum(m.pmax),mix:true,tmin:kmNum(m.tmin)}}
 function kzText(v){for(var i=0;i<KM_KZ.length;i++){if(KM_KZ[i][0]===v)return KM_KZ[i][1]}return "壁"}
 function kzList(a){return a.map(kzText).join("・")}
+function kOpenText(C){var a=[];if(C.sh!=="r")a.push("丸穴"+(C.dmax?"φ"+C.dmax+"以下":"")+(C.dmaxN?"(スリーブなしφ"+C.dmaxN+"以下)":""));
+if(C.sh!=="c")a.push("角穴"+(C.rmax?C.rmax[0]+"×"+C.rmax[1]+"以下":"")+(C.amax?C.amax+"m²以下":""));return a.join("・")}
 /* 処理方法の条件の説明 */
 function kmDesc(m){if(!m)return "";if(!isMK(m)&&!isUser(m))return m.d+"("+m.law+")";
 var C=kmCond(m),a=[];if(isMK(m))a.push(m.mk);
 a.push("区画: "+kzList(C.kz));a.push("耐火: "+(C.fr>=2?"2時間まで":C.fr<1?"45分まで":"1時間まで"));
-a.push("開口: "+(C.sh==="r"?"角穴":C.sh==="cr"?"丸穴・角穴":"丸穴")+(C.dmax?" φ"+C.dmax+"mm以下":"")+(C.amax?" 面積"+C.amax+"m²以下":""));
+a.push("開口: "+kOpenText(C));
 if(C.kits)a.push("適用穴径 "+C.kits.map(function(k){return k[0]===k[1]?"φ"+k[0]:"φ"+k[0]+"〜"+k[1]}).join("・"));
 a.push(C.fill?"占積率 "+C.fill+"%以下":"占積率の管理なし");
 var ok=[];if(C.c)ok.push("ケーブル"+(C.csq?"("+C.csq+"sq以下)":"")+(C.cod?"(外径"+C.cod+"mm以下)":""));
 if(C.p==="*")ok.push("電線管");else if(C.p){var ks=Object.keys(C.p);ok.push(ks.map(function(K){return PIPE[K].s+(C.p[K]?C.p[K]+"以下":"")}).join("・"))}
-a.push("通せる物: "+(ok.join("・")||"なし")+(C.pod?"(管の外径"+C.pod+"mm以下)":"")+(C.mix?"":"(ケーブルと電線管の混在不可)"));
+a.push("通せる物: "+(ok.join("・")||"なし")+(C.pod?"(管の外径"+C.pod+"mm以下)":"")+(C.pn?"(電線管"+C.pn+"本以下)":"")+(C.mix?"":"(ケーブルと電線管の混在不可)"));
 if(C.tmin)a.push("厚さ"+C.tmin+"mm以上");
 var memo=String(m.memo||"").trim();
 return a.join(" / ")+(memo?"。"+memo:"")+(isMK(m)?"(出典: "+m.src+")":"")}
@@ -768,14 +789,15 @@ if(C.cod&&x.od>C.cod+1e-9)w.push(x.lbl+"の外径"+n2(x.od)+"mmがケーブル�
 hasP=true;if(!C.p){if(!seen.p){seen.p=1;w.push("電線管は通せない工法")}return}
 if(C.p!=="*"){if(!(x.pk in C.p)){w.push(x.lbl+"は通せない管種");return}var mx=C.p[x.pk],nm=pipeNom(x.psz);if(mx&&nm&&nm>mx)w.push(x.lbl+"が最大の呼び"+mx+"を超える")}
 if(C.pod&&x.od>C.pod+1e-9)w.push(x.lbl+"の外径"+n2(x.od)+"mmが管の最大外径"+C.pod+"mmを超える")});
-if(!C.mix&&hasC&&hasP)w.push("ケーブルと電線管を混在できない工法")}
+if(!C.mix&&hasC&&hasP)w.push("ケーブルと電線管を混在できない工法");
+if(C.pn){var np=0;o.its.forEach(function(x){if(x.pk)np+=x.n});if(np>C.pn)w.push("電線管が"+np+"本で、"+C.pn+"本以下の工法")}}
 return w}
 function kfrText(v){for(var i=0;i<KM_FR.length;i++){if(KM_FR[i][0]===String(v))return KM_FR[i][1]}return v}
 /* 丸穴のスリーブ(管種・サイズ)ごとの理由。開口の径はスリーブの外径で見る(占積率は内径で計算するので安全側) */
 function kSlvWhy(o,q,m,p,fill){m=m||o.km;p=p||q.p;fill=fill==null?q.fill:fill;var w=[];if(!m||!p)return w;
 if(m.k==="M2"&&STEEL.indexOf(q.K)<0)w.push("スリーブが鋼管ではない");
 var C=kmCond(m);if(C&&o.r.sh!=="r"){var od=pipeOD(p)||p[2];
-if(C.dmax&&od>C.dmax+1e-9)w.push("開口(スリーブ外径"+n2(od)+"mm)が最大φ"+C.dmax+"mmを超える");
+var dm=q.K==="SV"&&C.dmaxN?C.dmaxN:C.dmax;if(dm&&od>dm+1e-9)w.push("開口(スリーブ外径"+n2(od)+"mm)が最大φ"+dm+"mmを超える"+(q.K==="SV"&&C.dmaxN?"(スリーブなし)":""));
 else if(C.kits&&!C.kits.some(function(k){return od>=k[0]-1e-9&&od<=k[1]+1e-9}))w.push("開口φ"+n2(od)+"mmに合う製品サイズがない");
 if(C.fill&&fill>C.fill+1e-9)w.push("占積率"+fill.toFixed(1)+"%が上限"+C.fill+"%を超える")}
 if(o.r.kk&&o.r.sh!=="r"&&o.cnt>1&&fill>40&&kFitMiss(o,p))w.push("通す物がスリーブに並びきらない(断面図で確認)");
@@ -785,6 +807,7 @@ function kFitMiss(o,p){if(o.cnt>40)return 0;var list=[];o.its.forEach(function(x
 /* 角穴の判定 */
 function kRectWhy(o,m){m=m||o.km;var w=[],R=o.rect;if(!m||!R||!R.area)return w;var C=kmCond(m);if(!C)return w;
 if(C.amax&&R.area/1e6>C.amax+1e-9)w.push("開口の面積"+(R.area/1e6).toFixed(3)+"m²が最大"+C.amax+"m²を超える");
+if(C.rmax){var a=[R.w,R.h].sort(function(x,y){return x-y}),b=C.rmax.slice().sort(function(x,y){return x-y});if(a[0]>b[0]+1e-9||a[1]>b[1]+1e-9)w.push("開口"+n2(R.w)+"×"+n2(R.h)+"mmが最大"+C.rmax[0]+"×"+C.rmax[1]+"mmを超える")}
 if(C.fill&&R.fill>C.fill+1e-9)w.push("占積率"+R.fill.toFixed(1)+"%が上限"+C.fill+"%を超える");return w}
 /* 処理方法に合う、管種ごとの最小サイズを選び直す(占積率の基準と、穴径・製品サイズの条件の両方) */
 function kPick(o,m,K,rt){var L=PIPE[K].l;for(var i=0;i<L.length;i++){var p=L[i],Ai=circ(p[2]);if(allowA(p[2],rt)<o.total-1e-9)continue;var f=o.total/Ai*100;if(!kSlvWhy(o,{K:K},m,p,f).length)return p}return null}
@@ -1354,7 +1377,7 @@ return h+'</tbody>'}
 function kCondText(){return '選定方法: 貫通ごとに、通す物(ケーブル・電線管)の断面積の合計が許容断面積以下となる最小のスリーブ・開口の太さ(占積率による)/ 選んだ処理方法の条件に合うかを判定し、判定OKのスリーブ・開口を記載(OKがない貫通は検討した全部を記載)'}
 /* 選定書の下に載せる処理方法の短い説明 */
 function kmBrief(m){if(!isMK(m)&&!isUser(m))return m.name+"("+m.law+")";var C=kmCond(m);
-return kmName(m)+(isMK(m)?" "+m.mk:"")+": "+kzList(C.kz)+" / "+(C.sh==="r"?"角穴"+(C.amax?C.amax+"m²以下":""):"丸穴"+(C.dmax?"φ"+C.dmax+"以下":""))+" / "+(C.fill?"占積率"+C.fill+"%以下":"占積率の管理なし")+(C.tmin?" / 厚さ"+C.tmin+"mm以上":"")+(isMK(m)?"(出典: "+m.src+")":"")}
+return kmName(m)+(isMK(m)?" "+m.mk:"")+": "+kzList(C.kz)+" / "+kOpenText(C)+" / "+(C.fill?"占積率"+C.fill+"%以下":"占積率の管理なし")+(C.tmin?" / 厚さ"+C.tmin+"mm以上":"")+(isMK(m)?"(出典: "+m.src+")":"")}
 function kFootHTML(){var used={};LASTOS.forEach(function(o){if(o.km)used[o.km.k]=o.km});
 var a=Object.keys(used).map(function(k){return '<p>○'+esc(kmBrief(used[k]))+'</p>'}).join("");
 return '<div><p>○占積率 = 通す物の断面積の合計 ÷ スリーブの内断面積 × 100(ケーブルは仕上がり外径、電線管は外径の基準寸法で計算)</p><p>○すき間はモルタルその他の不燃材料で埋める(建築基準法施行令 第112条第20項)</p><p>○認定工法の条件は、製品の認定書・施工要領書で必ず確認のこと</p></div><div>'+a+'</div>'}
@@ -1603,8 +1626,8 @@ f("pmax","管の最大外径(mm)","空欄なら見ない",1)+f("cmax","ケーブ
 '<div class="kmok"><span class="dim">通せる物</span>'+ck("m","金属管")+ck("r","合成樹脂管")+ck("c","ケーブル")+'</div>'+
 '<div class="f" style="margin-top:6px"><label>施工の条件メモ</label><input data-km="'+i+'" data-kf="memo" value="'+esc(m.memo)+'" placeholder="例: 両面に耐火パテ厚さ○mm" autocomplete="off"></div></div>'}
 function renderKMRef(){var el=$("kmRef");if(!el)return;el.innerHTML='<table class="ref"><thead><tr><th>メーカー・製品</th><th>認定番号</th><th>区画</th><th>開口</th><th>占積率</th><th>厚さ</th><th>通せる物・条件</th></tr></thead><tbody>'+
-KM_MK.map(function(m){var C=kmCond(m),ok=[];if(C.c)ok.push("ケーブル"+(C.csq?C.csq+"sq以下":""));if(C.p==="*")ok.push("電線管");else if(C.p)ok.push(Object.keys(C.p).map(function(K){return PIPE[K].s+(C.p[K]?C.p[K]+"以下":"")}).join("・"));
-return '<tr><td style="text-align:left">'+esc(m.mk)+'<br><b>'+esc(m.pr)+'</b></td><td>'+esc(m.no)+'</td><td>'+esc(kzList(C.kz))+'</td><td>'+(C.sh==="r"?"角穴 "+C.amax+"m²以下":"丸穴 φ"+C.dmax+"以下")+'</td><td>'+(C.fill?C.fill+"%":"管理なし")+'</td><td>'+(C.tmin?C.tmin+"mm以上":"-")+'</td><td style="text-align:left">'+esc(ok.join("・")+(C.mix?"":"(混在不可)"))+(m.memo?'<br><span class="dim">'+esc(m.memo)+'</span>':'')+'<br><a href="'+esc(m.url)+'" target="_blank" rel="noopener">'+esc(m.src)+'</a></td></tr>'}).join("")+'</tbody></table>'}
+KM_MK.map(function(m){var C=kmCond(m),ok=[];if(C.c)ok.push("ケーブル"+(C.csq?C.csq+"sq以下":""));if(C.p==="*")ok.push("電線管");else if(C.p)ok.push(Object.keys(C.p).map(function(K){return PIPE[K].s+(C.p[K]?C.p[K]+"以下":"")}).join("・")+(C.pn?"("+C.pn+"本以下)":""));
+return '<tr><td style="text-align:left">'+esc(m.mk)+'<br><b>'+esc(m.pr)+'</b></td><td>'+esc(m.no)+'</td><td>'+esc(kzList(C.kz))+'</td><td>'+esc(kOpenText(C))+'</td><td>'+(C.fill?C.fill+"%":"管理なし")+'</td><td>'+(C.tmin?C.tmin+"mm以上":"-")+'</td><td style="text-align:left">'+esc(ok.join("・")+(C.mix?"":"(混在不可)"))+(m.memo?'<br><span class="dim">'+esc(m.memo)+'</span>':'')+'<br><a href="'+esc(m.url)+'" target="_blank" rel="noopener">'+esc(m.src)+'</a></td></tr>'}).join("")+'</tbody></table>'}
 function renderKM(){renderKMRef();var el=$("kmList");if(!el)return;var L=PJ.km||[];el.innerHTML=L.length?L.map(kmItemHTML).join(""):'<p class="note">まだ登録していません</p>'}
 function kmChanged(){save();var keep=CUR_I;Array.prototype.forEach.call($("rows").querySelectorAll(".rc"),function(c){var r=rowById(c.getAttribute("data-id"));if(r&&r.kk){var sel=c.querySelector('[data-f="mt"]');if(sel){var t=document.createElement("div");t.innerHTML=kmSelHTML(r);sel.replaceWith(t.firstChild)}var d=c.querySelector(".kmd"),m=kmFind(r.mt);if(d)d.textContent=m?kmDesc(m):"処理方法が見つかりません。選び直してください";c.querySelector(".sum").innerHTML=sumText(r,rows.indexOf(r))}});mark()}
 $("kmList").addEventListener("input",function(e){var t=e.target,i=t.getAttribute("data-km");if(i==null)return;var m=(PJ.km||[])[+i];if(!m)return;var k=t.getAttribute("data-kf");
