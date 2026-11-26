@@ -74,7 +74,10 @@ select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visi
 .g3.pipe{grid-template-columns:repeat(2,minmax(0,1fr))}.g3.pipe>.f:last-child{grid-column:1/-1}
 }
 .it.ith span{font-size:.75rem;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.oth{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 6.2em;gap:6px;min-width:0}
+/* 「その他」は種別・サイズ・外径の3つを入れるので、広い画面でも2段にする */
+.it.ito{grid-template-columns:minmax(0,1fr) 4.8em 2.6em;grid-template-areas:"t n d" "s s s";row-gap:6px}
+.it.ito>:nth-child(1){grid-area:t}.it.ito>:nth-child(2){grid-area:s}.it.ito>:nth-child(3){grid-area:n}.it.ito>:nth-child(4){grid-area:d}
+.oth{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 5.6em;gap:6px;min-width:0}
 .idel{height:2.5rem;font:inherit;font-size:.8rem;border:0;background:none;color:var(--sub);cursor:pointer;border-radius:8px;padding:0}
 .idel:hover{color:var(--ng);background:var(--bg)}
 .idel:disabled{visibility:hidden}
@@ -400,7 +403,7 @@ h1{display:flex;align-items:center;gap:10px;font-size:1.45rem;letter-spacing:.03
 .pjcard .pjgrid{gap:1px}
 .pjcard .f{background:var(--card);padding:8px 12px 3px;min-width:0;transition:background-color .15s,box-shadow .15s}
 .pjcard .f:focus-within{background:var(--brb);box-shadow:inset 0 -2px 0 var(--acc)}
-.pjcard label{font-size:.7rem;margin:0;letter-spacing:.02em}
+.pjcard label{font-size:.75rem;margin:0;letter-spacing:.02em}
 .pjcard input,.pjcard select{height:2.15rem;border:0;border-radius:0;background:transparent;padding:0;font-size:1rem}
 .pjcard select{margin-left:-3px;width:calc(100% + 3px)}
 .pjcard input:focus-visible,.pjcard select:focus-visible{outline:none}
@@ -520,7 +523,7 @@ body.km .conly{display:none!important}
 .kcd li.kng{opacity:.8}
 .kcd .kbs{color:var(--ink)}
 .kcd .kwy{color:var(--sub);font-size:.76rem}
-.kcd .kcur{font-size:.72rem;font-weight:700;color:var(--acc)}
+.kcd .kcur{font-size:.72rem;font-weight:700;color:var(--acc);white-space:nowrap}
 .kcd details{margin-top:6px}
 .kcd summary{cursor:pointer;color:var(--sub)}
 .pgb{display:inline-flex;align-items:center;gap:4px;font:inherit;font-size:.76rem;font-weight:700;line-height:1.3;padding:5px 10px;border:1px solid var(--acc);border-radius:999px;color:var(--acc);background:var(--card);text-decoration:none;white-space:nowrap;vertical-align:middle;cursor:pointer}
@@ -630,7 +633,7 @@ body.km .conly{display:none!important}
 <p class="lead">配管ごとにケーブルと本数を入れて「計算する」を押すと、管種ごとの太さと占積率が出ます。断面図と選定書(PDF・Excel)、断面図のDXFも作れます。</p></header>
 <section class="card pjcard">
 <div class="pjgrid">
-<div class="f pjn"><label for="pjName">件名(建物名称)</label><input id="pjName" placeholder="件名を入力(例: ○○ビル新築工事)"></div>
+<div class="f pjn"><label for="pjName">件名(建物名称)</label><input id="pjName" placeholder="例: ○○ビル新築工事"></div>
 <div class="f"><label for="pjDate">作成日</label><input id="pjDate" placeholder="空欄で今日"></div>
 <div class="f"><label for="pjCo">会社名</label><input id="pjCo"></div>
 <div class="f"><label for="pjBy">担当者</label><input id="pjBy"></div>
@@ -690,7 +693,8 @@ body.km .conly{display:none!important}
 <summary><h2>計算結果</h2><span class="rst" id="rstL"></span><button type="button" class="mini" id="copy">表をコピー</button></summary><div class="rbody" aria-live="polite">
 <p class="stale-msg" id="stale" hidden>入力が変わりました。「計算する」を押すと表と選定書が更新されます。</p>
 <div id="rt"></div>
-<p class="note" style="margin-top:8px">管種ごとに、占積率の基準以下で入る最小のサイズと、そのときの占積率です。バーの全長が管の内断面積(100%)で、塗った部分がケーブルの占める割合、縦線が基準(32%か48%)の位置です。</p>
+<p class="note conly" style="margin-top:8px">管種ごとに、占積率の基準以下で入る最小のサイズと、そのときの占積率です。バーの全長が管の内断面積(100%)で、塗った部分がケーブルの占める割合、縦線が基準(32%か48%)の位置です。</p>
+<p class="note konly" style="margin-top:8px">スリーブ・開口ごとに、占積率の上限以下で入る最小のサイズと、そのときの占積率です。バーの全長がスリーブの内断面積(穴のみは穴の面積、角穴は幅×高さ)で、塗った部分が通す物の占める割合、縦線が処理方法の上限の位置です。</p>
 <p class="note" id="cmsg" style="margin-top:8px"></p>
 <textarea id="tsv" hidden readonly aria-label="コピー用の表"></textarea>
 </div></details>
@@ -775,7 +779,7 @@ body.km .conly{display:none!important}
 </dialog>
 <script>
 /* 出力(PDF・Excel)のフォントの一覧(起動の途中で使うので最初に置く) */
-var OUTF=[["bizg","BIZ UDPゴシック(標準)","'BIZ UDPGothic'","BIZ+UDPGothic","BIZ UDPゴシック","g"],
+var OUTF=[["bizg","BIZ UDPゴシック","'BIZ UDPGothic'","BIZ+UDPGothic","BIZ UDPゴシック","g"],
 ["bizm","BIZ UDP明朝","'BIZ UDPMincho'","BIZ+UDPMincho","BIZ UDP明朝","m"],
 ["notos","Noto Sans JP(ゴシック)","'Noto Sans JP'","Noto+Sans+JP","Noto Sans JP","g"],
 ["notom","Noto Serif JP(明朝)","'Noto Serif JP'","Noto+Serif+JP","Noto Serif JP","m"],
@@ -827,7 +831,7 @@ function shownPK(r){var a=r&&Array.isArray(r.show)?r.show:APPM==="k"?kShowDef():
 function setShowDef(a){if(APPM==="k")PJ.kshow=a.slice();else PJ.show=a.slice()}
 var CT_PW=Object.keys(CABP),CT_CT=["CVV","CVVS","CPEV","CPEVS","KPEV","KPEVS"],CT_WK=["FP-C"].concat(Object.keys(CABW).filter(function(k){return k!=="FP-C"})),CT=CT_PW.concat(CT_CT,CT_WK);
 var CT_GROUPS=[["電力用(電線・ケーブル)",CT_PW],["制御・計装用",CT_CT],["弱電・通信・防災用",CT_WK]];
-var CT_LBL={"FP-C":"FP-C(耐火ケーブル・電線管用)","AL-CVT":"AL-CVT(アルミ導体)",HP:"HP(消防用耐熱電線)","HP-S":"HP-S(耐熱・しゃへい付)",AE:"AE(警報用)","UTP(Cat5e)":"UTP Cat5e(LAN)","UTP(Cat6)":"UTP Cat6(LAN)","同軸":"同軸(S-5C-FB・S-7C-FB)","EV-CVF":"EV-CVF(平形・EV充電用 2.6mm-2C+E)","VVF-2C":"VVF-2C(平形)","VVF-3C":"VVF-3C(平形)","VVF-4C":"VVF-4C(平形)","EM-EEF-2C":"EM-EEF-2C(平形)","EM-EEF-3C":"EM-EEF-3C(平形)","EM-EEF-4C":"EM-EEF-4C(平形)",CVV:"CVV",CVVS:"CVVS(遮へい付)",CPEV:"CPEV",CPEVS:"CPEVS(遮へい付)",KPEV:"KPEV",KPEVS:"KPEVS(遮へい付)",other:"その他(外径を入力)"};
+var CT_LBL={"FP-C":"FP-C(耐火)","AL-CVT":"AL-CVT(アルミ導体)",HP:"HP(消防用耐熱電線)","HP-S":"HP-S(耐熱・しゃへい付)",AE:"AE(警報用)","UTP(Cat5e)":"UTP Cat5e(LAN)","UTP(Cat6)":"UTP Cat6(LAN)","同軸":"同軸(S-5C-FB・S-7C-FB)","EV-CVF":"EV-CVF(平形・EV充電用 2.6mm-2C+E)","VVF-2C":"VVF-2C(平形)","VVF-3C":"VVF-3C(平形)","VVF-4C":"VVF-4C(平形)","EM-EEF-2C":"EM-EEF-2C(平形)","EM-EEF-3C":"EM-EEF-3C(平形)","EM-EEF-4C":"EM-EEF-4C(平形)",CVV:"CVV",CVVS:"CVVS(遮へい付)",CPEV:"CPEV",CPEVS:"CPEVS(遮へい付)",KPEV:"KPEV",KPEVS:"KPEVS(遮へい付)",other:"その他(外径を入力)"};
 var RT_OPTS=[["32","32%(一般)"],["48","48%(屈曲が少ない)"],["m","手動入力"]];
 var PAPER={a4:{w:1123,h:794,mm:[297,210],sc:2},a3:{w:1587,h:1123,mm:[420,297],sc:1.5}};
 var CHEV='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>';
@@ -866,8 +870,8 @@ var KM_KZ=[["w","RC・ALC壁"],["h","中空壁"],["k","片壁"],["f","RC・ALC�
 var KM_BI=[
 {k:"M1",name:"金属管で貫通",law:"令129条の2の4第1項第七号イ",d:"通す物を全部鋼製の電線管(厚鋼・薄鋼・ねじなし)にして、区画の両側1m以内も金属管のまま通す。すき間はモルタル等の不燃材料で埋める"},
 {k:"M2",name:"鋼製スリーブを両側1m以上出す",law:"令129条の2の4第1項第七号イ",d:"鋼管のスリーブを区画の両側に1m以上突き出す(スリーブの中の条件は問わない)。スリーブと区画のすき間はモルタル等の不燃材料で埋める"},
-{k:"K1",name:"告示1422号(硬質塩ビ 肉厚5.5mm以上・外径90mm未満)",law:"令129条の2の4第1項第七号ロ・平12建告1422号",d:"通す物を全部、肉厚5.5mm以上・外径90mm未満の硬質塩化ビニルの管(VP・VE)にする(ケーブルを直接通すのは不可。ケーブルは管の中に入れる)。すき間はモルタル等の不燃材料で埋める。予備配管は先端を密閉"},
-{k:"K2",name:"告示1422号+運用指針(VPは外径90mm未満)",law:"平12建告1422号・建築設備設計・施工上の運用指針",d:"VPは外径90mm未満なら肉厚を問わない運用による(特定行政庁・確認検査機関に確認)。VEは肉厚5.5mm以上・外径90mm未満。ケーブルを直接通すのは不可(管の中に入れる)。すき間はモルタル等。予備配管は先端を密閉"}];
+{k:"K1",name:"告示1422号(硬質塩ビ管)",law:"令129条の2の4第1項第七号ロ・平12建告1422号",d:"通す物を全部、肉厚5.5mm以上・外径90mm未満の硬質塩化ビニルの管(VP・VE)にする(ケーブルを直接通すのは不可。ケーブルは管の中に入れる)。すき間はモルタル等の不燃材料で埋める。予備配管は先端を密閉"},
+{k:"K2",name:"告示1422号+運用指針(VP)",law:"平12建告1422号・建築設備設計・施工上の運用指針",d:"VPは外径90mm未満なら肉厚を問わない運用による(特定行政庁・確認検査機関に確認)。VEは肉厚5.5mm以上・外径90mm未満。ケーブルを直接通すのは不可(管の中に入れる)。すき間はモルタル等。予備配管は先端を密閉"}];
 /* ===== メーカーの認定工法(電気用)。メーカーの仕様書・カタログ、日建連の設備工事情報シートの値 =====
    kz: 使える区画、sh: c丸穴/r角穴、dmax: 丸穴の最大径(mm)、amax: 角穴の最大面積(m²)、fill: 占積率の上限(%。null=管理なし)、
    kits: 製品ごとの適用穴径[最小,最大]、c: ケーブル可、csq: ケーブルの最大サイズ(sq)、p: 電線管("*"=可、{管種:最大の呼び(0=制限なし)}、null=不可)、
@@ -1511,7 +1515,7 @@ if(L.it){var it=L.it,X=cx+it.x,Y=cy-it.y,sx,sy;
 if(it.h>0){sx=it.v?X+it.rr:X+it.h+it.rr;sy=Y}else{var dx=x0-X,dy=uy-Y,dl=Math.sqrt(dx*dx+dy*dy)||1;sx=X+dx/dl*it.rr;sy=Y+dy/dl*it.rr}
 ln(LL,7,sx,sy,x0,uy);ci(LL,7,sx,sy,.4)}
 ln(LL,7,x0,uy,x0+L.w+1,uy);tx(LT,7,x0+.5,L.y,H,L.t)});
-var fn=("電線管断面図_"+(r.name||"配管"+(idx+1))+"_"+p[0]).replace(/[\\\/:*?"<>|\s]/g,"")+".dxf";
+var fn=((APPM==="k"?"区画貫通断面図_":"電線管断面図_")+(r.name||"配管"+(idx+1))+"_"+p[0]).replace(/[\\\/:*?"<>|\s]/g,"")+".dxf";
 return {dxf:dxfDoc(E,[[LW,7],[LP,7],[LC,5],[LL,7],[LT,7]]),fn:fn,miss:pk.miss}}
 /* ===================== 選定書・計算書(表)のDXF書き出し =====================
    PDFと同じ紙面をA3で組み、罫線は線、文字は文字のまま、縮尺1/1(mm)のDXFにする。
@@ -1698,13 +1702,13 @@ finally{if(host.parentNode)document.body.removeChild(host);btn.disabled=false}}
 function opt(v,l,cur){return '<option value="'+esc(v)+'"'+(String(v)===String(cur)?' selected':'')+'>'+esc(l)+'</option>'}
 function nOpts(v){var a=[opt("","本数",v)];for(var k=1;k<=20;k++)a.push(opt(String(k),String(k),v));if(v!==""&&!(+v>=1&&+v<=20&&Math.floor(+v)===+v))a.push(opt(v,v,v));return a.join("")}
 function itemHTML(it,i,r){
-var pg='<optgroup label="電線管">'+PK_IN.map(function(K){return opt("P:"+K,PIPE[K].n,it.t)}).join("")+'</optgroup>';
+var pg='<optgroup label="電線管">'+PK_IN.map(function(K){return opt("P:"+K,PIPE[K].n.replace(/\(.*\)$/,""),it.t)}).join("")+'</optgroup>';
 var tsel='<select data-i="'+i+'" data-g="t" aria-label="ケーブル'+(i+1)+'の種類">'+(r.kk?pg:'')+CT_GROUPS.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(k){return opt(k,CT_LBL[k]||k,it.t)}).join("")+'</optgroup>'}).join("")+(!r.kk?pg:'')+'<optgroup label="その他">'+opt("other",CT_LBL.other,it.t)+'</optgroup></select>';
 var mid,pK=itPK(it.t);
 if(pK)mid='<select data-i="'+i+'" data-g="s" aria-label="電線管'+(i+1)+'のサイズ">'+opt("","サイズを選ぶ",it.s)+PIPE[pK].l.map(function(p){return opt(p[0],p[0]+"(外径"+podT(p)+")",it.s)}).join("")+'</select>';
 else if(it.t==="other")mid='<div class="oth"><input data-i="'+i+'" data-g="ty" placeholder="種別" value="'+esc(it.ty)+'" aria-label="ケーブル'+(i+1)+'の種別(例: CVV-S)" autocapitalize="characters" autocomplete="off"><input data-i="'+i+'" data-g="sz" placeholder="サイズ" value="'+esc(it.sz)+'" aria-label="ケーブル'+(i+1)+'のサイズ(例: 2sq-3C)" autocomplete="off"><input data-i="'+i+'" data-g="od" type="number" inputmode="decimal" step="0.1" placeholder="外径mm" value="'+esc(it.od)+'" aria-label="ケーブル'+(i+1)+'の外径(mm)"></div>';
 else mid='<select data-i="'+i+'" data-g="s" aria-label="ケーブル'+(i+1)+'のサイズ・心数">'+opt("",/-\dC$/.test(it.t)||!CAB[it.t][0][1]?"サイズを選ぶ":"サイズ・心数を選ぶ",it.s)+CAB[it.t].map(function(c){return opt(cabKey(c),c[0]+(c[1]?"-"+c[1]:"")+(isFlat(c)?"("+c[2]+"×"+c[3]+")":"(φ"+c[2]+")"),it.s)}).join("")+'</select>';
-return '<div class="it">'+tsel+mid+'<select data-i="'+i+'" data-g="n" aria-label="ケーブル'+(i+1)+'の本数">'+nOpts(it.n)+'</select><button type="button" class="idel" data-act="idel" data-i="'+i+'" aria-label="ケーブル'+(i+1)+'を削除"'+(r.items.length>1?'':' disabled')+'>削除</button></div>'}
+return '<div class="it'+(it.t==="other"?' ito':'')+'">'+tsel+mid+'<select data-i="'+i+'" data-g="n" aria-label="ケーブル'+(i+1)+'の本数">'+nOpts(it.n)+'</select><button type="button" class="idel" data-act="idel" data-i="'+i+'" aria-label="ケーブル'+(i+1)+'を削除"'+(r.items.length>1?'':' disabled')+'>削除</button></div>'}
 function isumHTML(r){var o=calcRow(r,{lite:true});
 var s=o.total==null?'<span>ケーブルと本数を入れると、ここに合計が出ます</span>':'<span>合計 <b>'+o.cnt+'</b> 本</span><span>断面積計 <b>'+f1(o.total)+'</b> mm²</span>';
 return s}
@@ -1777,7 +1781,7 @@ r.items.map(function(it,i){return itemHTML(it,i,r)}).join("")+
 '<button type="button" class="iadd" data-act="iadd">'+(K?'＋ 通す物を追加':'＋ ケーブルを追加')+'</button>'+
 '<p class="iwarn">'+esc(iwarnHTML(r))+'</p>'+
 '<div class="isum">'+isumHTML(r)+'</div></div>'+
-'<div class="sec"><h3>選定の条件</h3><div class="g2"><div class="f"><label>占積率</label><select data-f="rt">'+RT_OPTS.concat(K?[["k","処理方法の上限に合わせる"]]:[]).map(function(x){return opt(x[0],x[1],r.rt)}).join("")+'</select></div>'+
+'<div class="sec"><h3>選定の条件</h3><div class="g2"><div class="f"><label>占積率</label><select data-f="rt">'+RT_OPTS.concat(K?[["k","工法の上限"]]:[]).map(function(x){return opt(x[0],x[1],r.rt)}).join("")+'</select></div>'+
 (r.rt==="m"?'<div class="f"><label>手動(%)</label><div class="rtm"><input data-f="rtm" type="text" inputmode="decimal" value="'+esc(r.rtm)+'" placeholder="例: 40" aria-label="占積率(%)を手動で入力" autocomplete="off"><span>%</span></div></div>':'')+'</div>'+
 '<p class="iwarn rtw">'+(r.rt==="m"&&rtOf(r)==null&&String(r.rtm||"").trim()!==""?"1〜100の数字を入れてください":"")+'</p>'+
 (K?'':'<label class="chk c15"><input type="checkbox" data-c15'+(r.c15!==false?' checked':'')+'> <span>ケーブル1本のときは 内径 ≧ 外径×1.5 で選ぶ<small>管が短く曲がりがなく、引き替えが簡単ならOFFにできます(内線規程3165-1)</small></span></label>')+
