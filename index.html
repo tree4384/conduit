@@ -531,7 +531,8 @@ body.km #aiCard{display:none!important}
 .fmb2{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 16px calc(18px + env(safe-area-inset-bottom,0px))}
 .fmb2 h3{font-size:.95rem;margin:16px 0 6px;color:var(--acc)}
 .fmb2 .fx{font-family:'Times New Roman',var(--font);font-size:1.02rem;background:var(--brb);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:4px 0;overflow-x:auto;white-space:nowrap}
-.fmb2 .fx small{font-family:var(--font);font-size:.78rem;color:var(--sub);margin-left:6px}
+.fmb2 .fx small{font-family:var(--font);font-size:.78rem;color:var(--sub);margin-left:6px;display:inline-block}
+.fmex .fx{white-space:normal;overflow-wrap:anywhere}
 .fmb2 p,.fmb2 li{font-size:.85rem;color:var(--sub);margin:4px 0}
 .fmb2 ul{margin:4px 0;padding-left:1.2em}
 .fmb2 table{border-collapse:collapse;font-size:.85rem;margin:4px 0;width:100%}
@@ -674,7 +675,6 @@ body.km #aiCard{display:none!important}
 </main>
 <dialog class="fmd" id="fmd" aria-labelledby="fmdT">
 <div class="fmh"><h2 id="fmdT">計算式</h2><button type="button" class="mini" id="fmdX">閉じる</button></div>
-<div class="fmtabs" role="tablist" aria-label="電線管選定と区画貫通選定"><button type="button" role="tab" id="fmTC" aria-selected="true">電線管選定</button><button type="button" role="tab" id="fmTK" aria-selected="false">区画貫通選定</button></div>
 <div class="fmb2" id="fmC">
 <div class="fmex" id="fmExC"></div>
 <h3>記号の意味</h3>
@@ -2280,8 +2280,9 @@ rdr.readAsText(f)});
 /* ===================== 計算式を見る =====================
    式の説明と、計算結果の数字を入れた例(配管・貫通を選べる) */
 (function(){var d=document.getElementById("fmd");if(!d)return;
-var T=[["fmTC","fmC"],["fmTK","fmK"]],cur=0,sel={c:0,k:0};
-function tab(k){cur=k;T.forEach(function(t,i){document.getElementById(t[0]).setAttribute("aria-selected",String(i===k));var pn=document.getElementById(t[1]);pn.hidden=i!==k;if(i===k)pn.scrollTop=0});ex()}
+/* 電線管選定と区画貫通選定は、いま開いている方の式だけ出す */
+var T=["fmC","fmK"],cur=0,sel={c:0,k:0};
+function tab(k){cur=k;T.forEach(function(id,i){var pn=document.getElementById(id);pn.hidden=i!==k;if(i===k)pn.scrollTop=0});document.getElementById("fmdT").textContent="計算式("+(k?"区画貫通選定":"電線管選定")+")";ex()}
 function F(x,n){return (Math.round(x*Math.pow(10,n))/Math.pow(10,n)).toLocaleString("ja-JP",{minimumFractionDigits:n,maximumFractionDigits:n})}
 function pick(o){var fk=figK(o),ps=shownPipes(o).filter(function(q){return q.p}),q=null;
 if(o.r.kk){q=ps.filter(function(x){return x.kok})[0]||ps[0]}else{q=ps.filter(function(x){return x.K===fk})[0]||ps[0]}return q}
@@ -2303,12 +2304,11 @@ if(K)h+='<div class="fx">Sh = π × ('+(pipeOD(q.p)||dd)+' ÷ 2)² = <b>'+F(hole
 h+='<div class="fx">Ai = π × ('+dd+' ÷ 2)² = <b>'+F(q.Ai,1)+'</b> mm²</div>'+
 '<div class="fx">Aa = '+F(q.Ai,1)+' × '+rt+' ÷ 100 = <b>'+q.allow+'</b> mm² <small>切り捨て</small></div>'+
 '<div class="fx">ΣA '+F(o.total,1)+' ≦ Aa '+q.allow+' <small>'+(o.total<=q.allow+1e-9?'入る':'入らない')+'</small></div>'+
-'<div class="fx">占積率 = '+F(o.total,1)+' ÷ '+F(q.Ai,1)+' × 100 = <b>'+q.fill.toFixed(1)+'</b>% <small>基準 '+rt+'%</small></div>';
+'<div class="fx">占積率 = '+F(o.total,1)+' ÷ '+F(q.Ai,1)+' × 100 = <b>'+q.fill.toFixed(1)+'</b>% <small>'+(K?'上限 ':'基準 ')+rt+'%</small></div>';
 if(!K&&o.chk15&&q.x15!=null)h+='<div class="fx">d ÷ D = '+dd+' ÷ '+F(o.maxOd,1)+' = <b>'+q.x15.toFixed(2)+'</b> ≧ 1.5 <small>'+(q.x15>=1.5-1e-9?'OK':'NG')+'</small></div>';
 if(K)h+='<p class="'+(q.kok?'fmok':'fmng')+'">判定 '+(q.kok?'OK':'NG')+(o.km?'('+esc(kmName(o.km))+')':'')+'</p>'}
 el.innerHTML=h;var s=el.querySelector("select");if(s)s.addEventListener("change",function(){sel[key]=+s.value;ex()})}
 document.getElementById("fmOpen").addEventListener("click",function(){tab(APPM==="k"?1:0);if(d.showModal)d.showModal();else d.setAttribute("open","")});
-T.forEach(function(t,i){document.getElementById(t[0]).addEventListener("click",function(){tab(i)})});
 function close(){if(d.close)d.close();else d.removeAttribute("open")}
 document.getElementById("fmdX").addEventListener("click",close);
 d.addEventListener("click",function(e){if(e.target===d)close()})})();
