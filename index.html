@@ -174,7 +174,16 @@ td.ng{font-weight:700}
 #rt{display:grid;gap:18px}
 .rb{min-width:0}
 .rb+.rb{padding-top:16px;border-top:1px solid var(--line)}
-.rbh{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:start;margin-bottom:8px}
+.rbh{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:10px;align-items:start;margin-bottom:8px;cursor:pointer}
+.rbtg{width:2em;height:2em;margin:-2px -6px 0 -4px;display:grid;place-items:center;border:0;background:none;color:var(--acc);cursor:pointer;padding:0;border-radius:50%}
+.rbtg svg{width:18px;height:18px;transition:transform .15s;transform:rotate(180deg)}
+.rb.rbx .rbtg svg{transform:none}
+.rb.rbx>:not(.rbh){display:none!important}
+.rb.rbx .rbh{margin-bottom:0}
+.rbsm{display:none;margin-top:2px;font-size:.8rem;color:var(--sub);font-variant-numeric:tabular-nums}
+.rbsm .badge{font-size:.7rem;padding:0 6px}
+.rb.rbx .rbsm{display:block}
+.rbbar{display:flex;justify-content:flex-end;gap:14px;margin:-2px 0 8px;font-size:.8rem}
 .rbt{min-width:0;line-height:1.45}
 .rbt b{font-size:.95rem}
 .ckw{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:8px}
@@ -1115,6 +1124,12 @@ function n2(x){return String(Math.round(x*100)/100)}
 function shownPipes(o){var a=o.r&&o.r.kk?(o.slk||kSlKeys(o.km,o.r.kz)):shownPK(o.r);return (o.pipes||[]).filter(function(q){return a.indexOf(q.K)>=0})}
 
 /* ===== 計算結果の表 ===== */
+/* たたんだときの見出しの一言: 電線管選定は断面図の管種のサイズと占積率、区画貫通は判定と一番小さいスリーブ・開口 */
+function rbSum(o,KK){if(o.err)return '<span class="ng">要確認</span>';
+if(KK){var r=o.r;if(r.sh==="r"){var R=o.rect;return badge(o.kok)+(R&&R.area?' 角穴 '+n2(R.w)+'×'+n2(R.h)+' ・ '+R.fill.toFixed(1)+'%':'')}
+var q=shownPipes(o).filter(function(x){return x.kok&&x.p}).sort(function(a,b){return (pipeOD(a.p)||a.p[2])-(pipeOD(b.p)||b.p[2])})[0];return badge(o.kok)+(q?' '+esc(kSlShort(q.K)+" "+q.p[0])+' ・ '+q.fill.toFixed(1)+'%':'')}
+var ps=shownPipes(o).filter(function(x){return x.p}),fk=figK(o),q=ps.filter(function(x){return x.K===fk})[0]||ps[0];
+return q?esc(pl(q.K,q.p))+' ・ '+q.fill.toFixed(1)+'%':'<span class="dim">並べる管種なし</span>'}
 function badge(ok){return ok?'<span class="badge ok">OK</span>':'<span class="badge ng">NG</span>'}
 function memoOf(o){var m=[];if(o.err)m.push(o.err);m=m.concat(o.warn||[],o.notes||[]);if(o.r.memo)m.push(o.r.memo);return m.join(" / ")}
 function rowLabel(r,i){return r.name||((r.kk?"貫通":"配管")+(i+1))}
@@ -1150,8 +1165,9 @@ var os=rows.map(calcRow);LASTOS=os;
 var KK=APPM==="k",h="",tsv=[KK?tl(["貫通","場所","区画","耐火","処理方法","通す物","本数","断面積計(mm2)","占積率の基準(%)","スリーブの管種","サイズ","外径(mm)","内径(mm)","内断面積(mm2)","許容断面積(mm2)","占積率(%)","判定","理由・メモ"]):tl(["配管","区間・用途","ケーブル","本数","断面積計(mm2)","占積率の基準(%)","管種","サイズ","管外径(mm)","管内径(mm)","内断面積(mm2)","許容断面積(mm2)","占積率(%)","内径÷外径(1本のとき)","メモ"])];
 os.forEach(function(o,i){
 var r=o.r,nm=rowLabel(r,i),cab=o.its.map(function(x){return esc(x.lbl)+' ×'+x.n}).join("<br>"),cabT=o.its.map(function(x){return x.lbl+"×"+x.n}).join(" / ");
-h+='<section class="rb" data-oi="'+i+'"><div class="rbh"><span class="rn">'+(i+1)+'</span><div class="rbt"><b>'+esc(nm)+'</b>'+(r.sec?'<span class="dim"> '+esc(r.sec)+'</span>':'')+'</div>'+
-(o.total!=null?'<div class="rbs"><span class="dim">断面積計</span> <b>'+f1(o.total)+'</b> mm²<br><span class="dim">'+o.cnt+'本 ・ 基準 '+rtText(o)+'</span></div>':'')+'</div>';
+if(i===0&&os.length>1)h+='<div class="rbbar"><button type="button" class="fgall" data-rball="1">全部たたむ</button><button type="button" class="fgall" data-rball="0">全部ひらく</button></div>';
+h+='<section class="rb'+(r.rx?' rbx':'')+'" data-oi="'+i+'"><div class="rbh" title="タップでたたむ・ひらく"><span class="rn">'+(i+1)+'</span><div class="rbt"><b>'+esc(nm)+'</b>'+(r.sec?'<span class="dim"> '+esc(r.sec)+'</span>':'')+'<span class="rbsm">'+rbSum(o,KK)+'</span></div>'+
+(o.total!=null?'<div class="rbs"><span class="dim">断面積計</span> <b>'+f1(o.total)+'</b> mm²<br><span class="dim">'+o.cnt+'本 ・ '+(KK?'上限 ':'基準 ')+rtText(o)+'</span></div>':'<div></div>')+'<button type="button" class="rbtg" data-rbtg aria-expanded="'+(!r.rx)+'" aria-label="'+esc(nm)+'をたたむ・ひらく"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7.5l5 5 5-5"/></svg></button></div>';
 var memo=memoOf(o);
 if(o.its.length)h+=cabTable(o);
 if(KK)h+=kJudgeBox(o);
@@ -1339,6 +1355,8 @@ var nR=Math.ceil(d.querySelectorAll(".fi>div").length/3),IH=F?nR*68+(nR-1)*1.5+3
 ZV.show([d],w+40,H2,0,$("rt").classList.contains("stale"),rowLabel(o.r,+blk.getAttribute("data-oi"))+(q?" ・ "+q.p[0]:"")+" 断面図",true)}
 $("rt").addEventListener("keydown",function(e){if(e.key!=="Enter"&&e.key!==" ")return;var fz=e.target.closest(".fgp");if(fz){e.preventDefault();figZoom(fz)}});
 $("rt").addEventListener("click",function(e){
+var ra=e.target.closest("[data-rball]");if(ra){var x=ra.getAttribute("data-rball")==="1";rows.forEach(function(r){r.rx=x});Array.prototype.forEach.call($("rt").querySelectorAll(".rb"),function(b){b.classList.toggle("rbx",x);var t=b.querySelector("[data-rbtg]");if(t)t.setAttribute("aria-expanded",String(!x))});save();return}
+var hd=e.target.closest(".rbh");if(hd&&(e.target.closest("[data-rbtg]")||!e.target.closest("a,input,select,textarea,button:not([data-rbtg])"))){var blk=hd.closest(".rb"),o=LASTOS[+blk.getAttribute("data-oi")];if(o){o.r.rx=!o.r.rx;blk.classList.toggle("rbx",o.r.rx);var tg=hd.querySelector("[data-rbtg]");if(tg)tg.setAttribute("aria-expanded",String(!o.r.rx));save()}return}
 var dx=e.target.closest("[data-dxf]");if(dx){saveDxf(dx);return}
 var fz=e.target.closest(".fgp");if(fz){figZoom(fz);return}
 var a=e.target.closest("[data-fall]");
