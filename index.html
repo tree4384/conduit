@@ -479,7 +479,6 @@ details.rcard[open]>summary .aich svg{transform:rotate(180deg)}
 .mtab button[aria-pressed="true"]{background:var(--acc);color:var(--on-acc);font-weight:700}
 body:not(.km) .konly{display:none!important}
 body.km .conly{display:none!important}
-body.km #aiCard{display:none!important}
 .kmd{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--bg);font-size:.8rem;line-height:1.55;color:var(--sub)}
 .kmd b{color:var(--ink)}
 .kjr{margin:8px 0 0;padding:8px 10px;border-radius:8px;font-size:.84rem;line-height:1.55;border:1px solid var(--line)}
@@ -515,6 +514,17 @@ body.km #aiCard{display:none!important}
 .klb{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:.85rem;font-weight:700;padding:7px 14px;border-radius:999px;border:1px solid var(--acc);background:var(--card);color:var(--acc);cursor:pointer}
 .klb svg{width:1.1em;height:1.1em}
 .klb:hover{background:var(--brb)}
+/* AIは計算結果の右下の小さいボタンから、下から出るシートで開く(ページを長くしないため) */
+.rfoot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+#aiBtn{margin-left:auto}
+.hwd .fmb2>.note{margin:0}
+.aib{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:.8rem;font-weight:700;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--acc);cursor:pointer}
+.aib:hover{border-color:var(--acc)}
+.aib>svg{width:14px;height:14px;flex:none}
+.aid .fmh h2{display:flex;align-items:center;gap:8px}
+.aid .fmb2{padding-top:10px}
+#aiDlg #aiCard{border:0;box-shadow:none;margin:0;padding:0;background:none}
+#aiDlg #aiCard>summary{display:none}
 /* 計算式を見るボタンと計算式のシート */
 .btns{flex-wrap:wrap}
 .fmb{flex:1 0 100%;display:flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-size:.88rem;font-weight:700;padding:7px 10px;border:1px dashed var(--line);border-radius:10px;background:var(--card);color:var(--acc);cursor:pointer}
@@ -625,7 +635,7 @@ body.km #aiCard{display:none!important}
 <button type="button" class="kmadd" id="kmAdd">＋ 認定工法を登録</button>
 </details>
 
-<details class="card">
+<details class="card" id="howC">
 <summary>計算のしくみと根拠</summary>
 <div class="note" style="margin-top:10px">
 <p><b>ケーブルの断面積</b> = π ×(外径 ÷ 2)²。被覆を含む仕上がり外径で、0.1mm²に丸めます。本数をかけて足したものが断面積の合計です。</p>
@@ -2370,7 +2380,7 @@ window.addEventListener("hashchange",function(){if(location.hash==="#koho")show(
 window.addEventListener("popstate",function(){if(location.hash!=="#koho"){pushed=false;hide()}});
 return {open:open,close:close,refresh:render,init:function(){if(location.hash==="#koho")show()}}})();
 KL.init();
-document.addEventListener("click",function(e){var b=e.target.closest("[data-klopen]");if(!b)return;e.preventDefault();var c=b.closest(".rc"),r=c&&rowById(c.getAttribute("data-id"));KL.open(r&&r.kk?{kz:r.kz,sh:r.sh==="r"?"r":"c"}:null,b)});
+document.addEventListener("click",function(e){var b=e.target.closest("[data-klopen]");if(!b)return;e.preventDefault();var dl=b.closest("dialog");if(dl&&dl.close)dl.close();var c=b.closest(".rc"),r=c&&rowById(c.getAttribute("data-id"));KL.open(r&&r.kk?{kz:r.kz,sh:r.sh==="r"?"r":"c"}:null,b)});
 
 /* ===================== 計算書の拡大表示 =====================
    プレビューのページをタップすると全画面で開く。
@@ -2517,6 +2527,34 @@ window.addEventListener("load",function(){navigator.serviceWorker.register("sw.j
 </script>
 <script>
 /* ===== AI要約・チェック(Gemini)・配管区画選定アプリ(電線管選定)の設定 ===== */
+/* 計算結果のカードの下の段(rfoot)に、左に「計算のしくみと根拠」、右に「AIチェック」の小さいボタンを置く。
+   どちらも押すと下から出るシートで開く(ページを長くしないため) */
+function rfoot(host){var b=host&&(host.querySelector(".rbody")||host);if(!b)return null;var f=null;for(var i=0;i<b.children.length;i++)if(b.children[i].classList.contains("rfoot"))f=b.children[i];
+if(!f){f=document.createElement("div");f.className="rfoot";b.appendChild(f)}return f}
+function sheet(id,cls,title){var d=document.createElement("dialog");d.className="fmd "+cls;d.id=id;d.setAttribute("aria-labelledby",id+"T");
+d.innerHTML='<div class="fmh"><h2 id="'+id+'T">'+title+'</h2><button type="button" class="mini" data-shx>閉じる</button></div><div class="fmb2"></div>';
+document.body.appendChild(d);
+d.addEventListener("click",function(e){if(e.target===d||e.target.closest("[data-shx]")){if(d.close)d.close();else d.removeAttribute("open")}});return d}
+function sheetOpen(d){if(d.showModal)d.showModal();else d.setAttribute("open","");d.querySelector(".fmb2").scrollTop=0}
+var ICON_HOW='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3.5h9.5a2 2 0 0 1 2 2V17H6a2 2 0 0 1-2-2z"/><path d="M4 15a2 2 0 0 1 2-2h9.5M7.5 7h5M7.5 10h3"/></svg>';
+/* 「計算のしくみと根拠」のカード(details)をシートに移し、計算結果の下の段にボタンを置く */
+function howDock(det,host){if(!det||!host)return;var sm=det.querySelector("summary"),t=sm?sm.textContent.trim():"計算のしくみと根拠";
+var d=sheet((det.id||"how")+"Dlg","hwd",t),bx=d.querySelector(".fmb2");
+Array.prototype.slice.call(det.childNodes).forEach(function(n){if(n!==sm)bx.appendChild(n)});det.remove();
+var b=document.createElement("button");b.type="button";b.className="aib hwb";b.setAttribute("aria-haspopup","dialog");b.innerHTML=ICON_HOW+t;
+b.addEventListener("click",function(){sheetOpen(d)});var f=rfoot(host);if(f)f.insertBefore(b,f.firstChild)}
+function aiDock(el,host){
+var d=document.getElementById("aiDlg");
+if(!d){d=sheet("aiDlg","aid aic",'AI要約・チェック<span class="aitag">Gemini</span>')}
+var bx=d.querySelector(".fmb2");if(el.parentNode!==bx)bx.appendChild(el);
+if(!el.open){el.setAttribute("data-init","1");el.open=true}
+var b=document.getElementById("aiBtn");
+if(!b){b=document.createElement("button");b.type="button";b.className="aib";b.id="aiBtn";b.setAttribute("aria-haspopup","dialog");
+b.innerHTML='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2.5l1.6 4.4 4.4 1.6-4.4 1.6L10 14.5l-1.6-4.4L4 8.5l4.4-1.6zM15.5 13l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg>AIチェック';
+b.addEventListener("click",function(){var c=document.getElementById("aiCard");if(c&&!c.open){c.setAttribute("data-init","1");c.open=true}sheetOpen(d)})}
+var sb=document.getElementById("aiSB");if(sb&&sb.parentNode!==b)b.appendChild(sb);
+var f=rfoot(host);if(f&&b.parentNode!==f)f.appendChild(b)}
+howDock(document.getElementById("howC"),document.getElementById("rcL"));
 var AICFG=(function(){
 /* 選定書の欄外(選定方法・根拠)をそのまま使う。件名・会社名・担当者は入れない */
 /* full: 欄外の根拠まで入れる(AIチェックではいつも入れる) */
@@ -2538,11 +2576,28 @@ return P.n+": "+q.p[0]+"(内径"+q.p[2]+"mm、内断面積"+q.Ai.toFixed(1)+"mm�
 var m=o.notes||[];if(m.length)L.push("[アプリのメモ] "+m.join("、"));
 if(r.memo)L.push("[備考] "+r.memo);
 return L.join("\n")}
+/* 区画貫通選定の1貫通ぶん */
+function its(o){return o.its.map(function(x){return x.lbl+" 外径"+x.odT+"mm"+(x.fl?"(平形・短径×長径)":"")+" 1本"+f1(x.a1)+"mm² ×"+x.n+"本 = "+f1(x.sub)+"mm²"}).join(" / ")}
+function rowK(o,i){var r=o.r,L=[],W=kmNum(r.rw),H=kmNum(r.rh);
+L.push("■貫通"+(i+1)+(r.name?": "+r.name:"")+(r.sec?"(場所: "+r.sec+")":""));
+L.push("[区画] "+kzText(r.kz)+(kmNum(r.kt)?" 厚さ"+kmNum(r.kt)+"mm":"(厚さ未入力)")+" / "+kfrText(r.fr)+" / 開口: "+(r.sh==="r"?"角穴"+(W&&H?" "+W+"×"+H+"mm":"(寸法未入力)"):"丸穴"));
+if(o.its.length)L.push("[通す物] "+its(o));
+if(o.warn&&o.warn.length)L.push("[入力の抜け] "+o.warn.join("、"));
+if(o.err){L.push("[結果] 計算できず: "+o.err);if(r.memo)L.push("[備考] "+r.memo);return L.join("\n")}
+var lim=r.sh==="r"&&o.rect?o.rect.lim:o.rt,why=(o.kw||[]).concat(o.rw||[]);
+L.push("[条件] 断面積の合計 "+f1(o.total)+"mm²(計"+o.cnt+"本) / 占積率の上限 "+n2(lim)+"%");
+L.push("[処理方法] "+(o.auto?"おまかせで選んだ: ":"選んだ: ")+(o.km?kmName(o.km)+(isMK(o.km)?"("+o.km.mk+")":"")+"。条件: "+kmDesc(o.km):"使える工法なし"));
+L.push("[判定] "+(o.ok?"OK":"NG")+(why.length?"(理由: "+why.join("、")+")":""));
+if(r.sh==="r"){var R=o.rect;if(R)L.push("[角穴] "+(R.area?"貫通穴面積 "+Math.round(R.area)+"mm²、占積率 "+R.fill.toFixed(1)+"%、":"")+"必要な面積 "+Math.round(R.need)+"mm²")}
+else L.push("[使えるスリーブ・開口] "+shownPipes(o).map(function(q){if(!q.p)return kSlLbl(q.K)+": 入らない";return kSlLbl(q.K)+" "+q.p[0]+"(外径"+podT(q.p)+"mm、貫通穴面積"+Math.round(holeA(q))+"mm²、内径"+q.p[2]+"mm、内断面積"+q.Ai.toFixed(1)+"mm²、占積率"+q.fill.toFixed(1)+"%)"+(q.kok?"OK":"NG"+(q.kw&&q.kw.length?"("+q.kw.join("、")+")":""))}).join(" / "));
+var C=(o.cands||[]).filter(function(c){return c.ok&&c.m!==o.km}).slice(0,3);if(C.length)L.push("[ほかに使える工法] "+C.map(function(c){return isMK(c.m)?c.m.pr+" "+c.m.no:kmName(c.m)}).join("、"));
+if(r.memo)L.push("[備考] "+r.memo);
+return L.join("\n")}
 var cfg={
-sends:"配管名・区間や備考",
+sends:"配管名・貫通番号・区間や場所・備考",
 lead:"計算結果をGoogleのAI(Gemini)に送ります。",
-empty:"ケーブルの入力がまだないので、AIに送るものがありません。ケーブルと本数を入れて「計算する」を押してください。",
-sys:function(){return CHK+"\n# 要約(overview・points)の書き方\n"+PTS}};
+get empty(){return APPM==="k"?"通す物の入力がまだないので、AIに送るものがありません。通す物と本数を入れて「計算する」を押してください。":"ケーブルの入力がまだないので、AIに送るものがありません。ケーブルと本数を入れて「計算する」を押してください。"},
+sys:function(){return APPM==="k"?CHK_K+"\n# 要約(overview・points)の書き方\n"+PTS_K:CHK+"\n# 要約(overview・points)の書き方\n"+PTS}};
 var CHK="あなたは日本の電気工事(電線管の配管・配線)にくわしい技術者です。配管区画選定アプリの電線管選定(占積率による選定)の結果を、第三者の目でチェックし、あわせて現場の人がひと目でわかる要約も書いてください。\n"+
 "# 見るところ\n"+
 "1. 入力の不自然さ: ケーブルの種類・サイズ・心数・本数の組み合わせ(例: 三相の幹線なのに本数が合わない、CVTを3本など)、「その他」で入れた外径が一般的な値から大きく外れていないか、区間・用途とケーブルの組み合わせ。\n"+
@@ -2553,13 +2608,24 @@ var CHK="あなたは日本の電気工事(電線管の配管・配線)にくわ
 "- ケーブル断面積は π/4×外径²(1本あたり0.1mm²に丸め)、平形は短径×長径。許容断面積は内断面積×基準の%(1mm²未満切り捨て)。\n"+
 "- 管種ごとに、基準以下で入る最小のサイズを並べている。どの管種を使うかは利用者が決める。\n"+
 "- 外径・内径はアプリの表(メーカー資料やJIS)の値。";
+var CHK_K="あなたは日本の電気工事の防火区画貫通処理にくわしい技術者です。配管区画選定アプリの区画貫通選定(ケーブル・電線管が防火区画の壁・床を貫通する部分の処理方法と、スリーブ・開口の大きさ)の結果を、第三者の目でチェックし、あわせて現場の人がひと目でわかる要約も書いてください。\n"+
+"# 見るところ\n"+
+"1. 入力の不自然さ: 区画の種類(RC・ALC壁、中空壁、片壁、RC・ALC床)と厚さ、耐火時間、開口の形と寸法、通す物の種類・サイズ・本数の組み合わせ。\n"+
+"2. 検算: 通す物の断面積の合計、スリーブの内断面積(穴のみは穴径、角穴は幅×高さ)、占積率、貫通穴面積を、下の方法で数字を当てはめて確かめる。\n"+
+"3. 処理方法の妥当性: 選んだ工法の条件(区画の種類・最小厚さ・最大の穴径や面積・製品の適用穴径・占積率の上限・通せるケーブルの太さと電線管の種類・使えるスリーブの材質)に合っているか。法令の方法の前提(告示1422号はケーブルを直接通せない・肉厚5.5mm以上かつ外径90mm未満、金属管で貫通は鋼製の電線管だけ、鋼製スリーブは両側1m以上)。\n"+
+"4. 現場で見落としやすい点: 認定書・施工要領書での最終確認、中空壁の開口補強(鋼製枠など)、工法表示ラベル、両面からの処理、将来の増線の余裕など。必要なときだけ。\n"+
+"# このアプリの約束(これ自体はまちがいとしない)\n"+
+"- 断面積は π/4×外径²(1本あたり0.1mm²に丸め)、平形は短径×長径、電線管は基準の外径で計算。占積率は 断面積の合計 ÷ スリーブの内断面積(穴のみは穴径の円、角穴は幅×高さ)×100。\n"+
+"- 丸穴は、工法の認定で使えるスリーブごとに、上限以下で入る最小のサイズを並べている(鋼製スリーブは厚鋼電線管の寸法、塩ビスリーブはVP・VU、穴のみはφ50〜300を5mmきざみ)。貫通穴面積はスリーブの外径(穴のみは穴径)の円。\n"+
+"- 占積率の上限は工法の上限(なければ32%)。メーカーの認定工法の条件は2026年11月に各メーカーの資料で調べた値で、資料にスリーブの記載がない工法は穴のみにしている。";
+var PTS_K="- points は貫通ごとに「貫通番号(場所): 区画と開口、通す物、処理方法、スリーブ・開口のサイズと占積率、判定」くらいの長さで。スリーブが多いときは一番小さいものだけでよい。";
 var PTS="- points は配管ごとに「配管名(区間): 中身(ケーブル×本数)、断面積計、主な管種の選定サイズと占積率」くらいの長さで。管種が多いときは先頭の2〜3種類だけでよい。";
 Object.assign(cfg,{
-/* AIのカードは一番下(選定書のカードの後ろ) */
-place:function(el){var host=$("pv").closest(".card");if(host&&host.nextSibling!==el)host.parentNode.insertBefore(el,host.nextSibling)},
+place:function(el){aiDock(el,$("rt").closest(".card"))},
 ensure:function(){if(!$("stale").hidden)runCalc()},
 data:function(kind){var full=kind==="chk";
 if(!LASTOS.some(function(o){return o.its&&o.its.length}))return "";
+if(APPM==="k")return "# 区画貫通選定の計算結果\n## "+(full?"選定方法と根拠":"共通条件")+"\n"+method(full)+"\n## 貫通ごとの入力と結果\n"+LASTOS.map(rowK).join("\n\n");
 return "# 電線管選定(占積率)の計算結果\n## "+(full?"選定方法と根拠":"共通条件")+"\n"+method(full)+"\n## 配管ごとの入力と結果\n"+LASTOS.map(row).join("\n\n")}});
 return cfg})();
 /* ===== AIチェック(Gemini)・共通部分 =====
