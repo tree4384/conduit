@@ -526,6 +526,9 @@ body.km .conly{display:none!important}
 /* AIは計算結果の右下の小さいボタンから、下から出るシートで開く(ページを長くしないため) */
 .rfoot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
 #aiBtn{margin-left:auto}
+@media (max-width:440px){.rfoot{gap:6px}.rfoot .aib{padding:6px 10px}.rfoot .aib>svg{display:none}}
+.rfoot .aib.fmb{flex:0 0 auto;width:auto;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:.8rem;gap:6px;justify-content:flex-start}
+.rfoot .aib.fmb svg{width:14px;height:14px}
 .hwd .fmb2>.note{margin:0}
 .aib{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:.8rem;font-weight:700;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--acc);cursor:pointer}
 .aib:hover{border-color:var(--acc)}
@@ -2559,8 +2562,10 @@ var ICON_HOW='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-
 function howDock(det,host){if(!det||!host)return;var sm=det.querySelector("summary"),t=sm?sm.textContent.trim():"計算のしくみと根拠";
 var d=sheet((det.id||"how")+"Dlg","hwd",t),bx=d.querySelector(".fmb2");
 Array.prototype.slice.call(det.childNodes).forEach(function(n){if(n!==sm)bx.appendChild(n)});det.remove();
-var b=document.createElement("button");b.type="button";b.className="aib hwb";b.setAttribute("aria-haspopup","dialog");b.innerHTML=ICON_HOW+t;
+var b=document.createElement("button");b.type="button";b.className="aib hwb";b.setAttribute("aria-haspopup","dialog");b.innerHTML=ICON_HOW+"しくみと根拠";b.setAttribute("aria-label",t);
 b.addEventListener("click",function(){sheetOpen(d)});var f=rfoot(host);if(f)f.insertBefore(b,f.firstChild)}
+/* 「計算式を見る」のボタンも計算結果の下の段の先頭に移す(押したときの動きはそのまま) */
+function fmDock(btn,host){if(!btn||!host)return;btn.classList.add("aib");btn.innerHTML='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3h12v14H4zM7 7h6M7 10h6M7 13h3"/></svg>計算式';var f=rfoot(host);if(f)f.insertBefore(btn,f.firstChild)}
 function aiDock(el,host){
 var d=document.getElementById("aiDlg");
 if(!d){d=sheet("aiDlg","aid aic",'AI要約・チェック<span class="aitag">Gemini</span>')}
@@ -2572,7 +2577,7 @@ b.innerHTML='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-w
 b.addEventListener("click",function(){var c=document.getElementById("aiCard");if(c&&!c.open){c.setAttribute("data-init","1");c.open=true}sheetOpen(d)})}
 var sb=document.getElementById("aiSB");if(sb&&sb.parentNode!==b)b.appendChild(sb);
 var f=rfoot(host);if(f&&b.parentNode!==f)f.appendChild(b)}
-howDock(document.getElementById("howC"),document.getElementById("rcL"));
+howDock(document.getElementById("howC"),document.getElementById("rcL"));fmDock(document.getElementById("fmOpen"),document.getElementById("rcL"));
 var AICFG=(function(){
 /* 選定書の欄外(選定方法・根拠)をそのまま使う。件名・会社名・担当者は入れない */
 /* full: 欄外の根拠まで入れる(AIチェックではいつも入れる) */
