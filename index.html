@@ -2555,7 +2555,8 @@ var CHK="あなたは日本の電気工事(電線管の配管・配線)にくわ
 "- 外径・内径はアプリの表(メーカー資料やJIS)の値。";
 var PTS="- points は配管ごとに「配管名(区間): 中身(ケーブル×本数)、断面積計、主な管種の選定サイズと占積率」くらいの長さで。管種が多いときは先頭の2〜3種類だけでよい。";
 Object.assign(cfg,{
-place:function(el){var host=$("rt").closest(".card");if(host&&host.nextSibling!==el)host.parentNode.insertBefore(el,host.nextSibling)},
+/* AIのカードは一番下(選定書のカードの後ろ) */
+place:function(el){var host=$("pv").closest(".card");if(host&&host.nextSibling!==el)host.parentNode.insertBefore(el,host.nextSibling)},
 ensure:function(){if(!$("stale").hidden)runCalc()},
 data:function(kind){var full=kind==="chk";
 if(!LASTOS.some(function(o){return o.its&&o.its.length}))return "";
