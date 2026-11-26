@@ -916,11 +916,13 @@ if(w.length)return '<div class="kjr ng">'+head+'<br><span class="ng"><b>NG</b></
 if(r.sh==="r")return '<div class="kjr '+(o.kok?'ok':'ng')+'">'+head+'<br>'+(o.kok?'<span class="ok"><b>OK</b></span> この開口で処理できます':'<span class="ng"><b>NG</b></span><ul>'+(o.rw||[]).map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul>')+'</div>'+kCandHTML(o);
 return '<div class="kjr '+(o.kok?'ok':'ng')+'">'+head+'<br>'+(o.kok?'<span class="ok"><b>OK</b></span> 判定の欄がOKのスリーブ・開口で処理できます':'<span class="ng"><b>NG</b></span> 条件に合うスリーブ・開口がありません(並べる管種を増やすか、処理方法を見直してください)')+'</div>'+kCandHTML(o)}
 /* メーカーの認定工法の候補 */
-function kBestText(o,c){if(!c.best)return "";if(c.best.p)return c.best.p[0]+"(外径"+podT(c.best.p)+"・占積率"+c.best.fill.toFixed(1)+"%)";if(c.best.need)return "開口"+(c.best.need/1e6).toFixed(3)+"m²以上"+(o.rect&&o.rect.w?"(幅"+o.rect.w+"なら高さ"+Math.ceil(c.best.need/o.rect.w/5)*5+"mm以上)":"");return ""}
+/* 工法の占積率の上限(候補の一覧に出す) */
+function kLimT(c){var C=kmCond(c.m),f=C&&C.fill;return f?"上限"+(Math.round(f*10)/10)+"%":"上限なし"}
+function kBestText(o,c){if(!c.best)return "";if(c.best.p)return c.best.p[0]+"(外径"+podT(c.best.p)+"・占積率"+c.best.fill.toFixed(1)+"%/"+kLimT(c)+")";if(c.best.need)return "開口"+(c.best.need/1e6).toFixed(3)+"m²以上("+kLimT(c)+(o.rect&&o.rect.w?"、幅"+o.rect.w+"なら高さ"+Math.ceil(c.best.need/o.rect.w/5)*5+"mm以上":"")+")";return ""}
 function kCandHTML(o){var C=o.cands||[];if(!C.length)return '<p class="note rbn">この区画・開口の形に合うメーカーの認定工法はありません(登録した工法もなし)</p>';
 var ok=C.filter(function(c){return c.ok}),ng=C.filter(function(c){return !c.ok});
 function li(c){var cur=c.m.k===o.r.mt;return '<li class="'+(c.ok?'':'kng')+'">'+badge(c.ok)+' <b>'+esc(isMK(c.m)?c.m.pr:kmName(c.m))+'</b> <span class="dim">'+esc(isMK(c.m)?c.m.no:"登録")+'</span>'+
-(c.best?'<br><span class="kbs">'+esc(kBestText(o,c))+'</span>':'')+(c.why.length?'<br><span class="kwy">'+esc(c.why.join("、"))+'</span>':'')+
+(!c.best?' <span class="dim">(占積率'+kLimT(c)+')</span>':'')+(c.best?'<br><span class="kbs">'+esc(kBestText(o,c))+'</span>':'')+(c.why.length?'<br><span class="kwy">'+esc(c.why.join("、"))+'</span>':'')+
 (cur?' <span class="kcur">選択中</span>':(c.ok?' <button type="button" class="mini" data-kmset="'+esc(c.m.k)+'">この工法にする</button>':''))+'</li>'}
 return '<div class="kcd"><b>使える認定工法の候補</b><span class="dim">(区画・開口の形・厚さ・通す物で判定。丸穴は並べた管種から一番細いスリーブ)</span><ul>'+ok.map(li).join("")+'</ul>'+
 (ng.length?'<details><summary>条件に合わない工法 '+ng.length+'件</summary><ul>'+ng.map(li).join("")+'</ul></details>':'')+'</div>'}
