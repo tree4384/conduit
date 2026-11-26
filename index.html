@@ -308,6 +308,12 @@ body{padding-left:calc(276px + 20px)}
 .fg{margin-top:14px}
 .fgh{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:8px}
 .fgh b{font-size:.88rem}
+/* 断面図はたためる(配管ごとに覚える) */
+.fgtg{display:inline-flex;align-items:center;gap:4px;border:0;background:none;padding:2px 0;margin:0;color:var(--ink);font:inherit;cursor:pointer}
+.fgtg svg{width:16px;height:16px;color:var(--acc);transform:rotate(180deg);transition:transform .15s}
+.fg.fgcl .fgtg svg{transform:none}
+.fg.fgcl>:not(.fgh),.fg.fgcl .fgk{display:none!important}
+.fg.fgcl .fgh{margin-bottom:0}
 .fgk{display:flex;flex-wrap:wrap;gap:6px}
 .fk{font:inherit;font-size:.8rem;line-height:1.4;padding:4px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
 .fk:hover{border-color:var(--acc)}
@@ -1196,7 +1202,7 @@ h+='</tbody></table></div>';
 if(KK){var sw=ps.filter(function(q){return q.p&&q.kw&&q.kw.length});if(sw.length)h+='<p class="note rbn">'+sw.map(function(q){return '<b>'+esc(q.p[0])+'</b>: '+esc(q.kw.join("、"))}).join("<br>")+'</p>'}
 if(any15)h+='<p class="note rbn">* はケーブル外径の1.5倍の条件で決まったサイズです。</p>';
 if(memo)h+='<p class="note rbn">'+esc(memo)+'</p>';
-h+='<div class="fg">'+figInner(o)+'</div>'}
+h+='<div class="fg'+(r.fc?' fgcl':'')+'">'+figInner(o)+'</div>'}
 h+='</section>'});
 $("rt").innerHTML=h||'<p class="note">'+(KK?'貫通':'配管')+'がありません</p>';LASTTSV=tsv.join("\n");
 $("rt").classList.remove("stale");$("pv").classList.remove("stale");$("stale").hidden=true;
@@ -1344,7 +1350,7 @@ function figCap(o,F){var q=F.q;return q.p[0]+"(外径"+podT(q.p)+"・内径"+q.p
 function figInner(o){
 var K=figK(o);if(!K)return '<p class="note">断面図を出せる管種がありません</p>';
 var F=figSVG(o,K),ps=figPipes(o);
-return '<div class="fgh"><b>断面図</b><div class="fgk" role="group" aria-label="断面図の管種">'+ps.map(function(z){return '<button type="button" class="fk" data-fk="'+z.K+'" aria-pressed="'+(z.K===K)+'" title="'+esc(PIPE[z.K].n)+'">'+esc(PIPE[z.K].u?pl(z.K,z.p):z.p[0])+'</button>'}).join("")+'</div></div>'+
+return '<div class="fgh"><button type="button" class="fgtg" data-fgtg aria-expanded="'+(!o.r.fc)+'" title="タップでたたむ・ひらく"><b>断面図</b>'+CHEV+'</button><div class="fgk" role="group" aria-label="断面図の管種">'+ps.map(function(z){return '<button type="button" class="fk" data-fk="'+z.K+'" aria-pressed="'+(z.K===K)+'" title="'+esc(PIPE[z.K].n)+'">'+esc(PIPE[z.K].u?pl(z.K,z.p):z.p[0])+'</button>'}).join("")+'</div></div>'+
 figInfo(o,F)+'<div class="fgp" tabindex="0" role="button" aria-label="断面図を拡大して見る">'+F.svg+'<span class="fgz" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.4 10.4L14 14M7 5v4M5 7h4"/></svg>拡大</span></div><p class="fgc">'+(rows.length>1?' <button type="button" class="fgall" data-fall="'+K+'">全部の'+(APPM==="k"?'貫通':'配管')+'を'+esc(PIPE[K].s)+'にする</button>':'')+'</p>'+
 '<div class="fgx"><button type="button" class="btn" data-dxf>断面図をDXFで保存</button><span>A3枠・縮尺1/1(Jw_cadで開けます)</span></div><p class="note fgm" role="status"></p>'}
 var pvT=0;function schedPv(){clearTimeout(pvT);pvT=setTimeout(renderPreview,150)}
@@ -1358,6 +1364,7 @@ var nR=Math.ceil(d.querySelectorAll(".fi>div").length/3),IH=F?nR*68+(nR-1)*1.5+3
 ZV.show([d],w+40,H2,0,$("rt").classList.contains("stale"),rowLabel(o.r,+blk.getAttribute("data-oi"))+(q?" ・ "+q.p[0]:"")+" 断面図",true)}
 $("rt").addEventListener("keydown",function(e){if(e.key!=="Enter"&&e.key!==" ")return;var fz=e.target.closest(".fgp");if(fz){e.preventDefault();figZoom(fz)}});
 $("rt").addEventListener("click",function(e){
+var ft=e.target.closest("[data-fgtg]");if(ft){var fb=ft.closest(".rb"),fo=fb&&LASTOS[+fb.getAttribute("data-oi")];if(fo){fo.r.fc=!fo.r.fc;ft.closest(".fg").classList.toggle("fgcl",fo.r.fc);ft.setAttribute("aria-expanded",String(!fo.r.fc));save()}return}
 var ra=e.target.closest("[data-rball]");if(ra){var x=ra.getAttribute("data-rball")==="1";rows.forEach(function(r){r.rx=x});Array.prototype.forEach.call($("rt").querySelectorAll(".rb"),function(b){b.classList.toggle("rbx",x);var t=b.querySelector("[data-rbtg]");if(t)t.setAttribute("aria-expanded",String(!x))});save();return}
 var hd=e.target.closest(".rbh");if(hd&&(e.target.closest("[data-rbtg]")||!e.target.closest("a,input,select,textarea,button:not([data-rbtg])"))){var blk=hd.closest(".rb"),o=LASTOS[+blk.getAttribute("data-oi")];if(o){o.r.rx=!o.r.rx;blk.classList.toggle("rbx",o.r.rx);var tg=hd.querySelector("[data-rbtg]");if(tg)tg.setAttribute("aria-expanded",String(!o.r.rx));save()}return}
 var dx=e.target.closest("[data-dxf]");if(dx){saveDxf(dx);return}
