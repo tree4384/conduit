@@ -969,7 +969,7 @@ tsv.push(kT(null,[o.cnt,f1(o.total),n2(lim),"角穴",R.area?n2(R.w)+"×"+n2(R.h)
 if(memo)h+='<p class="note rbn">'+esc(memo)+'</p>'}
 else{
 var ps=shownPipes(o),any15=false,fk=figK(o);
-h+='<div class="tw"><table><thead><tr><th class="c1">管種</th><th>サイズ</th>'+(KK?'<th>判定</th>':'')+'<th style="text-align:left">占積率<span class="fh"><i></i>縦線＝基準 '+o.rt+'%</span></th><th>外径<br>(mm)</th><th>内径<br>(mm)</th><th>内断面積<br>(mm²)</th><th>許容断面積<br>('+o.rt+'%)</th></tr></thead><tbody>';
+h+=(KK?'<p class="note rbn" style="margin-top:8px"><b>スリーブ・開口の候補</b>(並べた管種ごとに、通す物が入る一番細いサイズ。ボイドは紙の型枠で、開口の大きさとして見ます)</p>':'')+'<div class="tw"><table><thead><tr><th class="c1">'+(KK?'スリーブ':'管種')+'</th><th>サイズ</th>'+(KK?'<th>判定</th>':'')+'<th style="text-align:left">占積率<span class="fh"><i></i>縦線＝基準 '+o.rt+'%</span></th><th>外径<br>(mm)</th><th>内径<br>(mm)</th><th>内断面積<br>(mm²)</th><th>許容断面積<br>('+o.rt+'%)</th></tr></thead><tbody>';
 if(!ps.length)h+='<tr><td colspan="'+(KK?8:7)+'" class="dim">並べる管種が選ばれていません('+(KK?'貫通の「スリーブ・開口に使う管種」':'配管の「並べる管種」')+'で選んでください)</td></tr>';
 ps.forEach(function(q){var P=PIPE[q.K];
 if(!q.p){h+='<tr><td class="c1" title="'+esc(P.n)+'">'+pn(q.K)+'</td><td class="ng" colspan="'+(KK?7:6)+'" style="text-align:left">入らない(最大の'+esc(P.l[P.l.length-1][0])+'でも不足)</td></tr>';tsv.push(KK?kT(q,[o.cnt,f1(o.total),o.rt,P.n,"入らない","","","","",""]):tl([nm,r.sec,cabT,o.cnt,f1(o.total),o.rt,P.n,"入らない","","","","","","",memo]));return}
