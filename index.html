@@ -483,6 +483,10 @@ details.aic[open]>summary .aich svg{transform:rotate(180deg)}
 /* 計算結果のカード(折りたたみ) */
 details.rcard>summary{list-style:none;display:flex;align-items:center;gap:8px;margin:0;color:var(--ink);font-size:1rem}
 details.rcard>summary::-webkit-details-marker{display:none}
+/* 選定書(計算書)のカードもたためる。中身は見出しの少し下から */
+details.outc>summary+*{margin-top:12px}
+details.outc>summary .aich{margin-left:auto}
+
 details.rcard>summary h2{margin:0;flex:none}
 details.rcard>summary .mini{flex:none}
 .rst{flex:1;min-width:0;font-size:.8rem;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -691,8 +695,8 @@ body.km .conly{display:none!important}
 <textarea id="tsv" hidden readonly aria-label="コピー用の表"></textarea>
 </div></details>
 
-<section class="card">
-<h2><span id="ttl">電線管選定書</span>(PDF・Excel)</h2>
+<details class="card rcard outc" id="outC" open>
+<summary><h2><span id="ttl">電線管選定書</span>(PDF・Excel)</h2></summary>
 <div class="outset"><div class="f ttl"><label for="pjTitle">題名(タップで編集できます)</label><input id="pjTitle" placeholder="電線管選定書" autocomplete="off"></div><div class="f"><label for="outFont">出力のフォント(PDF・Excel)</label><select id="outFont" class="outfsel"></select></div></div>
 <div class="pvbar">
 <span class="pvbtns"><button type="button" class="btn pri" id="pdf">PDFを保存</button><button type="button" class="btn" id="xlsx">Excelで保存</button><button type="button" class="btn" id="dxf">DXFで保存</button><button type="button" class="btn" id="zoom">拡大して見る</button></span>
@@ -701,7 +705,7 @@ body.km .conly{display:none!important}
 <p class="note" id="pdfmsg"></p>
 <p class="note" style="margin:0 0 8px">ページをタップすると、全画面で拡大して見られます。</p>
 <div class="desk" id="pv"></div>
-</section>
+</details>
 </div></div>
 </main>
 <dialog class="fmd" id="fmd" aria-labelledby="fmdT">
@@ -1663,6 +1667,8 @@ var pages=allPages(),P=PAPER[PJ.ppr]||PAPER.a4;
 var w=Math.min(pv.clientWidth-28,P.w);if(!(w>0))w=P.w;var sc=w/P.w;
 pages.forEach(function(p){var b=document.createElement("div");b.className="pgbox";b.tabIndex=0;b.setAttribute("role","button");b.setAttribute("aria-label",(pv.children.length+1)+"ページ目を拡大して見る");b.style.width=(P.w*sc)+"px";b.style.height=(P.h*sc)+"px";p.style.transform="scale("+sc+")";b.appendChild(p);pv.appendChild(b)})}
 var rzT;window.addEventListener("resize",function(){clearTimeout(rzT);rzT=setTimeout(renderPreview,200)});
+/* たたんでいた選定書を開いたら、プレビューを幅に合わせて描き直す */
+(function(d){if(d)d.addEventListener("toggle",function(){if(d.open)renderPreview()})})(document.getElementById("outC"));
 
 async function makePdf(){
 var btn=$("pdf"),msg=$("pdfmsg"),TITLE=docTitle();
